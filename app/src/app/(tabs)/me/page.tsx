@@ -1,12 +1,16 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Bell, HelpCircle, KeyRound, LogOut, MessageCircle, ShipWheel, Users } from "lucide-react";
+import { useState } from "react";
+import { Bell, Copy, Check, ExternalLink, HelpCircle, KeyRound, LogOut, MessageCircle, ShipWheel, Users, Wallet } from "lucide-react";
 import { Button, Card, Row, Sample, Screen } from "@/components/ui";
 import { useStore } from "@/lib/store";
-import { CHAIN_NAME } from "@/lib/deployment";
+import { CHAIN_NAME, explorer } from "@/lib/deployment";
+import { usd } from "@/lib/format";
 
 export default function Me() {
-  const { wallet, mode, setMode, captainOf, signOut } = useStore();
+  const { wallet, mode, setMode, captainOf, signOut, cash } = useStore();
+  const [copied, setCopied] = useState(false);
+  const addr = wallet?.address ?? "";
   const router = useRouter();
   const canCaptain = captainOf.length > 0;
   return (
@@ -16,6 +20,22 @@ export default function Me() {
         <div className="font-semibold mt-1">{wallet?.kind === "passkey" ? "Face ID passkey" : "This device"}</div>
         <div className="text-ink-2 text-[13px]">No passwords. No seed phrases. {CHAIN_NAME === "local" ? "Local test chain." : "Arc testnet."}</div>
       </Card>
+      {wallet && (
+        <Card testId="wallet-card">
+          <div className="flex items-center gap-2 label"><Wallet size={13} strokeWidth={1.5} /> Your wallet</div>
+          <div className="flex items-baseline justify-between mt-2">
+            <span className="font-mono text-[15px]" data-testid="wallet-address">{addr.slice(0, 6)}…{addr.slice(-4)}</span>
+            <b>{usd(cash)} USDC</b>
+          </div>
+          <div className="flex gap-4 mt-3 text-[13px]">
+            <button className="proof" onClick={() => { navigator.clipboard?.writeText(addr).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); }}>
+              {copied ? <>Copied <Check size={13} strokeWidth={1.5} /></> : <>Copy address <Copy size={13} strokeWidth={1.5} /></>}
+            </button>
+            {explorer && <a className="proof" href={`${explorer}/address/${addr}`} target="_blank" rel="noreferrer">See it on Arcscan <ExternalLink size={13} strokeWidth={1.5} /></a>}
+          </div>
+          <p className="text-ink-2 text-[13px] mt-2">You own this wallet. Boats never holds your keys or your money: the contract does.</p>
+        </Card>
+      )}
       {canCaptain ? (
         mode === "captain" ? (
           <Button variant="secondary" icon={Users} onClick={() => { setMode("crew"); router.push("/home"); }} testId="crew-mode">Back to crew mode</Button>

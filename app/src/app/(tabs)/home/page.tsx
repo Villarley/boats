@@ -1,13 +1,14 @@
 "use client";
-import { Plus, ShieldCheck, Calendar, MessageCircle } from "lucide-react";
+import { Plus, ShieldCheck, Calendar, MessageCircle, Gift, Loader2, ExternalLink } from "lucide-react";
 import { Flag } from "@/components/flags";
-import { Button, Card, Meta, Screen } from "@/components/ui";
+import { Button, Card, Meta, Proof, Screen } from "@/components/ui";
 import { useStore } from "@/lib/store";
+import { CHAIN_NAME } from "@/lib/deployment";
 import { dateShort, pct, usd } from "@/lib/format";
 import { FLAG_OF, statusLabel, captainName } from "@/lib/boat";
 
 export default function Home() {
-  const { boats, cash, loading } = useStore();
+  const { boats, cash, loading, gift, wallet } = useStore();
   const mine = boats.filter((b) => b.position.deposit > 0n && !b.position.withdrawn);
   const onBoats = mine.reduce((s, b) => s + b.position.valueNow, 0n);
   return (
@@ -20,6 +21,23 @@ export default function Home() {
           <span><span className="text-ink-2">On boats </span><b>{usd(onBoats)}</b></span>
         </div>
       </section>
+      {gift?.state === "sending" && (
+        <Card testId="gift">
+          <div className="flex items-center gap-3"><Loader2 size={20} className="animate-spin" /><div><div className="font-semibold">Sending you $5 of test dollars</div><div className="text-ink-2 text-[13px]">Real Circle USDC on Arc testnet. A few seconds.</div></div></div>
+        </Card>
+      )}
+      {gift?.state === "sent" && cash > 0n && !boats.some((b) => b.position.deposit > 0n) && (
+        <Card testId="gift">
+          <div className="flex items-center gap-3"><Gift size={20} strokeWidth={1.5} /><div className="flex-1"><div className="font-semibold">You got {usd(gift.amount ?? 0n)} of test dollars.</div><div className="text-ink-2 text-[13px] flex gap-2 items-center">Now pick a boat and board. <Proof hash={gift.hash} /></div></div></div>
+        </Card>
+      )}
+      {CHAIN_NAME === "arc" && cash === 0n && gift?.state === "unavailable" && wallet && (
+        <Card>
+          <div className="font-semibold">Get free test dollars</div>
+          <p className="text-ink-2 text-[15px] mt-1">Circle gives test USDC on Arc. We copy your address; pick Arc Testnet and paste it.</p>
+          <div className="mt-3"><Button variant="secondary" icon={ExternalLink} onClick={() => { navigator.clipboard?.writeText(wallet.address).catch(() => {}); window.open("https://faucet.circle.com", "_blank", "noopener"); }}>Open Circle's faucet</Button></div>
+        </Card>
+      )}
       <Button href="/add" icon={Plus} testId="add-dollars">Add dollars</Button>
 
       <h2 className="bt-title text-[1.15rem] mt-2">My boats</h2>

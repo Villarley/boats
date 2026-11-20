@@ -30,6 +30,12 @@
   ],
   "startBlock": 73136948,
   "demo": {
-    "aiCaptain": "0xFbC12A29C476bcAD3945e7471a893624b33EB040"
+    "aiCaptain": "0xFbC12A29C476bcAD3945e7471a893624b33EB040",
+    "blocked": [
+      {
+        "message": "The AI captain tried to move all $15 into Bitcoin. Blocked by the contract: max weight exceeded.",
+        "txHash": "0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630"
+      }
+    ]
   }
 }
