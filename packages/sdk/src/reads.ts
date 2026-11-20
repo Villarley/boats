@@ -40,6 +40,30 @@ export async function listBoats(pc: PublicClient, factory: Address): Promise<Add
   return (await pc.readContract({ address: factory, abi: factoryAbi, functionName: "allBoats" })) as Address[];
 }
 
+/**
+ * Boats that use the official oracle, router (swap adapter) and USDC of a deployment.
+ * The factory is permissionless, so anyone can create a boat pointing at their own router or
+ * oracle. Such a boat could move crew money, so apps, agents and keepers should only list these.
+ */
+export async function listOfficialBoats(
+  pc: PublicClient,
+  d: { factory: Address; oracle: Address; adapter: Address; tokens: { USDC: Address } },
+): Promise<Address[]> {
+  const all = await listBoats(pc, d.factory);
+  if (all.length === 0) return [];
+  const res = await pc.multicall({
+    allowFailure: true,
+    contracts: all.flatMap((b) => [
+      { address: b, abi: boatAbi, functionName: "oracle" } as const,
+      { address: b, abi: boatAbi, functionName: "router" } as const,
+      { address: b, abi: boatAbi, functionName: "usdc" } as const,
+    ]),
+  });
+  const eq = (r: { status: string; result?: unknown } | undefined, want: Address) =>
+    r?.status === "success" && String(r.result).toLowerCase() === want.toLowerCase();
+  return all.filter((_, i) => eq(res[i * 3], d.oracle) && eq(res[i * 3 + 1], d.adapter) && eq(res[i * 3 + 2], d.tokens.USDC));
+}
+
 export async function getBoat(pc: PublicClient, boat: Address, symbols: (a: Address) => string = (a) => a.slice(0, 6)): Promise<BoatInfo> {
   const c = { address: boat, abi: boatAbi } as const;
   const [name, captain, state, endReason, usdc, assets, sl, tp, endTime, feeBps, crewTotal, captainStake, startValue, nav, finalValue, crewPayout, inviteOnly] =

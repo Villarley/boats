@@ -39,4 +39,24 @@ describe("gemini odds", () => {
     const fake = (async () => new Response("nope", { status: 503 })) as unknown as typeof fetch;
     await expect(fetchOdds("X", "cut", fake)).rejects.toThrow("Gemini 503");
   });
+  it("never substitutes a different contract when a single outcome fails to match", () => {
+    expect(parseEventOdds({ ...event, contracts: [event.contracts[0]!] }, "hike")).toBeNull();
+    expect(parseEventOdds(event, "")).toBeNull();
+    expect(parseEventOdds({ ...event, contracts: [event.contracts[0]!, event.contracts[0]!] }, "hold")).toBeNull();
+  });
+  it("refuses inactive events and contracts", () => {
+    expect(parseEventOdds({ ...event, status: "settled" }, "cut")).toBeNull();
+    expect(parseEventOdds({ ...event, contracts: [{ ...event.contracts[1]!, status: "closed" }] }, "cut")).toBeNull();
+    expect(parseEventOdds({ ...event, contracts: [{ ...event.contracts[1]!, status: "active", marketState: "closed" }] }, "cut")).toBeNull();
+  });
+  it("preserves raw quote prices and exposes the probability spread", () => {
+    expect(parseEventOdds(event, "cut")?.quote).toEqual({ bestBid: "0.70", bestAsk: "0.74", spreadBps: 400 });
+    expect(parseEventOdds({ ...event, contracts: [{ ...event.contracts[1]!, prices: { bestAsk: "0.91" } }] }, "cut")?.quote).toEqual({ bestBid: null, bestAsk: "0.91", spreadBps: null });
+  });
+  it("does not use malformed prices or a crossed order book", () => {
+    expect(probabilityFromPrices({ bestAsk: "Infinity" })).toBeNull();
+    expect(probabilityFromPrices({ bestBid: "-1" })).toBeNull();
+    expect(probabilityFromPrices({ lastTradePrice: "1.1" })).toBeNull();
+    expect(probabilityFromPrices({ bestBid: "0.9", bestAsk: "0.1", lastTradePrice: "0.5" })).toBeNull();
+  });
 });

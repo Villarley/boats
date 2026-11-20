@@ -12,17 +12,24 @@ export type Deployment = {
   boats: { name: string; address: Address }[];
 };
 
-const zero = "0x0000000000000000000000000000000000000000" as Address;
-
-/** Arc testnet deployment. Replace with the real addresses after `forge script Deploy`. */
+/** Arc testnet deployment (chain 5042002), redeployed Nov 20 2026 with invite-only (private) funds. Same values as app/src/config/arc-deployment.json. */
 export const arcTestnetDeployment: Deployment = {
   chainId: 5042002,
-  factory: zero,
-  oracle: zero,
-  adapter: zero,
-  tokens: { USDC: zero, USYC: zero, EURC: zero, cirBTC: zero },
-  mocks: ["USYC", "cirBTC"],
-  boats: [],
+  factory: "0x115e0bebcce14481f2c4b00aac533e15efddb2fb",
+  oracle: "0x712f8c439e455e928b2f84c6f389d77e93c980f0",
+  adapter: "0xd1a6b1a5ccc3b5470a5a41595a186f885ea9464f",
+  tokens: {
+    USDC: "0x3600000000000000000000000000000000000000",
+    USYC: "0x7cfe546361594b24790d5f073a76a03217f0ee6d",
+    EURC: "0x579eefde3f46de5cef4c75c652eee372e4c0e808",
+    cirBTC: "0x56176b92852793a93f1783eb29232fa7c899b1bc",
+  },
+  mocks: ["USYC", "EURC", "cirBTC"],
+  boats: [
+    { name: "Safe Harbor", address: "0xed438B7A67C22AA48D0F32A69584405057535d4d" },
+    { name: "Westerly", address: "0x6f762E474d9aA387631f2F32013B8bDb6d0A66e5" },
+    { name: "Open Sea", address: "0xb751031f927a1FD9fb9b9EEe074894aeBcb04439" },
+  ],
 };
 
 /** Plain-words names for the UI: grandma never reads a ticker. */

@@ -1,6 +1,6 @@
 import type { Address, Hex } from "viem";
 import { boatAbi } from "@boats/sdk";
-import { clients, readBoat, revertReason, valueToAmount } from "@boats/sdk";
+import { buildSwapCall, clients, readBoat, revertReason, valueToAmount, type DecisionMemo } from "@boats/sdk";
 import { fetchOdds, type Odds } from "@boats/sdk";
 import { log, txLink } from "./log.js";
 import { decide, type Rule } from "./rules.js";
@@ -14,6 +14,7 @@ export type CaptainConfig = {
   gemini: { event: string; match: string };
   rules: Rule[];
   spreadBps: number;
+  slippageBps?: number;
   webhook?: string;
 };
 
@@ -26,6 +27,8 @@ export function configFromEnv(env = process.env): CaptainConfig {
   const usyc = need("USYC") as Address;
   const trigger = Number(env.ODDS_TRIGGER ?? "0.7");
   const fraction = Number(env.MOVE_FRACTION ?? "0.5");
+  const slippageBps = Number(env.SLIPPAGE_BPS ?? "100");
+  if (!Number.isInteger(slippageBps) || slippageBps < 0 || slippageBps > 500) throw new Error("SLIPPAGE_BPS must be an integer from 0 to 500.");
   // Gemini's live "Fed decision in December?" market. Rising rates: park part of the boat in Treasuries.
   const match = env.GEMINI_CONTRACT_MATCH || "Hike 25bps";
   return {
@@ -35,7 +38,8 @@ export function configFromEnv(env = process.env): CaptainConfig {
     oracle: need("ORACLE") as Address,
     tokens: { usdc: need("USDC") as Address, usyc, eurc: env.EURC as Address, cirbtc: env.CIRBTC as Address },
     gemini: { event: env.GEMINI_EVENT || "FED261211", match },
-    rules: [
+    // RULES_JSON overrides the default rule, e.g. [{"kind":"odds-above","threshold":0.8,"to":"0x...","targetFraction":0.3,"text":"..."}]
+    rules: env.RULES_JSON ? (JSON.parse(env.RULES_JSON) as Rule[]) : [
       {
         kind: "odds-above",
         threshold: trigger,
@@ -45,6 +49,7 @@ export function configFromEnv(env = process.env): CaptainConfig {
       },
     ],
     spreadBps: Number(env.SPREAD_BPS ?? "10"),
+    slippageBps,
     webhook: env.LOG_WEBHOOK || undefined,
   };
 }
@@ -106,8 +111,16 @@ export async function runOnce(c: CaptainConfig, opts: { rogue?: boolean } = {}) 
 
   const amountIn = await valueToAmount(pc, c.oracle, d.from, boat.usdc, d.amountValue);
   try {
-    const { request } = await pc.simulateContract({ account, address: c.boat, abi: boatAbi, functionName: "swap", args: [d.from, d.to, amountIn, 0n] });
-    const hash = await wc!.writeContract(request);
+    // The decision and the odds it used ride in the swap's calldata, so anyone can audit it on the explorer.
+    const memo: DecisionMemo = {
+      why: d.reason,
+      signal: d.odds ? { source: "gemini-prediction-markets", event: d.odds.eventTicker, contract: d.odds.contractLabel, probability: d.odds.probability, at: d.odds.fetchedAt } : undefined,
+    };
+    const minValue = d.amountValue * BigInt(10_000 - (c.slippageBps ?? 100)) / 10_000n;
+    const minOut = await valueToAmount(pc, c.oracle, d.to, boat.usdc, minValue);
+    const call = buildSwapCall(c.boat, d.from, d.to, amountIn, minOut, memo);
+    await pc.call({ account, to: call.to, data: call.data }); // simulate the exact calldata that will be sent
+    const hash = await wc!.sendTransaction({ account: account!, chain: wc!.chain, to: call.to, data: call.data });
     const rcpt = await pc.waitForTransactionReceipt({ hash });
     const ok = rcpt.status === "success";
     await log({ at: at(), boat: c.boat, kind: ok ? "trade" : "error", message: ok ? d.reason : `Trade failed on chain. ${d.reason}`, odds: oddsLog(d.odds), txHash: hash, explorer: txLink(hash) }, c.webhook);

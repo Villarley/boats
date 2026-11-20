@@ -6,7 +6,7 @@ import {
   erc20Abi,
   getBoat,
   getPosition,
-  listBoats,
+  listOfficialBoats,
   waterfall,
   type BoatInfo,
   type BoatsWallet,
@@ -96,7 +96,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     inflight.current = true;
     try {
       const pc = publicClient();
-      const addrs = (await listBoats(pc, deployment.factory)).filter(isListed);
+      const addrs = (await listOfficialBoats(pc, deployment)).filter(isListed);
       const who = wallet?.address ?? "0x0000000000000000000000000000000000000001";
       const infos = await Promise.all(addrs.map((a) => getBoat(pc, a, (t) => symbolOf(t))));
       const views = await Promise.all(infos.map(async (b) => ({ ...b, position: await getPosition(pc, b, who, waterfall) })));

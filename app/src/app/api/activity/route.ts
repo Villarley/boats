@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getActivity, listBoats, type Activity } from "@boats/sdk";
+import { getActivity, listOfficialBoats, type Activity } from "@boats/sdk";
 import { deployment, isDeployed, isListed } from "@/lib/deployment";
 import { publicClient } from "@/lib/client";
 
@@ -30,7 +30,7 @@ const json = (acts: Activity[]) => JSON.stringify({ activity: acts.slice(0, 200)
 
 async function update() {
   const pc = publicClient();
-  const [boats, head] = await Promise.all([listBoats(pc, deployment.factory).then((b) => b.filter(isListed)), pc.getBlockNumber()]);
+  const [boats, head] = await Promise.all([listOfficialBoats(pc, deployment).then((b) => b.filter(isListed)), pc.getBlockNumber()]);
   const key = boats.join(",");
   const prev = g.__boatsActivity;
   const fresh = !prev || prev.boats !== key; // a new boat: rescan everything for it

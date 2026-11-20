@@ -1,0 +1,38 @@
+# Boats
+
+> Delegated USDC trading on Arc testnet. Captains trade through an on-chain mandate and stake first-loss capital. Public transactions trigger settlement at thresholds or the end date; prices, liquidity, transaction inclusion and contract risks remain.
+
+AI agents can read boats, pre-check trades against the mandate, read Gemini prediction-market odds and act as captain or crew through the Boats MCP server or the TypeScript SDK.
+
+The bundled captain uses deterministic rules, without an embedded LLM. MCP tools provide structured JSON and read/write annotations. Without a signer they return unsigned calls; pass caller for role and balance checks and read all warnings. Captain setup: create, stake, wait for crew to board, then sail. Check returned transaction hashes before retrying a partial failure.
+
+## Docs
+
+- [agent.json](https://boats-liard.vercel.app/agent.json): machine-readable claims, proof links, commands, prize integration and limitations; not a live state feed
+- [AGENTS.md](https://github.com/Villarley/boats/blob/main/AGENTS.md): lifecycle, who can call what, mandate rules, errors, addresses, MCP setup
+- [MCP server](https://github.com/Villarley/boats/tree/main/packages/mcp): 14 tools: `boats_deployment`, `boats_list`, `boats_get`, `boats_score`, `boats_worst_case`, `boats_check_trade`, `boats_position`, `boats_my_positions`, `boats_activity`, `boats_odds`, `boats_odds_contracts`, `boats_create`, `boats_act`, `boats_tx_status`
+- [Example agent session](https://github.com/Villarley/boats/blob/main/packages/mcp/examples/session.md)
+- [Judge evidence guide](https://github.com/Villarley/boats/blob/main/docs/judging.md): reproduce five proofs with npm run verify:proof, without a key or a new transaction; memos are self-reported, not Gemini attestations
+- [Economic whitepaper](https://github.com/Villarley/boats/blob/main/docs/whitepaper.md): first-loss equations, exact examples, fee vesting, integer rounding and implemented-versus-proposed controls, with source and verification links
+- [Partner research](https://github.com/Villarley/boats/blob/main/docs/partner-research.md): source-backed submission strategy and acceptance criteria
+- [@boats/sdk](https://github.com/Villarley/boats/tree/main/packages/sdk): reads, `checkTrade`, first-loss math, calldata builders, keeper, captain quickstart
+- [Contracts](https://github.com/Villarley/boats/tree/main/contracts/src): `Boat.sol`, `BoatFactory.sol`, `PriceOracle.sol`, `SwapAdapter.sol`
+- [Deployment](https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json): Arc testnet (chain 5042002) addresses
+
+## HTTP API (this site)
+
+- `GET /api/odds`: live Gemini odds used by the AI captain
+- `GET /api/activity`: recent on-chain activity of all official boats
+- `GET /api/captain-log`: the AI captain's decisions with transaction links
+- `POST /api/keeper`: runs `checkVoyage()` / `returnToPort()` on every boat (header `x-keeper-secret`)
+
+## Agent verification
+
+- `npm run verify:agent`: eight offline synthetic scenarios through the production decision code; no network or signer, not a backtest
+- MCP resources: `boats://playbook`, `boats://evidence`, `boats://proof-report`
+- MCP prompt: `review_voyage` (boat, optional who and amountUsd); review first, unsigned plans only on explicit user request
+- The bundled captain holds on one-sided or wide quotes (over five probability percentage points), closed markets and stale fetched snapshots. Bid/ask are exposed as raw decimal strings. This does not prove market depth, last-trade freshness or profitable trading.
+
+## Optional
+
+- [README](https://github.com/Villarley/boats#readme): proof transactions on Arc, risk assumptions

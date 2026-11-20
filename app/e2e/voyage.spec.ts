@@ -115,7 +115,8 @@ test("manager: Laura switches to manager mode, starts the fund, and the rules ca
 
 test("fund closes: the market falls, the keeper closes it, María loses less than 1%", async ({ browser, request }) => {
   await movePrice("USYC", -1500); // Treasuries -15% -> fund about -10%
-  const k = await request.post("/api/keeper", { headers: { referer: "e2e" } });
+  // The keeper only answers its secret or a same-origin request (main closed the Referer bypass).
+  const k = await request.post("/api/keeper", { headers: { "x-keeper-secret": "e2e" } });
   const body = await k.json();
   expect(body.results.find((r: { message: string }) => r.message)).toBeTruthy();
   const page = await signIn(browser, "grandma");

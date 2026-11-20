@@ -39,6 +39,11 @@ export function decide(args: {
   spreadBps?: number;
   /** ignore trades smaller than this (USDC base units) to avoid dust churn. Default: $10 or 2% of NAV, whichever is smaller. */
   minTrade?: bigint;
+  /** Age of the fetched snapshot, not the age of the exchange's last trade. */
+  maxOddsAgeMs?: number;
+  /** Maximum YES bid/ask width in probability bps; default 500 = 5 percentage points. */
+  maxQuoteSpreadBps?: number;
+  now?: number;
 }): Decision {
   const { rules, holdings, usdc, odds, oddsError, spreadBps = 0 } = args;
   const n = nav(holdings);
@@ -49,6 +54,21 @@ export function decide(args: {
     if (r.kind !== "odds-above") continue;
     if (!odds) {
       return { action: "hold", reason: `Market data unavailable${oddsError ? ` (${oddsError})` : ""}. Holding position.` };
+    }
+    const age = (args.now ?? Date.now()) - Date.parse(odds.fetchedAt);
+    if (!Number.isFinite(odds.probability) || odds.probability < 0 || odds.probability > 1 || !Number.isFinite(age) || age < -30_000 || age > (args.maxOddsAgeMs ?? 120_000)) {
+      return { action: "hold", reason: "Market snapshot is invalid or stale. Holding position.", odds };
+    }
+    if (!Number.isFinite(r.threshold) || r.threshold < 0 || r.threshold > 1 || !Number.isFinite(r.targetFraction) || r.targetFraction <= 0 || r.targetFraction > 1) {
+      return { action: "hold", reason: "Rule has an invalid threshold or target fraction. Holding position.", odds };
+    }
+    const q = odds.quote;
+    const bid = q?.bestBid == null || !q.bestBid.trim() ? NaN : Number(q.bestBid);
+    const ask = q?.bestAsk == null || !q.bestAsk.trim() ? NaN : Number(q.bestAsk);
+    const maxWidth = args.maxQuoteSpreadBps ?? 500;
+    // Recompute from the prices rather than trusting caller-supplied spread metadata.
+    if (!Number.isFinite(bid) || !Number.isFinite(ask) || bid < 0 || ask > 1 || ask < bid || Math.abs(odds.probability - (bid + ask) / 2) > 1e-9 || !Number.isFinite(maxWidth) || maxWidth < 0 || (ask - bid) * 10_000 > maxWidth + 1e-9) {
+      return { action: "hold", reason: "Market needs a valid two-sided quote within the spread limit. Holding position.", odds };
     }
     const pct = Math.round(odds.probability * 100);
     const trig = Math.round(r.threshold * 100);
