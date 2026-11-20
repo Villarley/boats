@@ -144,7 +144,7 @@ contract BoatTest is Test {
         _sail(boat);
         vm.startPrank(captain);
         boat.swap(address(usdc), address(cirbtc), 4_400 * U, 0); // 40% BTC
-        boat.swap(address(usdc), address(usyc), 6_600 * U, 0); // 60% USYC
+        boat.swap(address(usdc), address(usyc), 6_500 * U, 0); // ~59% USYC (60% cap)
         vm.stopPrank();
         assertFalse(boat.checkVoyage());
 
@@ -159,13 +159,13 @@ contract BoatTest is Test {
         boat.returnToPort();
         assertEq(uint256(boat.state()), uint256(Boat.State.Closed));
         // V = 9,900: captain loses the whole stake, crew loses 100 in total (-1%).
-        assertApproxEqAbs(boat.finalValue(), 9_900 * U, 1);
-        assertApproxEqAbs(boat.crewPayout(), 9_900 * U, 1);
-        assertApproxEqAbs(boat.captainBase(), 0, 1);
+        assertApproxEqAbs(boat.finalValue(), 9_900 * U, U / 100); // swap rounding dust
+        assertApproxEqAbs(boat.crewPayout(), 9_900 * U, U / 100);
+        assertEq(boat.captainBase(), 0);
 
         vm.prank(grandma);
         uint256 got = boat.withdraw();
-        assertApproxEqAbs(got, 8_910 * U, 1); // 9,000 -> 8,910: grandma lost 1%
+        assertApproxEqAbs(got, 8_910 * U, U / 100); // 9,000 -> 8,910: grandma lost 1%
     }
 
     // 5b. Take profit.
@@ -222,22 +222,22 @@ contract BoatTest is Test {
         _sail(b);
         vm.prank(captain);
         b.swap(address(usdc), address(cirbtc), 4_400 * U, 0);
-        oracle.setPrice(address(cirbtc), oracle.price(address(cirbtc)) * 13_750 / 10_000); // BTC +37.5% -> NAV +15% = 12,650
+        oracle.setPrice(address(cirbtc), oracle.price(address(cirbtc)) * 13_800 / 10_000); // BTC +38% -> NAV ~12,672 (past +15%)
         assertTrue(b.checkVoyage());
         b.returnToPort();
-        assertApproxEqAbs(b.captainFee(), 300 * U, 2);
+        assertApproxEqAbs(b.captainFee(), 304 * U, U / 100); // 20% of crew profit 1,520
 
         vm.warp(block.timestamp + 5 days);
         vm.prank(captain);
         (uint256 base, uint256 fee) = b.claimCaptain();
-        assertApproxEqAbs(base, 1_150 * U, 2);
-        assertApproxEqAbs(fee, 150 * U, 2);
+        assertApproxEqAbs(base, 1_152 * U, U / 100); // stake + pro-rata profit
+        assertApproxEqAbs(fee, 152 * U, U / 100); // half vested
 
         vm.warp(block.timestamp + 10 days);
         vm.prank(captain);
         (base, fee) = b.claimCaptain();
         assertEq(base, 0);
-        assertApproxEqAbs(fee, 150 * U, 2);
+        assertApproxEqAbs(fee, 152 * U, U / 100);
     }
 
     // 8. No boarding after sailing; no sailing without a captain stake.
