@@ -1,8 +1,9 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Bell, Copy, Check, ExternalLink, HelpCircle, KeyRound, LogOut, MessageCircle, ShipWheel, Users, Wallet } from "lucide-react";
-import { Button, Card, Row, Sample, Screen } from "@/components/ui";
+import { ChevronRight, Copy, Check, ExternalLink, HelpCircle, LogOut, MessageCircle, ShipWheel, Users, Wallet } from "lucide-react";
+import { Button, Card, Row, Screen } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import { CHAIN_NAME, explorer } from "@/lib/deployment";
 import { usd } from "@/lib/format";
@@ -50,9 +51,7 @@ export default function Me() {
         </Card>
       )}
       <Card>
-        <Row icon={Bell} title={<span className="flex items-center gap-2">Alerts <Sample /></span>} sub="Tell me when my boat is down 7%, and every captain trade" />
-        <Row icon={MessageCircle} title="Invite family" sub="Save Mom a seat" right={<Button variant="ghost" href="/invite">Open</Button>} />
-        <Row icon={KeyRound} title={<span className="flex items-center gap-2">Passkeys and devices <Sample /></span>} sub="This phone" />
+        <Link href="/invite" className="block"><Row icon={MessageCircle} title="Invite family" sub="Save Mom a seat" right={<ChevronRight size={18} strokeWidth={1.5} className="text-ink-2" />} /></Link>
         <Row icon={HelpCircle} title="What happens if…" sub="the captain disappears? The money stays inside the rules and the voyage still ends on its date." />
       </Card>
       <Button variant="ghost" icon={LogOut} onClick={() => { signOut(); router.replace("/"); }} testId="signout">Sign out</Button>

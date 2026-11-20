@@ -87,6 +87,38 @@ test("voyage ends: the market falls, the keeper brings the boat back, grandma lo
   await expect(page.getByTestId("withdrawn")).toBeVisible();
 });
 
+test("captain: a family member launches their own boat, stakes first, and it shows up for everyone", async ({ browser }) => {
+  const page = await signIn(browser, "grandma");
+  await page.goto("/captain/launch");
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled(); // a boat needs a name
+  await page.getByPlaceholder("Family Harbor").fill("Abuela's Harbor");
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Abuela's Harbor")).toBeVisible();
+  await page.getByRole("button", { name: /Launch/ }).click();
+  await expect(page).toHaveURL(/\/captain$/, { timeout: 30_000 });
+  const card = page.getByTestId("bridge-Abuela's Harbor");
+  await expect(card).toBeVisible();
+  await card.getByTestId("stake").click();
+  await expect(card.getByText("Stake: done.")).toBeVisible({ timeout: 30_000 });
+  await page.goto("/explore");
+  await expect(page.getByTestId("boat-card-Abuela's Harbor")).toBeVisible();
+});
+
+test("missing pages and boats fail gracefully", async ({ browser }) => {
+  const page = await signIn(browser, "grandma");
+  await page.goto("/boat/0x0000000000000000000000000000000000000bad");
+  await expect(page.getByText("We couldn't find this boat.")).toBeVisible({ timeout: 15_000 });
+  await page.goto("/nope");
+  await expect(page.getByText("This page sailed off.")).toBeVisible();
+});
+
+test("activity: the shared feed is served by the app, not scanned by each browser", async ({ request }) => {
+  const r = await request.get("/api/activity");
+  expect(r.ok()).toBeTruthy();
+  const j = await r.json();
+  expect(j.activity.length).toBeGreaterThan(0);
+});
+
 test("PWA: manifest and service worker are served", async ({ request }) => {
   const m = await request.get("/manifest.webmanifest");
   expect(m.ok()).toBeTruthy();

@@ -1,13 +1,19 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDownLeft, ArrowLeftRight, Ban, Anchor, Flag as FlagIcon, ArrowUpRight, Coins } from "lucide-react";
-import { getActivity, type Activity } from "@boats/sdk";
+import type { Activity } from "@boats/sdk";
 import { Card, Proof, Row, Screen } from "@/components/ui";
 import { useCaptainLog } from "@/components/captain-log";
 import { useStore } from "@/lib/store";
-import { publicClient } from "@/lib/client";
 import { deployment } from "@/lib/deployment";
 import { assetName, usd } from "@/lib/format";
+
+// The server sends bigints as strings; turn the amounts back into bigints.
+const NUM = new Set(["amount", "startValue", "base", "fee", "amountIn", "amountOut", "finalValue", "crewPayout", "nav", "navAfter"]);
+function revive(a: Activity): Activity {
+  const args = Object.fromEntries(Object.entries(a.args as Record<string, unknown>).map(([k, v]) => [k, NUM.has(k) && typeof v === "string" ? BigInt(v) : v]));
+  return { ...a, blockNumber: BigInt(a.blockNumber as unknown as string), args };
+}
 
 type Item = { key: string; when: number; icon: typeof Ban; title: string; sub: string; hash?: string; danger?: boolean };
 
@@ -18,13 +24,15 @@ export default function ActivityPage() {
   const names = Object.fromEntries(boats.map((b) => [b.address.toLowerCase(), b.name]));
   const mineOrCaptained = new Set(boats.filter((b) => b.position.deposit > 0n || b.position.isCaptain).map((b) => b.address.toLowerCase()));
 
-  const addrsRef = useRef<`0x${string}`[]>([]);
-  addrsRef.current = boats.map((b) => b.address);
   useEffect(() => {
     let alive = true;
-    const load = () => getActivity(publicClient(), addrsRef.current, BigInt(deployment.startBlock ?? 0)).then((a) => alive && setActs(a)).catch(() => {});
+    const load = () =>
+      fetch("/api/activity")
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((j: { activity: Activity[] }) => alive && setActs(j.activity.map(revive)))
+        .catch(() => {});
     load();
-    const id = setInterval(load, 5000);
+    const id = setInterval(() => !document.hidden && load(), 10_000);
     return () => { alive = false; clearInterval(id); };
   }, []);
 
@@ -54,6 +62,9 @@ export default function ActivityPage() {
     else if (a.kind === "boarded") live.push({ key: "l" + a.txHash, when, icon: ArrowDownLeft, title: String(args.crew).toLowerCase() === me ? `You boarded ${boat}` : `Someone boarded ${boat}`, sub: usd(args.amount as bigint), hash: a.txHash });
     else if (a.kind === "sailed") live.push({ key: "l" + a.txHash, when, icon: Anchor, title: `${boat} set sail`, sub: `${usd(args.startValue as bigint)} on board`, hash: a.txHash });
     else if (a.kind === "staked") live.push({ key: "l" + a.txHash, when, icon: Coins, title: `Captain staked on ${boat}`, sub: `${usd(args.amount as bigint)} that loses first`, hash: a.txHash });
+    else if (a.kind === "ended") live.push({ key: "l" + a.txHash + "e", when, icon: FlagIcon, title: `${boat} hit its ${Number(args.reason) === 2 ? "goal" : Number(args.reason) === 1 ? "floor" : "end date"}`, sub: "The contract ended the voyage", hash: a.txHash });
+    else if (a.kind === "returned") live.push({ key: "l" + a.txHash + "r", when, icon: Anchor, title: `${boat} is back in port`, sub: `${usd(args.finalValue as bigint)} final value`, hash: a.txHash });
+    else if (a.kind === "withdrawn") live.push({ key: "l" + a.txHash, when, icon: ArrowUpRight, title: String(args.crew).toLowerCase() === me ? `You withdrew from ${boat}` : `Crew withdrew from ${boat}`, sub: usd(args.amount as bigint), hash: a.txHash });
   }
   live.sort((x, y) => y.when - x.when);
   const proofs = deployment.demo.blocked ?? [];
@@ -69,7 +80,7 @@ export default function ActivityPage() {
         </Card>
       )}
       <Card>
-        {items.length === 0 && <p className="text-ink-2">Nothing yet. Every trade, deposit and withdrawal shows here with its proof.</p>}
+        {items.length === 0 && <p className="text-ink-2">Nothing of yours yet. Your deposits, your captain's trades and withdrawals show here, each with its proof.</p>}
         {items.map((i) => <Row key={i.key} icon={i.icon} title={i.title} sub={<><span>{i.sub}</span><Proof hash={i.hash} /></>} />)}
       </Card>
       {live.length > 0 && (

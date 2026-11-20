@@ -15,7 +15,7 @@ export default function Launch() {
   const { wallet, refresh, setMode } = useStore();
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("Family Harbor");
+  const [name, setName] = useState("");
   const [weights, setWeights] = useState<Record<string, number>>({ USYC: 70, EURC: 30, cirBTC: 0 });
   const [floor, setFloor] = useState(10);
   const [goal, setGoal] = useState(15);
@@ -39,7 +39,7 @@ export default function Launch() {
       const chosen = ASSETS.filter((a) => weights[a]! > 0);
       const now = BigInt(Math.floor(Date.now() / 1000));
       const r = await wallet!.send([buildCreateBoatCall(deployment.factory, {
-        name, captain: wallet!.address, usdc: deployment.tokens.USDC, oracle: deployment.oracle, router: deployment.adapter,
+        name: name.trim(), captain: wallet!.address, usdc: deployment.tokens.USDC, oracle: deployment.oracle, router: deployment.adapter,
         assets: chosen.map((a) => deployment.tokens[a]), maxWeightBps: chosen.map((a) => weights[a]! * 100),
         stopLossBps: floor * 100, takeProfitBps: goal * 100, endTime: now + BigInt(days * 86_400), feeBps: fee * 100, vestingDuration: 3n * 86_400n,
       })]);
@@ -66,7 +66,7 @@ export default function Launch() {
       <div className="label">Step {step + 1} of 5: {STEPS[step]}</div>
       <Card>
         {step === 0 && (
-          <label className="block"><div className="label mb-2">Boat name</div><input className="w-full text-[20px] font-semibold bg-transparent border-b border-hair py-2 outline-none" value={name} onChange={(e) => setName(e.target.value.slice(0, 32))} /></label>
+          <label className="block"><div className="label mb-2">Boat name</div><input className="w-full text-[20px] font-semibold bg-transparent border-b border-hair py-2 outline-none" value={name} placeholder="Family Harbor" autoFocus onChange={(e) => setName(e.target.value.slice(0, 32))} /></label>
         )}
         {step === 1 && ASSETS.map((a) => slider(`${ASSET_NAMES[a]} (max share)`, weights[a]!, (n) => setWeights((w) => ({ ...w, [a]: n })), 0, 100))}
         {step === 2 && (<>{slider("Floor: the voyage ends if the boat falls", floor, setFloor, 5, 40)}{slider("Goal: the voyage ends if the boat gains", goal, setGoal, 5, 50)}{slider("Length", days, setDays, 7, 90, " days")}</>)}
@@ -88,7 +88,7 @@ export default function Launch() {
       {err && <Notice tone="danger">{err}</Notice>}
       <div className="flex gap-2">
         {step > 0 && <Button variant="secondary" onClick={() => setStep(step - 1)}>Back</Button>}
-        {step < 4 ? <Button onClick={() => setStep(step + 1)} disabled={step === 2 && floorTooWide}>Next</Button> : <Button icon={ScanFace} loading={busy} onClick={create} disabled={floorTooWide}>{wallet?.kind === "passkey" ? "Launch with Face ID" : "Launch"}</Button>}
+        {step < 4 ? <Button onClick={() => setStep(step + 1)} disabled={(step === 0 && !name.trim()) || (step === 2 && floorTooWide)}>Next</Button> : <Button icon={ScanFace} loading={busy} onClick={create} disabled={floorTooWide}>{wallet?.kind === "passkey" ? "Launch with Face ID" : "Launch"}</Button>}
       </div>
       <p className="text-[13px] text-ink-2 text-center flex items-center justify-center gap-1"><Rocket size={13} /> The boat comes from the same factory as every other boat. After launch, put in your stake from the Bridge.</p>
     </Screen>
