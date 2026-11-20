@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, ExternalLink, Zap } from "lucide-react";
 import { Amount, Button, Keypad, Meta, Notice, Screen } from "@/components/ui";
@@ -13,6 +13,10 @@ export default function AddDollars() {
   const [v, setV] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [faucetOn, setFaucetOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch("/api/faucet").then((r) => r.json()).then((j) => setFaucetOn(Boolean(j.enabled))).catch(() => setFaucetOn(false));
+  }, []);
   const amount = parseUsd(v);
   const max = CHAIN_NAME === "local" ? 10_000 : 200;
 
@@ -62,8 +66,8 @@ export default function AddDollars() {
         <div className="flex gap-4 justify-center"><Meta icon={Zap}>Arrives in seconds</Meta><Meta icon={BadgeCheck}>No fees</Meta></div>
         <Notice tone="caution">This is Arc testnet: dollars are Circle's test USDC, with no real value. Card and bank deposits come later.</Notice>
         {err && <Notice tone="danger">{err}</Notice>}
-        <Button onClick={gift} loading={busy} testId="confirm-add">Get $5 of test dollars</Button>
-        {wallet && <Button variant="secondary" icon={ExternalLink} onClick={circleFaucet} testId="circle-faucet">Get more from Circle's faucet</Button>}
+        {faucetOn !== false && <Button onClick={gift} loading={busy || faucetOn === null} testId="confirm-add">Get $5 of test dollars</Button>}
+        {wallet && <Button variant={faucetOn === false ? "primary" : "secondary"} icon={ExternalLink} onClick={circleFaucet} testId="circle-faucet">{faucetOn === false ? "Get test dollars from Circle" : "Get more from Circle's faucet"}</Button>}
         <p className="text-center text-ink-2 text-[13px]">For Circle's faucet we copy your address. Pick Arc Testnet and paste it.</p>
       </Screen>
     );

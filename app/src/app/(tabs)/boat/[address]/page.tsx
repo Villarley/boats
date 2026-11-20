@@ -4,7 +4,7 @@ import { Bot, Calendar, Lock, ShieldCheck, UserRound, Ban, Check } from "lucide-
 import { Flag } from "@/components/flags";
 import { Button, Card, Gauge, Meta, Notice, ScoreBadge, Screen } from "@/components/ui";
 import { OddsChip } from "@/components/odds";
-import { useBoat } from "@/lib/store";
+import { useBoat, useStore } from "@/lib/store";
 import { boatScore, captainName, FLAG_OF, isAiCaptain, scoreWord, statusLabel, worstCase } from "@/lib/boat";
 import { assetName, dateShort, pct, usd } from "@/lib/format";
 import { CaptainLog } from "@/components/captain-log";
@@ -12,6 +12,8 @@ import { CaptainLog } from "@/components/captain-log";
 export default function BoatPage({ params }: { params: Promise<{ address: string }> }) {
   const { address } = use(params);
   const b = useBoat(address);
+  const { loading, error } = useStore();
+  if (!b && !loading && !error) return <Screen back="/explore" title="Boat"><Card><p className="font-semibold">We couldn't find this boat.</p><p className="text-ink-2 text-[15px] mt-1">The link may be wrong. Every boat comes from the same factory, and this one isn't there.</p><div className="mt-3"><Button href="/explore">See all boats</Button></div></Card></Screen>;
   if (!b) return <Screen back="/explore" title="Boat"><Card><div className="h-24 animate-pulse bg-hair rounded" /></Card></Screen>;
   const s = boatScore(b);
   const w = worstCase(b);

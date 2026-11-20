@@ -1,7 +1,7 @@
 /**
  * Typed reads of the protocol, built only on a public RPC (no indexer needed).
  */
-import { parseAbiItem, type Address, type PublicClient } from "viem";
+import { parseAbiItem, parseEventLogs, toEventSelector, type Address, type PublicClient } from "viem";
 import { boatAbi, factoryAbi } from "./abi.js";
 import { STATE, type BoatState } from "./chain.js";
 import type { Holding } from "./mandate.js";
@@ -162,15 +162,30 @@ const EVENTS = {
   claimed: parseAbiItem("event CaptainClaimed(uint256 base, uint256 fee)"),
 } as const;
 
-/** Activity from logs. Arc RPCs may cap the block range, so pass a recent fromBlock. */
-export async function getActivity(pc: PublicClient, boats: Address[], fromBlock: bigint): Promise<Activity[]> {
+/** Arc's public RPC rejects eth_getLogs over 10,000 blocks, so scan in chunks under that. */
+export const LOG_CHUNK = 9_000n;
+
+/**
+ * Activity from logs, oldest scanned first, returned newest first.
+ * One eth_getLogs per chunk (all boat events at once), a few chunks in parallel.
+ */
+export async function getActivity(pc: PublicClient, boats: Address[], fromBlock: bigint, toBlock?: bigint, opts: { chunk?: bigint; parallel?: number } = {}): Promise<Activity[]> {
   if (!boats.length) return [];
-  const all = await Promise.all(
-    (Object.keys(EVENTS) as (keyof typeof EVENTS)[]).map(async (kind) => {
-      type RawLog = { address: Address; transactionHash: `0x${string}` | null; blockNumber: bigint | null; args?: Record<string, unknown> };
-      const logs = (await pc.getLogs({ address: boats, event: EVENTS[kind], fromBlock, toBlock: "latest" } as Parameters<PublicClient["getLogs"]>[0])) as unknown as RawLog[];
-      return logs.map((l) => ({ kind, boat: l.address, txHash: l.transactionHash!, blockNumber: l.blockNumber!, args: l.args ?? {} }));
-    }),
-  );
-  return all.flat().sort((a, b) => Number(b.blockNumber - a.blockNumber));
+  const to = toBlock ?? (await pc.getBlockNumber());
+  if (to < fromBlock) return [];
+  const chunk = opts.chunk ?? LOG_CHUNK;
+  const ranges: [bigint, bigint][] = [];
+  for (let a = fromBlock; a <= to; a += chunk) ranges.push([a, a + chunk - 1n > to ? to : a + chunk - 1n]);
+  const kindOf = new Map(Object.entries(EVENTS).map(([k, e]) => [toEventSelector(e), k as Activity["kind"]]));
+  const abi = Object.values(EVENTS);
+  const out: Activity[] = [];
+  const parallel = opts.parallel ?? 4;
+  for (let i = 0; i < ranges.length; i += parallel) {
+    const batch = await Promise.all(ranges.slice(i, i + parallel).map(([a, b]) => pc.getLogs({ address: boats, fromBlock: a, toBlock: b })));
+    for (const l of parseEventLogs({ abi, logs: batch.flat() })) {
+      const kind = kindOf.get(l.topics[0]!);
+      if (kind) out.push({ kind, boat: l.address, txHash: l.transactionHash!, blockNumber: l.blockNumber!, args: (l.args ?? {}) as Record<string, unknown> });
+    }
+  }
+  return out.sort((a, b) => Number(b.blockNumber - a.blockNumber));
 }

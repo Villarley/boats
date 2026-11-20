@@ -55,6 +55,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const inflight = useRef(false);
+  const fails = useRef(0);
   // Arc testnet: every new wallet gets a one-time drip of test dollars, so a visitor can board right away.
   const [gift, setGift] = useState<{ state: "sending" | "sent" | "unavailable"; hash?: string; amount?: bigint } | null>(null);
 
@@ -84,6 +85,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!isDeployed || inflight.current) return;
+    // only show the network error after two failures in a row (one 429 is not an outage)
     inflight.current = true;
     try {
       const pc = publicClient();
@@ -100,9 +102,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setCash(bal as bigint);
         setCaptainOf(caps);
       }
+      fails.current = 0;
       setError(null);
     } catch (e) {
-      setError("We couldn't reach the network. Your money hasn't moved.");
+      if (++fails.current >= 2) setError("We couldn't reach the network. Your money hasn't moved.");
       console.error(e);
     } finally {
       setLoading(false);
@@ -113,7 +116,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     refresh();
-    const id = setInterval(refresh, 4000);
+    const id = setInterval(() => { if (typeof document === "undefined" || !document.hidden) refresh(); }, 6000);
     return () => clearInterval(id);
   }, [ready, refresh]);
 

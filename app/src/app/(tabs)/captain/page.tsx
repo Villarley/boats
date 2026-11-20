@@ -35,6 +35,10 @@ function BoatBridge({ b }: { b: BoatView }) {
     setBusy("Check limits");
     try {
       const r = await fetch("/api/keeper", { method: "POST" });
+      if (!r.ok) {
+        setMsg({ tone: "ok", text: "Limits are checked automatically every 10 minutes. Anyone can also trigger it on chain." });
+        return;
+      }
       const j = await r.json();
       const mine = (j.results ?? []).find((x: { boat: string }) => x.boat.toLowerCase() === b.address.toLowerCase());
       setMsg({ tone: "ok", text: mine?.message ?? "Checked.", hash: mine?.txHash });
