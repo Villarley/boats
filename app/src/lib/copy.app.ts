@@ -180,6 +180,8 @@ export const appCopy = {
     manageTitle: (fund: string) => fund,
     stake: (v: string) => `Put in my money (${v})`,
     stakeLabel: "How much of your own money",
+    addMoreTitle: (v: string) => `Your money in: ${v}. Add more?`,
+    addMore: (v: string) => `Add ${v} more`,
     stakeHave: (v: string) => `You have ${v} available. It covers the first losses.`,
     stakeHint: "Investors see your money goes in first and covers the first losses.",
     start: "Close joining and start",

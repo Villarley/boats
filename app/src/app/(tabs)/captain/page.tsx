@@ -51,7 +51,7 @@ function ManageSheet({ b, onClose }: { b: BoatView; onClose: () => void }) {
   const suggested = want < spendable ? want : spendable;
   // The manager types how much of their own money goes in (suggested: ~10% of the fund, capped by their dollars).
   const [stakeV, setStakeV] = useState<string | null>(null);
-  const typed = stakeV ?? (suggested > 0n ? String(Number(suggested) / 1e6) : "");
+  const typed = stakeV ?? (suggested > 0n && b.captainStake === 0n ? String(Number(suggested) / 1e6) : "");
   const stake = parseUsd(typed);
   const tooMuch = stake > spendable;
   const check = async () => {
@@ -74,9 +74,15 @@ function ManageSheet({ b, onClose }: { b: BoatView; onClose: () => void }) {
     <Sheet open onClose={onClose} title={b.name} testId={`bridge-${b.name}`}>
       <div className="mt-2"><StatusDot status={status} className="text-muted" /></div>
       <div className="mt-4 flex flex-col gap-2.5">
-        {b.state === "Open" && b.captainStake === 0n && (
+        {b.state === "Open" && b.captainStake > 0n && (
           <>
-            <p className="text-[14px] text-muted">{appCopy.manager.stakeHint}</p>
+            <p className="text-[14px] text-muted">{b.crewTotal === 0n ? appCopy.manager.startNeedsInvestors : appCopy.manager.startHint}</p>
+            <Button icon={<Play weight="fill" />} disabled={b.crewTotal === 0n} loading={busy === "start"} onClick={() => run("start", appCopy.manager.start, () => wallet!.send([buildSailCall(b.address)]))} testId="sail">{appCopy.manager.start}</Button>
+          </>
+        )}
+        {b.state === "Open" && (
+          <>
+            {b.captainStake === 0n ? <p className="text-[14px] text-muted">{appCopy.manager.stakeHint}</p> : <p className="mt-2 text-[15px] font-semibold">{appCopy.manager.addMoreTitle(amt(b.captainStake))}</p>}
             <label className="flex items-center gap-2 rounded-card bg-card px-4 py-3">
               <span className="flex-1">
                 <span className="block text-[13px] font-medium text-muted">{appCopy.manager.stakeLabel}</span>
@@ -90,13 +96,7 @@ function ManageSheet({ b, onClose }: { b: BoatView; onClose: () => void }) {
               <button type="button" onClick={() => setStakeV(String(Number(spendable) / 1e6))} className="h-8 rounded-full bg-white px-3 text-[13px] font-semibold text-signal">MAX</button>
             </label>
             <p className={`-mt-1 text-[13px] ${tooMuch ? "text-loss" : "text-muted"}`}>{appCopy.manager.stakeHave(amt(cash))}</p>
-            <Button icon={<Coins weight="fill" />} disabled={stake === 0n || tooMuch} loading={busy === "stake"} onClick={() => run("stake", appCopy.manager.stake(amt(stake)), () => wallet!.send(buildStakeCalls(b.address, b.usdc, stake)))} testId="stake">{appCopy.manager.stake(amt(stake))}</Button>
-          </>
-        )}
-        {b.state === "Open" && b.captainStake > 0n && (
-          <>
-            <p className="text-[14px] text-muted">{b.crewTotal === 0n ? appCopy.manager.startNeedsInvestors : appCopy.manager.startHint}</p>
-            <Button icon={<Play weight="fill" />} disabled={b.crewTotal === 0n} loading={busy === "start"} onClick={() => run("start", appCopy.manager.start, () => wallet!.send([buildSailCall(b.address)]))} testId="sail">{appCopy.manager.start}</Button>
+            <Button icon={<Coins weight="fill" />} variant={b.captainStake > 0n ? "secondary" : "primary"} disabled={stake === 0n || tooMuch} loading={busy === "stake"} onClick={() => run("stake", appCopy.manager.stake(amt(stake)), () => wallet!.send(buildStakeCalls(b.address, b.usdc, stake)))} testId="stake">{b.captainStake > 0n ? appCopy.manager.addMore(amt(stake)) : appCopy.manager.stake(amt(stake))}</Button>
           </>
         )}
         {b.state === "Sailing" && <Button icon={<ArrowsDownUp weight="bold" />} href={`/captain/trade?boat=${b.address}`} testId="trade">{appCopy.manager.trade}</Button>}
