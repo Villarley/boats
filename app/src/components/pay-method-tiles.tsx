@@ -14,7 +14,7 @@ export type PayMethod = {
 /** Three equal tiles: inset 1.5px card-2; selected = 2px signal + check badge. */
 export function PayMethodTiles({ methods, value, onChange, label }: { methods: PayMethod[]; value: string; onChange: (id: string) => void; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="mt-2.5 grid grid-cols-3 gap-2" data-testid="pay-methods">
+    <div role="radiogroup" aria-label={label} className="mt-2.5 grid gap-2" style={{ gridTemplateColumns: `repeat(${methods.length}, minmax(0, 1fr))` }} data-testid="pay-methods">
       {methods.map((m) => {
         const on = m.id === value;
         return (

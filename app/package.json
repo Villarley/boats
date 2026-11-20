@@ -15,6 +15,7 @@
   "dependencies": {
     "@boats/sdk": "0.1.0",
     "@circle-fin/modular-wallets-core": "1.0.3",
+    "@circle-fin/onramp-kit": "1.0.10",
     "@phosphor-icons/react": "2.1.10",
     "next": "15.1.12",
     "react": "19.0.9",
