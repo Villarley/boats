@@ -14,6 +14,7 @@ cd "$(dirname "$0")"
 : "${CAPTAIN_PRIVATE_KEY:?set CAPTAIN_PRIVATE_KEY (AI captain) in contracts/.env}"
 : "${CREW_PRIVATE_KEY:?set CREW_PRIVATE_KEY (seed crew) in contracts/.env}"
 RPC="${ARC_RPC:-https://rpc.testnet.arc.io}"
+[ -d lib/forge-std ] || forge install foundry-rs/forge-std --no-git
 
 # Circle's tokens on Arc testnet (docs.arc.io/arc/references/contract-addresses).
 export USDC="${USDC:-0x3600000000000000000000000000000000000000}"
