@@ -11,7 +11,7 @@ const holdings = (cash: bigint, usyc = 0n, cap = 6000): Holding[] => [
   { token: USDC, symbol: "Dollars", value: cash },
   { token: USYC, symbol: "Treasuries", value: usyc, maxWeightBps: cap },
 ];
-const odds = (p: number): Odds => ({ eventTicker: "FED", eventTitle: "", contractLabel: "Cut 25bps", probability: p, source: "lastTradePrice", fetchedAt: new Date().toISOString() });
+const odds = (p: number): Odds => ({ eventTicker: "FED", eventTitle: "", contractLabel: "Cut 25bps", probability: p, source: "bestBid/bestAsk mid", quote: { bestBid: String(p - 0.01), bestAsk: String(p + 0.01), spreadBps: 200 }, fetchedAt: new Date().toISOString() });
 
 describe("AI captain decisions", () => {
   it("holds below the trigger and says the number", () => {
@@ -46,5 +46,17 @@ describe("AI captain decisions", () => {
   });
   it("holds on a malformed rule instead of converting NaN to a trade amount", () => {
     expect(decide({ rules: [{ ...rules[0]!, targetFraction: NaN } as Rule], holdings: holdings(15n * U), usdc: USDC, odds: odds(0.91) }).action).toBe("hold");
+  });
+  it.each([
+    undefined,
+    { bestBid: null, bestAsk: "0.91", spreadBps: null },
+    { bestBid: "0.4", bestAsk: "0.99", spreadBps: 1 },
+    { bestBid: "0.95", bestAsk: "0.90", spreadBps: -500 },
+    { bestBid: "", bestAsk: "0.91", spreadBps: 0 },
+  ])("holds on absent, one-sided, wide or crossed quotes (%j)", (quote) => {
+    expect(decide({ rules, holdings: holdings(15n * U), usdc: USDC, odds: { ...odds(0.91), quote } }).action).toBe("hold");
+  });
+  it("refuses a probability inconsistent with the supplied quote", () => {
+    expect(decide({ rules, holdings: holdings(15n * U), usdc: USDC, odds: { ...odds(0.91), quote: { bestBid: "0.10", bestAsk: "0.12", spreadBps: 200 } } }).action).toBe("hold");
   });
 });

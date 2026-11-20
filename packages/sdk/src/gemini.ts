@@ -14,11 +14,13 @@ export type Odds = {
   /** 0..1 */
   probability: number;
   source: "bestBid/bestAsk mid" | "lastTradePrice" | "bestAsk" | "bestBid";
+  /** Raw decimal prices retain the API's precision. Missing sides are null. */
+  quote?: { bestBid: string | null; bestAsk: string | null; spreadBps: number | null };
   fetchedAt: string;
 };
 
 type Prices = { bestBid?: string | null; bestAsk?: string | null; lastTradePrice?: string | null };
-type Contract = { ticker?: string; label?: string; status?: string; instrumentSymbol?: string; prices?: Prices };
+type Contract = { ticker?: string; label?: string; status?: string; marketState?: string; instrumentSymbol?: string; prices?: Prices };
 type EventResponse = { ticker?: string; title?: string; status?: string; contracts?: Contract[] };
 
 const num = (s?: string | null) => {
@@ -47,9 +49,11 @@ export function parseEventOdds(ev: EventResponse, match: string, now = new Date(
   const contracts = ev.contracts ?? [];
   const matches = contracts.filter((x) => (x.label ?? "").toLowerCase().includes(m) || (x.ticker ?? "").toLowerCase().includes(m));
   const c = matches.length === 1 ? matches[0] : undefined;
-  if (!c || (c.status && !["active", "open"].includes(c.status.toLowerCase()))) return null;
+  if (!c || (c.status && !["active", "open"].includes(c.status.toLowerCase())) || (c.marketState && c.marketState.toLowerCase() !== "open")) return null;
   const p = probabilityFromPrices(c.prices);
   if (!p || !(p.probability >= 0 && p.probability <= 1)) return null;
+  const bid = num(c.prices?.bestBid);
+  const ask = num(c.prices?.bestAsk);
   return {
     eventTicker: ev.ticker ?? "",
     eventTitle: ev.title ?? "",
@@ -57,6 +61,12 @@ export function parseEventOdds(ev: EventResponse, match: string, now = new Date(
     instrumentSymbol: c.instrumentSymbol,
     probability: p.probability,
     source: p.source,
+    quote: {
+      bestBid: bid === undefined ? null : c.prices!.bestBid!,
+      bestAsk: ask === undefined ? null : c.prices!.bestAsk!,
+      // Probability basis points: 0.01 price width = 100 bps, not 1% of the mid.
+      spreadBps: bid !== undefined && ask !== undefined ? Math.round((ask - bid) * 10_000) : null,
+    },
     fetchedAt: now.toISOString(),
   };
 }

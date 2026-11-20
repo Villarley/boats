@@ -11,7 +11,7 @@ vi.mock("@boats/sdk", async (load) => {
     ...actual,
     clients: () => ({ publicClient: { call: mocks.call, waitForTransactionReceipt: async () => ({ status: "success" }) }, walletClient: { sendTransaction: mocks.send, chain: actual.arcTestnet }, account: { address: "0x0000000000000000000000000000000000000001" } }),
     readBoat: async () => ({ state: "Sailing", usdc, holdings: [{ token: usdc, symbol: "Dollars", value: 10_000_000n }, { token: usyc, symbol: "Treasuries", value: 0n, maxWeightBps: 7000 }] }),
-    fetchOdds: async () => ({ eventTicker: "FED261211", eventTitle: "Fed", contractLabel: "Hike 25bps", probability: 0.91, source: "lastTradePrice", fetchedAt: new Date().toISOString() }),
+    fetchOdds: async () => ({ eventTicker: "FED261211", eventTitle: "Fed", contractLabel: "Hike 25bps", probability: 0.91, source: "bestBid/bestAsk mid", quote: { bestBid: "0.90", bestAsk: "0.92", spreadBps: 200 }, fetchedAt: new Date().toISOString() }),
     valueToAmount: async (_pc: unknown, _oracle: unknown, _token: unknown, _usdc: unknown, value: bigint) => value,
   };
 });

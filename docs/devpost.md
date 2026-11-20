@@ -28,12 +28,9 @@ arc, usdc, solidity, foundry, viem, typescript, next.js, circle-modular-wallets,
 
 ```markdown
 ## Inspiration
-Delegating money should not require delegating unrestricted control. We built a vault where the manager's trading permissions are enforced on chain and the manager contributes capital that absorbs losses first.
+If a group lets an agent manage pooled money, who sets its limits—and whose capital takes the first loss? Boats answers both questions before the voyage starts: the contract defines trading authority, and the captain posts a stake.
 
-Three pieces of evidence informed the design:
-- In I-HITL's controlled payment experiment, 9 of 10 tested models raised their spending limit in at least one of 20 runs per model, without an adversarial prompt. That is a result about this experimental setup, not a 90% failure rate for all agents. [Research paper, October 2026](https://arxiv.org/html/2610.35835v1)
-- The FBI recorded $7.28 billion in reported cryptocurrency-related investment-fraud losses in 2025. This motivates reducing delegated authority; it does not imply Boats prevents every type of investment fraud. [FBI IC3 2025 report, p. 55](https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf)
-- In Riskified's September 2026 survey of 5,100 adult online shoppers in five countries, 7% were comfortable with AI purchases without approval, while 29% would allow automatic purchases within their own rules. This is shopping research, not a measure of demand for AI investing. [Riskified, published October 27, 2026](https://www.riskified.com/press/agentic-commerce-pulse-consumer-survey-november-2026/)
+Two findings shaped that design. In I-HITL's controlled payment experiment, 9 of 10 tested models raised their spending limit in at least one of 20 runs per model without an adversarial prompt. It is evidence from that setup, not a population-wide failure rate. [Research paper, October 2026](https://arxiv.org/html/2610.35835v1) In Riskified's survey of 5,100 adult online shoppers across five countries, 29% accepted automatic AI purchases within their rules, versus 7% without approval. The survey concerns shopping, but the distinction—delegation within explicit boundaries—is the question we apply to fund management. [Riskified, October 27, 2026](https://www.riskified.com/press/agentic-commerce-pulse-consumer-survey-november-2026/)
 
 ## What it does
 A boat is a USDC vault with a fixed voyage. A captain, human or AI, trades pooled crew deposits subject to an immutable mandate:
@@ -54,14 +51,16 @@ For $10,000 crew principal and $1,000 captain stake, an exit exactly 10% below s
 ## How we built it
 - **Contracts:** Solidity and Foundry: `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. Unit and invariant tests cover mandate restrictions and first-loss settlement.
 - **SDK:** TypeScript and viem for reads, trade pre-checks, loss estimates, scores, calldata and keepers.
-- **Agent interface:** a stdio MCP server with 14 tools, structured JSON, read/write annotations, AGENTS.md and llms.txt. Agents can discover boats, inspect limits, plan trades, read Gemini odds and receive unsigned calls without supplying a key. With a signer, each step is simulated before sending; partial failures return transaction hashes so the agent can check before retrying.
+- **Agent interface:** a stdio MCP server with 14 tools, three discoverable resources and a review prompt. Structured JSON, AGENTS.md, llms.txt and a public agent.json connect claims to evidence. Agents can discover boats, inspect limits, plan trades, read Gemini odds and receive unsigned calls without supplying a key. With a signer, each step is simulated before sending; partial failures return transaction hashes so the agent can check before retrying.
 - **Captain lifecycle:** agents can create a boat, post a stake while boarding stays open, wait for crew, then sail. Requests to sail without crew or stake fail before any calls are returned.
-- **Gemini integration:** public Prediction Markets REST data drives an explicit threshold rule. Missing, ambiguous, inactive, invalid or stale fetched snapshots cause the captain to hold. Normal swaps carry a configurable slippage floor, 1% by default. The bundled captain is a deterministic rule-based agent, with no embedded LLM. External LLM agents can operate through MCP.
+- **Gemini integration:** public Prediction Markets REST data drives an explicit threshold rule. Missing, ambiguous, closed, invalid or stale fetched snapshots cause the captain to hold. The current engine also requires a two-sided quote no wider than five probability percentage points; raw bid/ask strings remain visible in SDK/MCP output. Normal swaps carry a configurable slippage floor, 1% by default. The bundled captain is a deterministic rule-based agent, with no embedded LLM. External LLM agents can operate through MCP.
 - **Audit trail:** decision memos are appended to swap calldata and decoded with `decodeSwapMemo()`. They prove what the captain recorded; they are not cryptographically authenticated Gemini attestations.
-- **App:** Next.js PWA. Circle Modular Wallets passkey and paymaster integration is implemented, but production login returned HTTP 401 “Invalid credentials” during verification on November 20. We do not count passkey onboarding or sponsored boarding as demonstrated.
+- **App:** Next.js PWA with Circle Modular Wallets passkey and paymaster integration. Correcting both production domains restored authentication: the user completed passkey onboarding in Brave on November 20 and the signed-in account view was verified. Sponsored boarding remains unverified.
 - **Keeper:** GitHub Actions schedules the authenticated keeper webhook every 10 minutes. Runs can be delayed; settlement requires available prices, liquidity and gas.
 - **Arc:** contracts and evidence are on Arc testnet, chain 5042002. USDC is used for deposits and gas. EURC, USYC and cirBTC are testnet mocks.
 - **CI:** Foundry, SDK, captain, MCP, app and local-chain end-to-end checks. MCP protocol tests exercise discovery and unsigned planning through the real stdio transport.
+
+These are parts of one flow: Gemini informs the decision, the captain proposes it, Arc enforces the mandate and pays out, and MCP lets another agent use the same protocol. `npm run verify:agent` reproduces eight synthetic decision and refusal scenarios offline, without a key. It uses the production parser and rules; it is a behavioral check, not a performance backtest. The historical swap memo predates the new quote-quality gate.
 
 ## Challenges we ran into
 - The demo needs funded liquidity and prices. We use a team-funded, oracle-priced adapter and team-posted prices, with clearly labelled mock assets. This is not a production DEX or a live USYC yield strategy.

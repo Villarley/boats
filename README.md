@@ -8,7 +8,7 @@
 
 > **TL;DR for judges.** A fund where a human or AI manager trades through `swap()` inside an on-chain mandate, stakes first-loss capital, and cannot withdraw crew deposits. Live on Arc testnet: an automated captain [traded on Gemini odds](https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea) and [recorded its signal in the transaction](https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41), a rogue trade was [reverted](https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6), and a voyage using a manually increased mock Bitcoin price [paid the crew +9.87%](https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e). AI agents can connect through our [MCP server](packages/mcp). Verify the evidence without a wallet: `npm run verify:proof`. [Judge guide](docs/judging.md).
 
-**Try it on your phone: [boats-liard.vercel.app](https://boats-liard.vercel.app)** (Arc testnet; you get $5 of test USDC on first open)
+**Try it on your phone: [boats-liard.vercel.app](https://boats-liard.vercel.app)** (Arc testnet; the demo faucet offers $5 test USDC, subject to availability and rate limits)
 
 Boats is infrastructure for delegated money on Arc. A captain (a person or an AI) trades crew funds inside an on-chain mandate and posts first-loss capital. The captain cannot withdraw crew deposits. A public `checkVoyage()` call starts settlement when a stop loss, take profit or end date is reached; exits depend on oracle availability, liquidity and transaction inclusion.
 
@@ -45,6 +45,8 @@ An MCP-capable agent can be a captain or crew member. The contract enforces trad
 - **Auditable decisions:** the bundled rule-based captain and `boats_act swap` record reasons in trailing swap calldata (`decodeSwapMemo()` in the SDK). [Live proof](https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41). The memo is the captain's self-reported signal; it is not an authenticated Gemini price attestation. The bundled captain uses deterministic rules, with no embedded LLM; external AI agents use the MCP interface.
 - **[AGENTS.md](AGENTS.md)**: lifecycle, who can call what, mandate rules, revert reasons, addresses.
 - **[llms.txt](https://boats-liard.vercel.app/llms.txt)** on the live app.
+- **[agent.json](app/public/agent.json)** maps claims to verification commands and proof transactions. MCP clients discover the same manifest, operating playbook and recorded report as resources, plus the `review_voyage` prompt.
+- **Offline decision replay:** `npm run verify:agent` checks eight synthetic success/refusal scenarios using the production engine. Missing, closed, stale, one-sided and wide-spread data produce a hold. This is behavioral verification, not a backtest. [Partner research and quality bar](docs/partner-research.md).
 - **[@boats/sdk](packages/sdk)**: captain quickstart in TypeScript.
 
 ## Why
@@ -87,7 +89,7 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 |---|---|---|
 | Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 18 tests incl. invariants, CI on every push) |
 | SDK | `packages/sdk/` | `@boats/sdk`: reads, mandate pre-check, waterfall, score, calldata builders, wallet interface, keeper, Gemini odds |
-| App | `app/` | PWA for crew and captains; Circle Modular Wallets integration plus a local demo-wallet fallback. Production passkey verification is pending (Circle returned HTTP 401 on Nov 20) |
+| App | `app/` | PWA for crew and captains; Circle Modular Wallets passkey onboarding verified in production on November 20, plus a local demo-wallet fallback. Sponsored boarding remains unverified |
 | MCP server | `packages/mcp/` | Any AI agent (Claude, GPT...) can read boats, dry-run trades against the mandate and act as captain or crew. See [AGENTS.md](AGENTS.md) |
 | AI captain | `captain/` | Reads Gemini prediction-market odds, decides by plain-words rules, trades only via `Boat.swap()` |
 | Keeper | `packages/sdk/src/keeper.ts` + `app/src/app/api/keeper/route.ts` | Authenticated webhook called by a GitHub Actions schedule: `checkVoyage()` then `returnToPort()` |
@@ -124,7 +126,7 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 ## How we use Arc
 
 - All contracts are deployed on **Arc testnet** (chain 5042002). USDC is the gas token.
-- **Wallet integration:** Circle Modular Wallets code supports passkeys and sponsored `approve` + `board` user operations. Production login is currently unverified: Circle returned `401 Invalid credentials` during the Nov 20 check. Do not present passkey onboarding or sponsored boarding as demonstrated until a real-device test passes.
+- **Wallet integration:** Circle Modular Wallets code supports passkeys and sponsored `approve` + `board` user operations. Correcting both Circle domains removed HTTP 401; login options now return a challenge with `rpId: boats-liard.vercel.app`. The user completed production passkey onboarding in Brave on November 20, and the signed-in account view was verified. Sponsored boarding remains unverified.
 - Real Circle USDC (gas and deposits); other assets are labelled mocks.
 - Every trade, blocked attempt and withdrawal links to the Arc explorer.
 

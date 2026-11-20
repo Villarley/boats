@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": ["packages/*", "captain", "app"],
   "scripts": {
+    "verify:agent": "npm run verify:agent -w captain",
     "verify:proof": "npm run verify:proof -w packages/mcp",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"

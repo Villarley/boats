@@ -47,6 +47,11 @@ describe("gemini odds", () => {
   it("refuses inactive events and contracts", () => {
     expect(parseEventOdds({ ...event, status: "settled" }, "cut")).toBeNull();
     expect(parseEventOdds({ ...event, contracts: [{ ...event.contracts[1]!, status: "closed" }] }, "cut")).toBeNull();
+    expect(parseEventOdds({ ...event, contracts: [{ ...event.contracts[1]!, status: "active", marketState: "closed" }] }, "cut")).toBeNull();
+  });
+  it("preserves raw quote prices and exposes the probability spread", () => {
+    expect(parseEventOdds(event, "cut")?.quote).toEqual({ bestBid: "0.70", bestAsk: "0.74", spreadBps: 400 });
+    expect(parseEventOdds({ ...event, contracts: [{ ...event.contracts[1]!, prices: { bestAsk: "0.91" } }] }, "cut")?.quote).toEqual({ bestBid: null, bestAsk: "0.91", spreadBps: null });
   });
   it("does not use malformed prices or a crossed order book", () => {
     expect(probabilityFromPrices({ bestAsk: "Infinity" })).toBeNull();

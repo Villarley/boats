@@ -7,7 +7,8 @@ import { getBoat, checkTrade, buildBoardCalls, score, worstCaseIfBoarding } from
 
 const boat = await getBoat(publicClient, boatAddress);
 const review = worstCaseIfBoarding(boat.crewTotal, boat.captainStake, 100_000_000n, boat.stopLossBps);
-await wallet.send(buildBoardCalls(boat.address, boat.usdc, 100_000_000n)); // one Face ID
+// Review state, first-loss estimate and lock period before explicitly authorizing wallet.send(...).
+// A threshold-loss estimate is not a guaranteed maximum loss.
 ```
 
 | Module | What it does |
@@ -26,12 +27,18 @@ await wallet.send(buildBoardCalls(boat.address, boat.usdc, 100_000_000n)); // on
 ```ts
 import {
   arcTestnetDeployment as d, clients, buildCreateBoatCall, buildStakeCalls, getBoat, checkTrade,
-  valueToAmount, buildSwapCall, buildClaimCaptainCall, revertReason, symbolOf,
+  valueToAmount, buildSwapCall, buildSailCall, buildClaimCaptainCall, revertReason, symbolOf,
 } from "@boats/sdk";
 
 const { publicClient: pc, walletClient: wc, account } = clients("https://rpc.testnet.arc.io", process.env.KEY as `0x${string}`);
-const send = async (c: { to: `0x${string}`; data: `0x${string}` }) =>
-  pc.waitForTransactionReceipt({ hash: await wc!.sendTransaction({ account: account!, chain: wc!.chain, ...c }) });
+const send = async (c: { to: `0x${string}`; data: `0x${string}` }) => {
+  await pc.call({ account, ...c }); // simulate exact calldata
+  const hash = await wc!.sendTransaction({ account: account!, chain: wc!.chain, ...c });
+  console.log("Sent", hash); // retain it even if receipt polling fails; check status before retrying
+  const receipt = await pc.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error(`Transaction reverted: ${hash}`);
+  return receipt;
+};
 
 // 1. Launch a boat. Use the deployment's oracle and adapter: apps only list boats that do.
 await send(buildCreateBoatCall(d.factory, {
@@ -44,8 +51,11 @@ await send(buildCreateBoatCall(d.factory, {
 
 const boat = "0x..." as `0x${string}`; // from the BoatCreated event, or the last entry of listBoats()
 
-// 2. Stake first-loss money and sail (once crew has boarded, or right away).
-for (const c of buildStakeCalls(boat, d.tokens.USDC, 2_000_000n, true)) await send(c);
+// 2. Stake while boarding remains open, then wait for crew before sailing.
+for (const c of buildStakeCalls(boat, d.tokens.USDC, 2_000_000n)) await send(c);
+const ready = await getBoat(pc, boat);
+if (ready.crewTotal === 0n) throw new Error("Wait for crew to board, then resume at sail; do not repeat the stake.");
+await send(buildSailCall(boat));
 
 // 3. Trade: pre-check against the mandate, then swap. The contract is still the final judge.
 const b = await getBoat(pc, boat, (t) => symbolOf(d, t));
@@ -53,7 +63,8 @@ const check = checkTrade(b.holdings, b.usdc, d.tokens.USDC, d.tokens.cirBTC, 3_0
 if (!check.ok) console.log(check.message, check.maxAllowed);   // e.g. "Max 20% in cirBTC. This makes it 54%." plus the max allowed amount
 else {
   const amountIn = await valueToAmount(pc, d.oracle, d.tokens.USDC, d.tokens.USDC, 3_000_000n);
-  try { await send(buildSwapCall(boat, d.tokens.USDC, d.tokens.cirBTC, amountIn)); }
+  const minOut = await valueToAmount(pc, d.oracle, d.tokens.cirBTC, d.tokens.USDC, 2_970_000n); // 1% below $3 oracle value
+  try { await send(buildSwapCall(boat, d.tokens.USDC, d.tokens.cirBTC, amountIn, minOut)); }
   catch (e) { console.log(revertReason(e)); }                    // MandateViolation("max weight")
 }
 
@@ -62,6 +73,8 @@ await send(buildClaimCaptainCall(boat));
 ```
 
 Our AI captain (`captain/src/index.ts`) is this loop plus Gemini odds and a plain-words rule. For agents, the MCP server in `packages/mcp` exposes the same steps as tools.
+
+`fetchOdds()` returns raw decimal bid/ask strings and spread in probability basis points, plus the selected probability source. Display odds can fall back to a last trade or one side; the bundled captain holds unless there is a valid two-sided midpoint with at most five percentage points of width and a fetched snapshot no older than two minutes. This does not establish depth, calibration or last-trade freshness. Run `npm run verify:agent` for synthetic decision scenarios, or connect an agent to the MCP playbook and evidence resources. The bundled captain is deterministic, without an embedded LLM.
 
 ## Crew: judge a boat before boarding
 
@@ -72,4 +85,4 @@ const worst = worstCaseIfBoarding(b.crewTotal, b.captainStake, 10_000_000n, b.st
 const pos = await getPosition(pc, b, me, waterfall);                    // deposit, value now, payout
 ```
 
-Only list boats from `listOfficialBoats(pc, arcTestnetDeployment)`: the factory is permissionless, and a boat with a foreign oracle or router is not safe.
+Only list boats from `listOfficialBoats(pc, arcTestnetDeployment)`: the factory is permissionless, and a boat with a foreign oracle or router has different trust assumptions. Official status is not a security audit.
