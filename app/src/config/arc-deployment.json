@@ -1,11 +1,35 @@
 {
   "chainId": 5042002,
-  "factory": "0x0000000000000000000000000000000000000000",
-  "oracle": "0x0000000000000000000000000000000000000000",
-  "adapter": "0x0000000000000000000000000000000000000000",
-  "tokens": { "USDC": "0x0000000000000000000000000000000000000000", "USYC": "0x0000000000000000000000000000000000000000", "EURC": "0x0000000000000000000000000000000000000000", "cirBTC": "0x0000000000000000000000000000000000000000" },
-  "mocks": ["USYC", "cirBTC"],
-  "boats": [],
-  "startBlock": 0,
-  "demo": {}
+  "factory": "0x154c6f6019e8deca1bea388ecb1d81993a528936",
+  "oracle": "0x9d32649fafd0e13aeb57770f764a4986a4046f5c",
+  "adapter": "0xf94f024cde1e4efcd0e3e29f0bbd8d993e0d2f57",
+  "tokens": {
+    "USDC": "0x3600000000000000000000000000000000000000",
+    "USYC": "0x95e88570e02d6071ec88874fa18e64c45a123431",
+    "EURC": "0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e",
+    "cirBTC": "0x3318e4b95316dd91c3ab1c1afc4df977073d1126"
+  },
+  "mocks": [
+    "USYC",
+    "EURC",
+    "cirBTC"
+  ],
+  "boats": [
+    {
+      "name": "Safe Harbor",
+      "address": "0x2A923331aA7f452fD3A566DE1a85D1Dc16673092"
+    },
+    {
+      "name": "Westerly",
+      "address": "0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b"
+    },
+    {
+      "name": "Open Sea",
+      "address": "0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392"
+    }
+  ],
+  "startBlock": 73136948,
+  "demo": {
+    "aiCaptain": "0xFbC12A29C476bcAD3945e7471a893624b33EB040"
+  }
 }

@@ -23,7 +23,7 @@ export const localChain = defineChain({
 
 export const chain = CHAIN_NAME === "arc" ? arcTestnet : localChain;
 export const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || chain.rpcUrls.default.http[0]!;
-export const explorer = CHAIN_NAME === "arc" ? "https://explorer.testnet.arc.io" : null;
+export const explorer = CHAIN_NAME === "arc" ? "https://testnet.arcscan.app" : null;
 
 export function symbolOf(token: string): string {
   const hit = Object.entries(deployment.tokens).find(([, a]) => a.toLowerCase() === token.toLowerCase());
