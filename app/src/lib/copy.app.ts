@@ -422,7 +422,6 @@ export const appCopy = {
     cardNoteLive: "Credit cards aren't accepted. What you can use depends on your country.",
     widgetTitle: "Pay with Circle",
     changeAmount: "Back",
-    sandboxTips: "Test mode: no text message is sent. Type any 6 digits as the code (not 000000). For the ID check, any photo with a face works.",
     onTheWay: "Your dollars are on the way",
     onTheWaySub: "Card payments arrive in a few minutes, bank transfers in 2–3 days. You can leave this screen.",
     arrived: (v: string) => `${v} arrived`,

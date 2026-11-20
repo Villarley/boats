@@ -117,7 +117,6 @@ function CardDeposit({ onramp, onCheckout }: { onramp: Onramp; onCheckout: (on: 
     return (
       <>
         <OnrampWidget session={session} widget={onramp.widget} title={A.widgetTitle} onEvent={onEvent} />
-        {onramp.sandbox && <p className="mt-3 rounded-input bg-signal-50 px-3.5 py-2.5 text-[13px] leading-[1.45] text-signal-deep" data-testid="onramp-sandbox-tips">{A.sandboxTips}</p>}
         <Button className="mt-3" variant="secondary" onClick={() => { setPhase("amount"); setSession(null); }} testId="onramp-back">{A.changeAmount}</Button>
       </>
     );
