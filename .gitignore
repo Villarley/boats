@@ -6,3 +6,6 @@ contracts/cache/
 contracts/broadcast/
 contracts/lib/
 .next/
+test-results/
+playwright-report/
+*.tsbuildinfo
