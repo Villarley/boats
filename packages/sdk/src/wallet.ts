@@ -20,6 +20,7 @@ export function friendlyError(err: unknown): string {
   const m = String((err as { shortMessage?: string; message?: string })?.shortMessage ?? (err as Error)?.message ?? err);
   if (/NotAllowedError|cancel|denied|rejected/i.test(m)) return "You cancelled. Your money hasn't moved.";
   if (/MandateViolation/.test(m)) return "The contract said no: that trade breaks this boat's rules.";
+  if (/NotInvited/.test(m)) return "This fund is invite-only. Ask the manager to invite you.";
   if (/WrongState/.test(m)) return "This boat isn't taking that action right now.";
   if (/insufficient|exceeds balance|balance/i.test(m)) return "Not enough dollars for that.";
   return "Your money hasn't moved. Try again.";

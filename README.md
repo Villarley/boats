@@ -179,17 +179,17 @@ Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contrac
 
 | Contract | Address |
 |---|---|
-| BoatFactory | [`0x90acf1bb09a7b71c276187a7791e0593dfc68e74`](https://testnet.arcscan.app/address/0x90acf1bb09a7b71c276187a7791e0593dfc68e74) |
-| PriceOracle | [`0xec5c4538335dc7712ae98660574b071232272093`](https://testnet.arcscan.app/address/0xec5c4538335dc7712ae98660574b071232272093) |
-| SwapAdapter | [`0x0cca2f532467984014445bef61b592a1eaec9cf0`](https://testnet.arcscan.app/address/0x0cca2f532467984014445bef61b592a1eaec9cf0) |
-| Safe Harbor | [`0x89376Bb6bE0824A4bCD832C86C8Fac483B6Eb978`](https://testnet.arcscan.app/address/0x89376Bb6bE0824A4bCD832C86C8Fac483B6Eb978) |
-| Westerly (AI captain, sailing) | [`0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359`](https://testnet.arcscan.app/address/0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359) |
-| Open Sea | [`0xC2FFFAAA021f4214E6e685e883Cc06E0601e5c29`](https://testnet.arcscan.app/address/0xC2FFFAAA021f4214E6e685e883Cc06E0601e5c29) |
-| Trade Winds (finished voyage) | [`0x7281C2b57894d9061B83A316426fC6149C729160`](https://testnet.arcscan.app/address/0x7281C2b57894d9061B83A316426fC6149C729160) |
+| BoatFactory | [`0x115e0bebcce14481f2c4b00aac533e15efddb2fb`](https://testnet.arcscan.app/address/0x115e0bebcce14481f2c4b00aac533e15efddb2fb) |
+| PriceOracle | [`0x712f8c439e455e928b2f84c6f389d77e93c980f0`](https://testnet.arcscan.app/address/0x712f8c439e455e928b2f84c6f389d77e93c980f0) |
+| SwapAdapter | [`0xd1a6b1a5ccc3b5470a5a41595a186f885ea9464f`](https://testnet.arcscan.app/address/0xd1a6b1a5ccc3b5470a5a41595a186f885ea9464f) |
+| Safe Harbor | [`0xed438B7A67C22AA48D0F32A69584405057535d4d`](https://testnet.arcscan.app/address/0xed438B7A67C22AA48D0F32A69584405057535d4d) |
+| Westerly (AI captain, sailing) | [`0x6f762E474d9aA387631f2F32013B8bDb6d0A66e5`](https://testnet.arcscan.app/address/0x6f762E474d9aA387631f2F32013B8bDb6d0A66e5) |
+| Open Sea | [`0xb751031f927a1FD9fb9b9EEe074894aeBcb04439`](https://testnet.arcscan.app/address/0xb751031f927a1FD9fb9b9EEe074894aeBcb04439) |
+| Trade Winds (finished voyage, previous factory) | [`0x7281C2b57894d9061B83A316426fC6149C729160`](https://testnet.arcscan.app/address/0x7281C2b57894d9061B83A316426fC6149C729160) |
 | USDC (Circle) | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
-| EURC (mock) | [`0x1a5dc3284fc658472fe2a7eaef3c87f0c7575000`](https://testnet.arcscan.app/address/0x1a5dc3284fc658472fe2a7eaef3c87f0c7575000) |
-| USYC (mock; Circle's USYC needs an allowlist) | [`0xc1401fecd029e1f3a528cc02535e98f95873fac1`](https://testnet.arcscan.app/address/0xc1401fecd029e1f3a528cc02535e98f95873fac1) |
-| cirBTC (mock) | [`0x1f99f14b0704bd2551129385867a7f477d2b1e5e`](https://testnet.arcscan.app/address/0x1f99f14b0704bd2551129385867a7f477d2b1e5e) |
+| EURC (mock) | [`0x579eefde3f46de5cef4c75c652eee372e4c0e808`](https://testnet.arcscan.app/address/0x579eefde3f46de5cef4c75c652eee372e4c0e808) |
+| USYC (mock; Circle's USYC needs an allowlist) | [`0x7cfe546361594b24790d5f073a76a03217f0ee6d`](https://testnet.arcscan.app/address/0x7cfe546361594b24790d5f073a76a03217f0ee6d) |
+| cirBTC (mock) | [`0x56176b92852793a93f1783eb29232fa7c899b1bc`](https://testnet.arcscan.app/address/0x56176b92852793a93f1783eb29232fa7c899b1bc) |
 | AI captain wallet | [`0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF`](https://testnet.arcscan.app/address/0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF) |
 
 ## License

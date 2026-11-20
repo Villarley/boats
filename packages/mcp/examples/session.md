@@ -1,5 +1,7 @@
 # Example agent session (live reads on Arc testnet, unsigned writes)
 
+> Recorded on the previous Arc testnet deployment (before the Nov 20 2026 redeploy with invite-only funds). Fund addresses differ now; the current ones are in `packages/sdk/src/addresses.ts`.
+
 Real output of the Boats MCP server against the live deployment, captured 2026-11-20. No private key was configured, so write tools return checked, unsigned calls; with `BOATS_PRIVATE_KEY` set, `boats_act` simulates and sends them and returns explorer links.
 
 ## Crew agent: is Safe Harbor safe enough for $5?

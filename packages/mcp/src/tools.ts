@@ -45,7 +45,7 @@ import {
 
 export const deployment: Deployment = arcTestnetDeployment;
 /** First block of the current deployment, so activity scans start there. */
-export const START_BLOCK = 73_190_666n;
+export const START_BLOCK = 73_208_024n;
 /** Duplicate demo boat from the deploy run, hidden in the app too. */
 export const HIDDEN = new Set(["0xf27641544ea56cd61c04499626ec948828ee36fd"]);
 /** Router spread of the testnet SwapAdapter, used by the pre-check. */

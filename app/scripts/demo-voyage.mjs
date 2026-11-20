@@ -21,7 +21,7 @@ const log=[];
 async function send(a,address,abi,functionName,args=[]){ const h=await W(a).writeContract({address,abi,functionName,args}); const r=await pc.waitForTransactionReceipt({hash:h}); if(r.status!=="success") throw new Error(functionName+" reverted "+h); console.log(functionName,h); log.push([functionName,h]); return h; }
 const U=(n)=>BigInt(Math.round(n*1e6));
 const blk=await pc.getBlock();
-const cfg={name:"Trade Winds",captain:A.cap.address,usdc:d.tokens.USDC,oracle:d.oracle,router:d.adapter,assets:[d.tokens.USYC,d.tokens.cirBTC],maxWeightBps:[5000,5000],stopLossBps:1000,takeProfitBps:1000,endTime:blk.timestamp+7n*86400n,feeBps:2000,vestingDuration:0n};
+const cfg={name:"Trade Winds",captain:A.cap.address,usdc:d.tokens.USDC,oracle:d.oracle,router:d.adapter,assets:[d.tokens.USYC,d.tokens.cirBTC],maxWeightBps:[5000,5000],stopLossBps:1000,takeProfitBps:1000,endTime:blk.timestamp+7n*86400n,feeBps:2000,vestingDuration:0n,inviteOnly:false};
 const {result:boat}=await pc.simulateContract({account:A.dep,address:d.factory,abi:facAbi,functionName:"createBoat",args:[cfg]});
 await send(A.dep,d.factory,facAbi,"createBoat",[cfg]); console.log("boat",boat);
 await send(A.cap,d.tokens.USDC,erc,"approve",[boat,U(1)]); await send(A.cap,boat,boatAbi,"stakeCaptain",[U(1)]);

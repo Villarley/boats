@@ -1,11 +1,33 @@
-/* Tailwind v4: @import "tailwindcss"; @import "./tokens.css"; @import "./tailwind-v4.css"; */
+/* Tailwind v4 mapping for Boats v9.
+   In app/src/app/globals.css:
+     @import "tailwindcss";
+     @import "../../../design/boats/tokens.css";   (or copy tokens.css next to globals.css)
+     @import "../../../design/boats/tailwind-v4.css";
+   Gives: bg-bg, bg-card, bg-card-2, text-ink, text-muted, bg-signal, text-gain, text-loss, bg-navy, rounded-card, shadow-float... */
 @theme inline {
-  --color-paper: var(--bt-paper); --color-surface: var(--bt-surface); --color-ink: var(--bt-ink); --color-ink-2: var(--bt-ink-2); --color-hair: var(--bt-hair);
+  --color-bg: var(--bt-bg);
+  --color-card: var(--bt-card); --color-card-2: var(--bt-card-2); --color-card-3: var(--bt-card-3);
+  --color-divider: var(--bt-divider);
+  --color-ink: var(--bt-ink); --color-muted: var(--bt-muted); --color-faint: var(--bt-faint);
+  --color-signal: var(--bt-signal); --color-signal-deep: var(--bt-signal-deep); --color-signal-soft: var(--bt-signal-soft); --color-signal-50: var(--bt-signal-50);
+  --color-navy: var(--bt-navy); --color-brand-blue: var(--bt-brand-blue);
+  --color-indigo: var(--bt-indigo); --color-teal: var(--bt-teal); --color-sky: var(--bt-sky); --color-usdc: var(--bt-usdc);
+  --color-gain: var(--bt-gain); --color-loss: var(--bt-loss);
+
+  /* v3 names kept so existing classes (bg-primary, text-up, ...) keep compiling during the migration */
+  --color-paper: var(--bt-paper); --color-surface: var(--bt-surface); --color-ink-2: var(--bt-ink-2); --color-hair: var(--bt-hair);
   --color-primary: var(--bt-primary); --color-on-primary: var(--bt-on-primary);
   --color-crew: var(--bt-crew); --color-captain: var(--bt-captain); --color-up: var(--bt-up); --color-down: var(--bt-down); --color-caution: var(--bt-caution);
   --color-tint-blue: var(--bt-tint-blue); --color-tint-red: var(--bt-tint-red); --color-tint-yellow: var(--bt-tint-yellow);
-  --color-flag-red: var(--bt-flag-red); --color-flag-yellow: var(--bt-flag-yellow); --color-flag-blue: var(--bt-flag-blue); --color-flag-ink: var(--bt-flag-ink);
+
   --font-sans: var(--bt-font); --font-mono: var(--bt-font-mono);
-  --radius-DEFAULT: var(--bt-radius); --radius-sm: var(--bt-radius-sm); --radius-md: var(--bt-radius); --radius-lg: var(--bt-radius);
-  --spacing-tap: var(--bt-tap);
+
+  --radius-chip: var(--bt-radius-chip); --radius-tile: var(--bt-radius-tile); --radius-input: var(--bt-radius-input);
+  --radius-card: var(--bt-radius-card); --radius-hero: var(--bt-radius-hero); --radius-sheet: var(--bt-radius-sheet);
+  --radius-DEFAULT: var(--bt-radius-card); --radius-sm: var(--bt-radius-chip); --radius-md: var(--bt-radius-card); --radius-lg: var(--bt-radius-hero);
+
+  --shadow-tabbar: var(--bt-shadow-tabbar); --shadow-float: var(--bt-shadow-float);
+  --shadow-fab: var(--bt-shadow-fab); --shadow-fab-navy: var(--bt-shadow-fab-navy); --shadow-ticket: var(--bt-shadow-ticket);
+
+  --spacing-tap: var(--bt-row);
 }

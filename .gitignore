@@ -8,6 +8,7 @@ contracts/broadcast/
 contracts/lib/
 .next/
 app/.next/
+app/.next-e2e/
 app/test-results/
 app/playwright-report/
 test-results/

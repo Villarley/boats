@@ -64,6 +64,11 @@ export const boatAbi = [
             "internalType": "uint64",
             "name": "vestingDuration",
             "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "inviteOnly",
+            "type": "bool"
           }
         ],
         "internalType": "struct Boat.Config",
@@ -99,6 +104,11 @@ export const boatAbi = [
   {
     "inputs": [],
     "name": "NotCaptain",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotInvited",
     "type": "error"
   },
   {
@@ -200,6 +210,19 @@ export const boatAbi = [
       }
     ],
     "name": "CrewWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "who",
+        "type": "address"
+      }
+    ],
+    "name": "Invited",
     "type": "event"
   },
   {
@@ -561,6 +584,51 @@ export const boatAbi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "who",
+        "type": "address[]"
+      }
+    ],
+    "name": "invite",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "inviteOnly",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "invited",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -1293,6 +1361,11 @@ export const factoryAbi = [
             "internalType": "uint64",
             "name": "vestingDuration",
             "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "inviteOnly",
+            "type": "bool"
           }
         ],
         "internalType": "struct Boat.Config",

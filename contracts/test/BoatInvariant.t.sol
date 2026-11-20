@@ -269,7 +269,8 @@ contract BoatInvariantTest is StdInvariant, Test {
                 takeProfitBps: 1_500,
                 endTime: uint64(block.timestamp + 30 days),
                 feeBps: 2_000,
-                vestingDuration: 0
+                vestingDuration: 0,
+                inviteOnly: false
             })
         );
 

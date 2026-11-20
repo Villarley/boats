@@ -20,11 +20,11 @@ Keep only the events that can move a boat across a limit. Topic0 values are the 
 
 ```js
 function main(stream) {
-  const ORACLE = "0xec5c4538335dc7712ae98660574b071232272093";
+  const ORACLE = "0x712f8c439e455e928b2f84c6f389d77e93c980f0";
   const BOATS = [
-    "0x89376bb6be0824a4bcd832c86c8fac483b6eb978", // Safe Harbor
-    "0xeaa3d4bc9b2be8341b76b04d3c2e7ce4b9ddc359", // Westerly
-    "0xc2fffaaa021f4214e6e685e883cc06e0601e5c29", // Open Sea
+    "0xed438b7a67c22aa48d0f32a69584405057535d4d", // Safe Harbor
+    "0x6f762e474d9aa387631f2f32013b8bdb6d0a66e5", // Westerly
+    "0xb751031f927a1fd9fb9b9eee074894aebcb04439", // Open Sea
   ];
   const PRICE = "0xb556fac599c3c70efb9ab1fa725ecace6c81cc48d1455f886607def065f3e0c0";  // PriceUpdated(address,uint256,uint256)
   const TRADED = "0x825f67dcf8bc9df74117166defc432f4cdf0a331eff757dd049327c83c2e02e1"; // Traded(address,address,uint256,uint256,uint256)

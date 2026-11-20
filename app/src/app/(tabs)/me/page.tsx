@@ -2,59 +2,105 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronRight, Copy, Check, ExternalLink, HelpCircle, LogOut, MessageCircle, ShipWheel, Users, Wallet } from "lucide-react";
-import { Button, Card, Row, Screen } from "@/components/ui";
+import { Bank, Bell, CaretRight, ChartLineUp, Copy, Lifebuoy, ScanSmiley, ShieldCheck, SignOut, UserPlus } from "@phosphor-icons/react";
+import { BackButton, Page, TopBar } from "@/components/top-bar";
+import { Button } from "@/components/button";
+import { HelmIcon } from "@/components/brand";
+import { IconTile, ListGroup, ListRow } from "@/components/list-group";
+import { ModeSwitch } from "@/components/sidebar";
 import { useStore } from "@/lib/store";
-import { CHAIN_NAME, explorer } from "@/lib/deployment";
+import { saveName, useDisplayName, useSavedName } from "@/lib/names";
+import { NameSheet } from "@/components/name-sheet";
+import { managerOf } from "@/lib/fund";
 import { usd } from "@/lib/format";
+import { copy } from "@/lib/copy";
+import { appCopy } from "@/lib/copy.app";
+import { useUnlock } from "@/lib/unlock";
+import { passkeyAvailable } from "@/lib/wallet/passkey";
 
-export default function Me() {
-  const { wallet, mode, setMode, captainOf, signOut, cash } = useStore();
-  const [copied, setCopied] = useState(false);
-  const addr = wallet?.address ?? "";
+const chev = <CaretRight weight="bold" className="size-4 text-faint" />;
+
+/** H1 Profile (opened from the avatar). Approved managers get the Investor/Manager switch (M3). */
+export default function Profile() {
+  const { wallet, captainOf, boats, signOut, cash } = useStore();
   const router = useRouter();
-  const canCaptain = captainOf.length > 0;
+  const [copied, setCopied] = useState(false);
+  const name = useDisplayName(wallet?.address);
+  const saved = useSavedName(wallet?.address);
+  const [editName, setEditName] = useState(false);
+  const isManager = captainOf.length > 0;
+  const managed = boats.filter((b) => captainOf.some((a) => a.toLowerCase() === b.address.toLowerCase()));
+  const verified = managed.some((b) => managerOf(b).verified);
+  const passkey = wallet?.kind === "passkey";
+  const unlock = useUnlock();
+  const addr = wallet?.address ?? "";
+
   return (
-    <Screen title="Me">
-      <Card>
-        <div className="label">Signed in with</div>
-        <div className="font-semibold mt-1">{wallet?.kind === "passkey" ? "Face ID passkey" : "This device"}</div>
-        <div className="text-ink-2 text-[13px]">No passwords. No seed phrases. {CHAIN_NAME === "local" ? "Local test chain." : "Arc testnet."}</div>
-      </Card>
-      {wallet && (
-        <Card testId="wallet-card">
-          <div className="flex items-center gap-2 label"><Wallet size={13} strokeWidth={1.5} /> Your wallet</div>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="font-mono text-[15px]" data-testid="wallet-address">{addr.slice(0, 6)}…{addr.slice(-4)}</span>
-            <b>{usd(cash)} USDC</b>
-          </div>
-          <div className="flex gap-4 mt-3 text-[13px]">
-            <button className="proof" onClick={() => { navigator.clipboard?.writeText(addr).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); }}>
-              {copied ? <>Copied <Check size={13} strokeWidth={1.5} /></> : <>Copy address <Copy size={13} strokeWidth={1.5} /></>}
-            </button>
-            {explorer && <a className="proof" href={`${explorer}/address/${addr}`} target="_blank" rel="noreferrer">See it on Arcscan <ExternalLink size={13} strokeWidth={1.5} /></a>}
-          </div>
-          <p className="text-ink-2 text-[13px] mt-2">You own this wallet. Boats never holds your keys or your money: the contract does.</p>
-        </Card>
-      )}
-      {canCaptain ? (
-        mode === "captain" ? (
-          <Button variant="secondary" icon={Users} onClick={() => { setMode("crew"); router.push("/home"); }} testId="crew-mode">Back to crew mode</Button>
+    <Page testId="profile">
+      <TopBar left={<BackButton />} title={copy.profile.title} />
+      <div className="mt-3.5 flex flex-col items-center gap-1 rounded-[20px] bg-card px-4 pb-4 pt-5">
+        <span className={`grid size-[68px] place-items-center rounded-full bg-card-2 text-[26px] font-semibold ${isManager ? "shadow-[0_0_0_2.5px_var(--bt-navy)]" : ""}`}>{name.slice(0, 1)}</span>
+        <b className="mt-1.5 text-[20px] font-semibold">{name}</b>
+        <button type="button" onClick={() => setEditName(true)} className="text-[13px] font-semibold text-signal" data-testid="edit-name">{appCopy.name.edit}</button>
+        {isManager && verified ? (
+          <span className="flex items-center gap-1 text-[13px] font-semibold"><ShieldCheck weight="fill" className="size-4 text-signal" />{copy.profile.verified}</span>
         ) : (
-          <Button icon={ShipWheel} onClick={() => { setMode("captain"); router.push("/captain"); }} testId="captain-mode">Switch to captain mode</Button>
-        )
-      ) : (
-        <Card>
-          <div className="font-semibold">Captain mode</div>
-          <p className="text-ink-2 text-[15px] mt-1">Launch a boat to unlock it. You set the rules, put in a stake that loses first, and your crew sees everything.</p>
-          <div className="mt-3"><Button variant="secondary" icon={ShipWheel} href="/captain/launch" testId="launch">Launch a boat</Button></div>
-        </Card>
+          <span className="text-[13px] text-muted">{unlock.signedIn}</span>
+        )}
+        {isManager && <ModeSwitch className="mt-3.5" />}
+      </div>
+
+      {!isManager && (
+        <Link href="/manager" className="mt-3.5 grid grid-cols-[40px_1fr_auto] items-center gap-3 rounded-card bg-card p-3.5" data-testid="manage-others">
+          <span className="grid size-10 place-items-center rounded-[11px] bg-navy text-white"><HelmIcon size={21} /></span>
+          <div>
+            <b className="block text-[15px] font-semibold">{copy.profile.manageOthers}</b>
+            <p className="mt-0.5 text-[13px] leading-[1.35] text-muted">{copy.profile.manageOthersSub}</p>
+          </div>
+          {chev}
+        </Link>
       )}
-      <Card>
-        <Link href="/invite" className="block"><Row icon={MessageCircle} title="Invite family" sub="Save Mom a seat" right={<ChevronRight size={18} strokeWidth={1.5} className="text-ink-2" />} /></Link>
-        <Row icon={HelpCircle} title="What happens if…" sub="the captain disappears? The money stays inside the rules and the voyage still ends on its date." />
-      </Card>
-      <Button variant="ghost" icon={LogOut} onClick={() => { signOut(); router.replace("/"); }} testId="signout">Sign out</Button>
-    </Screen>
+
+      <ListGroup className="mt-3.5">
+        {isManager && (
+          <>
+            <ListRow dense href="/captain" leading={<IconTile color="indigo"><ChartLineUp weight="fill" /></IconTile>} title={appCopy.profile.publicFunds} sub={appCopy.profile.publicFundsSub} trailing={<><b className="text-[15px] font-semibold">{managed.length}</b>{chev}</>} />
+            <ListRow dense leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.profile.privateFunds} sub={appCopy.profile.privateFundsSub} trailing={<><b className="text-[15px] font-semibold">0</b>{chev}</>} />
+          </>
+        )}
+        <ListRow dense leading={<IconTile color="gain"><ScanSmiley weight="fill" /></IconTile>} title={passkey ? `${unlock.how[0]!.toUpperCase()}${unlock.how.slice(1)} · ${appCopy.unlock.row}` : appCopy.unlock.row}
+          sub={passkey ? undefined : passkeyAvailable() ? appCopy.unlock.nextTime : appCopy.unlock.notYet}
+          trailing={<span className="text-[15px] font-medium text-muted">{passkey ? appCopy.profile.on : appCopy.profile.off}</span>} />
+        {!isManager && (
+          <>
+            <ListRow dense href="/add" leading={<IconTile color="teal"><Bank weight="fill" /></IconTile>} title={copy.profile.rows[1]} sub={appCopy.profile.demoBalance(usd(cash, { cents: true }))} trailing={chev} />
+            <ListRow dense href="/activity" leading={<IconTile color="loss"><Bell weight="fill" /></IconTile>} title={copy.profile.rows[2]} trailing={chev} />
+            {isManager
+              ? <ListRow dense href="/invite" leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.invite.title} trailing={chev} />
+              : <ListRow dense href="/invitations" leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.invitations.title} trailing={chev} />}
+          </>
+        )}
+        <ListRow dense leading={<IconTile color="muted"><Lifebuoy weight="fill" /></IconTile>} title={copy.profile.rows[4]} trailing={chev} />
+      </ListGroup>
+
+      {addr && (
+        <button
+          type="button"
+          className="mt-3.5 flex items-center justify-between rounded-card bg-card px-4 py-3 text-left"
+          onClick={() => navigator.clipboard?.writeText(addr).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {})}
+          data-testid="account-id"
+        >
+          <span>
+            <span className="block font-mono text-[11px] uppercase tracking-[.07em] text-faint">{appCopy.profile.accountId}</span>
+            <span className="font-mono text-[14px]">{addr.slice(0, 6)}…{addr.slice(-4)}</span>
+          </span>
+          <span className="flex items-center gap-1 text-[13px] font-semibold text-signal">{copied ? appCopy.profile.copied : <Copy weight="bold" className="size-4" />}</span>
+        </button>
+      )}
+
+      <NameSheet open={editName} initial={saved ?? ""} onClose={() => setEditName(false)}
+        onSave={(n) => { if (wallet) saveName(wallet.address, n); setEditName(false); }} />
+      <Button variant="outline" className="mb-6 mt-4" icon={<SignOut weight="bold" />} onClick={() => { signOut(); router.replace("/"); }} testId="signout">{copy.profile.signOut}</Button>
+    </Page>
   );
 }

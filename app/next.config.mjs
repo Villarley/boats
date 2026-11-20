@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // e2e builds into its own folder so it never clobbers a running `next dev`.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Vercel builds point at Arc testnet by default; local builds keep the local chain.
   env: { NEXT_PUBLIC_CHAIN: process.env.NEXT_PUBLIC_CHAIN ?? (process.env.VERCEL ? "arc" : "local") },
   transpilePackages: ["@boats/sdk"],
