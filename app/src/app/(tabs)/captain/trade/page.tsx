@@ -48,6 +48,7 @@ function TradeScreen() {
   const [review, setReview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<{ ok: boolean; text: string; hash?: string } | null>(null);
+  const [why, setWhy] = useState("");
 
   useEffect(() => {
     if (b && !from) { setFrom(b.usdc); setTo(b.assets[0]!); }
@@ -87,6 +88,11 @@ function TradeScreen() {
       const r = await wallet!.send([buildSwapCall(b.address, from as `0x${string}`, to as `0x${string}`, amountIn, 0n)]);
       if (r.status !== "success") throw new Error("reverted");
       setRes({ ok: true, text: appCopy.manager.tradeDone(usd(amount), assetName(from), assetName(to)), hash: r.hash });
+      // The reason shows in investors' Activity under "Why … did it".
+      if (why.trim()) {
+        fetch("/api/captain-log", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ at: new Date().toISOString(), boat: b.address, kind: "trade", message: why.trim(), txHash: r.hash }) }).catch(() => {});
+        setWhy("");
+      }
       setV("");
       refresh();
     } catch (e) {
@@ -180,6 +186,13 @@ function TradeScreen() {
           { label: copy.manager.buy, value: `≈ ${num(amount)} ${symbolOf(to)}` },
           ...(toUsdc ? [] : [{ label: symbolOf(to), note: appCopy.manager.ofMax(pct(after), pct(maxBps)), value: broken ? appCopy.manager.breaks : appCopy.manager.inside, valueClass: broken ? "text-loss" : "text-gain" }]),
         ]} />
+        {!broken && (
+          <label className="mt-4 block rounded-card bg-card px-4 py-3">
+            <span className="text-[13px] font-medium text-muted">{appCopy.manager.whyLabel}</span>
+            <textarea value={why} onChange={(e) => setWhy(e.target.value.slice(0, 200))} rows={2} placeholder={appCopy.manager.whyPlaceholder} data-testid="trade-why"
+              className="mt-1 block w-full resize-none bg-transparent text-[15px] leading-[1.4] outline-none placeholder:text-faint" />
+          </label>
+        )}
         <Button className="mt-4" icon={<ScanSmiley weight="bold" />} loading={busy} disabled={broken} onClick={() => send()} testId="send-trade">{appCopy.manager.tradeCta}</Button>
         {broken && <Button className="mt-2.5" variant="outline" disabled={busy} onClick={() => send(true)} testId="send-anyway">{appCopy.manager.sendAnyway}</Button>}
       </Sheet>

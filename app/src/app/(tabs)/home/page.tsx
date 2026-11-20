@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowDown, ArrowsLeftRight, CaretRight, CircleNotch, Gift, MagnifyingGlass, Plus, UserPlus } from "@phosphor-icons/react";
+import { ArrowDown, ArrowsLeftRight, CaretRight, CircleNotch, Gift, Plus, UserPlus } from "@phosphor-icons/react";
 import { exampleSeries } from "@/components/area-chart";
 import { ArtBanner } from "@/components/art-banner";
 import { BalanceCard } from "@/components/balance-card";
-import { Button, IconButton } from "@/components/button";
+import { Button } from "@/components/button";
 import { FolderCard } from "@/components/folder-card";
 import { FundsTable } from "@/components/funds-table";
 import { IconTile, ListGroup, ListRow, TitleRow } from "@/components/list-group";
@@ -27,6 +27,7 @@ import { assetName, pct, usd } from "@/lib/format";
 import { useDisplayName, useSavedName } from "@/lib/names";
 import { openWithdraw } from "@/lib/ui-state";
 import { fundHref, managerOf, myFunds, riskOf, statusOf, worstCaseBps } from "@/lib/fund";
+import { NotificationBell } from "@/components/notification-bell";
 
 type ActivityItem = { key: string; leading: ReactNode; title: string; sub: string; amount?: string };
 
@@ -153,7 +154,7 @@ export default function Home() {
             <Link href={familyHref} className="flex h-[38px] items-center gap-[7px] rounded-full bg-card-2 px-3.5 text-[14px] font-semibold">
               <UserPlus weight="fill" className="size-4" />{copy.home.invite}
             </Link>
-            <IconButton href="/explore" label={appCopy.nav.search}><MagnifyingGlass weight="bold" /></IconButton>
+            <NotificationBell />
           </div>
         </div>
 
@@ -164,7 +165,6 @@ export default function Home() {
           series={week}
           baseline={week[0]}
           protection={protection}
-          funds={mine.map((b) => ({ key: b.address, name: b.name, value: b.position.valueNow, href: fundHref(b) }))}
         />
 
         <div className="mt-4 grid grid-cols-2 gap-2.5">

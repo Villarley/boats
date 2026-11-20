@@ -89,6 +89,7 @@ test("manager: Laura switches to manager mode, starts the fund, and the rules ca
   await page.getByTestId("use-max").click();
   await expect(page.getByTestId("rule")).toHaveCount(0);
   await page.getByTestId("trade").click();
+  await page.getByTestId("trade-why").fill("Rate cuts look likely, so I'm moving more into Treasuries.");
   await page.getByTestId("send-trade").click();
   await expect(page.getByTestId("trade-result")).toContainText("Moved");
   // María gets the plain-language alert about the blocked trade.
@@ -98,6 +99,14 @@ test("manager: Laura switches to manager mode, starts the fund, and the rules ca
   await expect(alert.getByText("Your money is safe")).toBeVisible();
   await alert.getByTestId("blocked-ok").click();
   await expect(alert).toHaveCount(0);
+  // Her Activity shows the move; opening it shows Laura's reason and why the rules allowed it.
+  await maria.goto("/activity");
+  const move = maria.getByTestId("feed-manager").filter({ hasText: "Laura moved" }).first();
+  await expect(move).toBeVisible({ timeout: 30_000 });
+  await move.click();
+  await expect(maria.getByTestId("move-detail")).toBeVisible();
+  await expect(maria.getByText("Why Laura did it")).toBeVisible();
+  await expect(maria.getByText("US Treasuries are allowed")).toBeVisible();
 });
 
 test("fund closes: the market falls, the keeper closes it, María loses less than 1%", async ({ browser, request }) => {

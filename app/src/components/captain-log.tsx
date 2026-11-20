@@ -7,7 +7,7 @@ import { Proof } from "./proof";
 import { appCopy } from "@/lib/copy.app";
 import { plainWords } from "@/lib/fund";
 
-export type LogEntry = { at: string; boat: string; kind: "hold" | "trade" | "blocked" | "error" | "keeper"; message: string; txHash?: string };
+export type LogEntry = { at: string; boat: string; kind: "hold" | "trade" | "blocked" | "error" | "keeper"; message: string; txHash?: string; odds?: unknown };
 
 export function useCaptainLog(boat?: string) {
   const [log, setLog] = useState<LogEntry[]>([]);
