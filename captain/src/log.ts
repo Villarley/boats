@@ -10,7 +10,7 @@ export type LogEntry = {
   explorer?: string;
 };
 
-const EXPLORER = "https://explorer.testnet.arc.io/tx/";
+const EXPLORER = "https://testnet.arcscan.app/tx/";
 
 export function txLink(hash?: string) {
   return hash ? `${EXPLORER}${hash}` : undefined;

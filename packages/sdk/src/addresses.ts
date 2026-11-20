@@ -38,5 +38,5 @@ export function symbolOf(d: Deployment, token: Address): string {
   return hit?.[0] ?? token.slice(0, 6);
 }
 
-export const explorerTx = (hash: string) => `https://explorer.testnet.arc.io/tx/${hash}`;
-export const explorerAddress = (a: string) => `https://explorer.testnet.arc.io/address/${a}`;
+export const explorerTx = (hash: string) => `https://testnet.arcscan.app/tx/${hash}`;
+export const explorerAddress = (a: string) => `https://testnet.arcscan.app/address/${a}`;

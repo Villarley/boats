@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Vercel builds point at Arc testnet by default; local builds keep the local chain.
+  env: { NEXT_PUBLIC_CHAIN: process.env.NEXT_PUBLIC_CHAIN ?? (process.env.VERCEL ? "arc" : "local") },
   transpilePackages: ["@boats/sdk"],
   webpack(config) {
     // The SDK is TypeScript source with ESM ".js" import specifiers.

@@ -56,7 +56,7 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 - **Oracle.** On testnet we push the prices ourselves. `PriceOracle` rejects prices older than `maxAge` and caps each update at `maxDeviationBps`. A production version would plug in a decentralized oracle behind the same interface.
 - **Liquidity.** Arc testnet has no liquidity for these pairs, so `SwapAdapter` swaps at the oracle price minus a spread, against liquidity we fund. Boats trade only through an allowlisted router, so a real DEX router can replace it.
 - **Exit slippage.** `returnToPort()` accepts up to 1% below the oracle value. The app shows the real figure.
-- **Assets.** USDC and EURC are Circle's testnet tokens. Assets we couldn't get on Arc testnet (USYC needs an allowlist; cirBTC) are deployed as clearly labelled mocks.
+- **Assets.** USDC is Circle's testnet token. Assets we couldn't fund on Arc testnet (EURC liquidity, USYC needs an allowlist, cirBTC) are deployed as clearly labelled mocks.
 - **Captain liveness.** If the captain disappears, the money stays inside the rules, and the voyage still ends at its date. Anyone can bring it back to port.
 - **Dilution.** A larger crew dilutes the captain's cushion. The app computes the worst case at review time with `worstCaseIfBoarding()`, not a static number.
 
@@ -64,7 +64,7 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 
 - All contracts are deployed on **Arc testnet** (chain 5042002). USDC is the gas token.
 - **Invisible wallet:** passkey sign-in creates a Circle Modular Wallet smart account. Boarding batches `approve` + `board` in one user operation sponsored by the paymaster, so grandma never sees gas, a seed phrase or an address.
-- Real Circle assets where Arc testnet has them (USDC, EURC).
+- Real Circle USDC (gas and deposits); other assets are labelled mocks.
 - Every trade, blocked attempt and withdrawal links to the Arc explorer.
 
 ## Gemini Prediction Markets
@@ -104,17 +104,18 @@ AI captain: `cp captain/.env.example captain/.env`, fill it, then `npm run capta
 
 ## Contract addresses (Arc testnet)
 
-_Filled after deploy._
+Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). Oracle prices expire after 1 day: refresh with `node app/scripts/deploy-arc.mjs --refresh`.
 
 | Contract | Address |
 |---|---|
-| BoatFactory | |
-| PriceOracle | |
-| SwapAdapter | |
-| Safe Harbor | |
-| Westerly (AI captain) | |
-| Open Sea | |
-| USDC (Circle) | |
-| EURC (Circle) | |
-| USYC (mock; Circle's USYC needs an allowlist) | |
-| cirBTC (mock) | |
+| BoatFactory | [`0x154c6f6019e8deca1bea388ecb1d81993a528936`](https://testnet.arcscan.app/address/0x154c6f6019e8deca1bea388ecb1d81993a528936) |
+| PriceOracle | [`0x9d32649fafd0e13aeb57770f764a4986a4046f5c`](https://testnet.arcscan.app/address/0x9d32649fafd0e13aeb57770f764a4986a4046f5c) |
+| SwapAdapter | [`0xf94f024cde1e4efcd0e3e29f0bbd8d993e0d2f57`](https://testnet.arcscan.app/address/0xf94f024cde1e4efcd0e3e29f0bbd8d993e0d2f57) |
+| Safe Harbor | [`0x2A923331aA7f452fD3A566DE1a85D1Dc16673092`](https://testnet.arcscan.app/address/0x2A923331aA7f452fD3A566DE1a85D1Dc16673092) |
+| Westerly (AI captain, sailing) | [`0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b`](https://testnet.arcscan.app/address/0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b) |
+| Open Sea | [`0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392`](https://testnet.arcscan.app/address/0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392) |
+| USDC (Circle) | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
+| EURC (mock) | [`0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e`](https://testnet.arcscan.app/address/0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e) |
+| USYC (mock; Circle's USYC needs an allowlist) | [`0x95e88570e02d6071ec88874fa18e64c45a123431`](https://testnet.arcscan.app/address/0x95e88570e02d6071ec88874fa18e64c45a123431) |
+| cirBTC (mock) | [`0x3318e4b95316dd91c3ab1c1afc4df977073d1126`](https://testnet.arcscan.app/address/0x3318e4b95316dd91c3ab1c1afc4df977073d1126) |
+| AI captain wallet | [`0xFbC12A29C476bcAD3945e7471a893624b33EB040`](https://testnet.arcscan.app/address/0xFbC12A29C476bcAD3945e7471a893624b33EB040) |

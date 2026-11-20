@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --dir src",
     "e2e": "playwright test --trace off",
-    "chain": "node scripts/local-chain.mjs"
+    "chain": "node scripts/local-chain.mjs",
+    "deploy:arc": "NODE_USE_ENV_PROXY=1 node scripts/deploy-arc.mjs"
   },
   "dependencies": {
     "@boats/sdk": "0.1.0",
