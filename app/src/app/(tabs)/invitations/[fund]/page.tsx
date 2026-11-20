@@ -10,7 +10,7 @@ import { StatusDot } from "@/components/status-dot";
 import { StickyActions } from "@/components/controls";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackButton, Page, TopBar } from "@/components/top-bar";
-import { useBoat } from "@/lib/store";
+import { useBoat, useStore } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
 import { dismissInvitation, useInvitations } from "@/lib/invitations";
 import { boatScore } from "@/lib/boat";
@@ -27,6 +27,7 @@ const CAP = 25_000_000_000n;
 export default function InvitedFund({ params }: { params: Promise<{ fund: string }> }) {
   const { fund } = use(params);
   const b = useBoat(fund);
+  const { wallet } = useStore();
   const router = useRouter();
   const acts = useActivityFeed();
   const inv = useInvitations().find((i) => i.fund.toLowerCase() === fund.toLowerCase());
@@ -76,11 +77,11 @@ export default function InvitedFund({ params }: { params: Promise<{ fund: string
       {!open && <p className="mt-3 text-center text-[13px] text-loss">{appCopy.invitations.closed}</p>}
 
       <StickyActions aboveTabs>
-        <Button variant="secondary" onClick={() => { dismissInvitation(b.address); router.push("/invitations"); }}>{appCopy.invitations.notNow}</Button>
+        <Button variant="secondary" onClick={() => { if (wallet) dismissInvitation(wallet.address, b.address); router.push("/invitations"); }}>{appCopy.invitations.notNow}</Button>
         <Button href={open ? `/boat/${b.address}/board?invite=1` : undefined} disabled={!open} testId="invited-invest">{P.invest}</Button>
       </StickyActions>
       <div className="mt-8 hidden grid-cols-2 gap-2.5 lg:grid">
-        <Button variant="secondary" onClick={() => { dismissInvitation(b.address); router.push("/invitations"); }}>{appCopy.invitations.notNow}</Button>
+        <Button variant="secondary" onClick={() => { if (wallet) dismissInvitation(wallet.address, b.address); router.push("/invitations"); }}>{appCopy.invitations.notNow}</Button>
         <Button href={open ? `/boat/${b.address}/board?invite=1` : undefined} disabled={!open}>{P.invest}</Button>
       </div>
     </Page>

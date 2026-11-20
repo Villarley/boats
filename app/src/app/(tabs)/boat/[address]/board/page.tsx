@@ -10,8 +10,8 @@ import { Sheet } from "@/components/sheet";
 import { InvestReview } from "@/components/invest-review";
 import { TokenIcon } from "@/components/token-icon";
 import { Proof } from "@/components/proof";
-import { useBoat } from "@/lib/store";
-import { dismissInvitation, useInvitations, type Invitation } from "@/lib/invitations";
+import { useBoat, useStore } from "@/lib/store";
+import { dismissInvitation, useInvitations } from "@/lib/invitations";
 import { managerOf } from "@/lib/fund";
 import { useInvest } from "@/lib/invest";
 import { usd } from "@/lib/format";
@@ -22,22 +22,22 @@ export default function Invest({ params }: { params: Promise<{ address: string }
   const { address } = use(params);
   const b = useBoat(address);
   const inv = useInvest(b);
+  const { wallet } = useStore();
   const router = useRouter();
   const [review, setReview] = useState(false);
   const [done, setDone] = useState(false);
   // Came from an invitation (P2 → ?invite=1): review asks "I know …", done is P4, back goes to the invite.
-  const [invite, setInvite] = useState<Invitation | null>(null);
+  const [fromInvite, setFromInvite] = useState(false);
+  useEffect(() => setFromInvite(new URLSearchParams(window.location.search).get("invite") === "1"), []);
   const invites = useInvitations();
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("invite") === "1") setInvite(invites.find((i) => i.fund.toLowerCase() === address.toLowerCase()) ?? { fund: address, from: "", code: "", at: 0 });
-    // read once on arrival: the invite list can change after joining
-  }, [address]);
-  const back = invite ? `/invitations/${address}` : `/boat/${address}`;
+  const [joinedFrom, setJoinedFrom] = useState<string | null>(null); // the inviter's name, kept once joined
+  const invite = fromInvite ? invites.find((i) => i.fund.toLowerCase() === address.toLowerCase()) ?? null : null;
+  const back = fromInvite ? `/invitations/${address}` : `/boat/${address}`;
 
   if (!b) return <Page><TopBar left={<BackButton fallback={back} />} /><div className="mt-10 h-64 animate-pulse rounded-card bg-card" /></Page>;
 
-  const inviterFirst = b && invite ? (invite.from.trim() || managerOf(b).name).split(" ")[0]! : undefined;
-  if (done && invite && b)
+  const inviterFirst = b && fromInvite ? (joinedFrom ?? invite?.from.trim() ?? "").split(" ")[0] || managerOf(b).first : undefined;
+  if (done && fromInvite && b)
     return (
       <Page testId="boarded">
         <TopBar right={<CloseButton to="/home" />} />
@@ -120,7 +120,7 @@ export default function Invest({ params }: { params: Promise<{ address: string }
 
       <Sheet open={review} onClose={() => setReview(false)} title={copy.invest.sheetTitle} testId="review-sheet">
         <InvestReview b={b} amount={inv.amount} worst={inv.worst} busy={inv.busy} err={inv.err} passkey={inv.passkey} knowManager={inviterFirst}
-          onConfirm={async () => { if (await inv.confirm()) { setReview(false); setDone(true); if (invite) dismissInvitation(address); } }} />
+          onConfirm={async () => { if (await inv.confirm()) { setReview(false); setDone(true); if (fromInvite && wallet) { setJoinedFrom(inviterFirst ?? null); dismissInvitation(wallet.address, address); } } }} />
       </Sheet>
     </Page>
   );

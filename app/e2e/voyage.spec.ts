@@ -1,5 +1,5 @@
 import { test, expect, type Browser } from "@playwright/test";
-import { movePrice } from "./helpers";
+import { d, movePrice } from "./helpers";
 
 // One full run of Safe Harbor: María invests, Laura starts the fund and trades, the market falls, María withdraws.
 test.describe.configure({ mode: "serial" });
@@ -149,15 +149,15 @@ test("manager: a family member creates their own fund, puts money in first, and 
   await expect(page.getByTestId("boat-card-Abuela's Harbor")).toBeVisible();
 });
 
-test("invitations: a manager's link shows up as a ticket in the investor's Invitations", async ({ browser }) => {
+test("invitations: a manager invites an account ID, the investor finds the ticket and joins", async ({ browser }) => {
   const laura = await signIn(browser, "ana");
   await laura.goto("/invite");
   await expect(laura.getByTestId("invite")).toContainText("Invite investors");
-  const wa = await laura.getByRole("link", { name: /WhatsApp/ }).getAttribute("href");
-  const link = decodeURIComponent(wa!.split("text=")[1]!).split(" ").pop()!;
-  expect(link).toContain("/invitations?fund=");
+  await laura.getByTestId("invite-to").fill(d.demo.grandma);
+  await laura.getByTestId("invite-send").click();
+  await expect(laura.getByTestId("invite-note")).toContainText("Invite sent");
   const maria = await signIn(browser, "grandma");
-  await maria.goto(new URL(link).pathname + new URL(link).search);
+  await maria.goto("/invitations");
   await expect(maria.getByTestId("ticket")).toBeVisible();
   await expect(maria.getByTestId("ticket")).toContainText("Laura invited you");
   // P2: the fund behind the invite, then the real invest flow with "I know Laura personally" (P3).

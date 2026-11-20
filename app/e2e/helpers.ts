@@ -11,7 +11,7 @@ const oracleAbi = [
   { type: "function", name: "setPrice", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [] },
 ] as const;
 
-export const d = deployment as unknown as { oracle: Address; tokens: Record<string, Address>; boats: { name: string; address: Address }[] };
+export const d = deployment as unknown as { oracle: Address; tokens: Record<string, Address>; boats: { name: string; address: Address }[]; demo: { grandma: Address; ana: Address } };
 
 /** Moves a token's oracle price by `bps` (e.g. -1500), like script/MovePrices.s.sol. */
 export async function movePrice(symbol: string, bps: number) {

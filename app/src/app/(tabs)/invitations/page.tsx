@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { LockSimple } from "@phosphor-icons/react";
 import { BackButton, Page, TopBar } from "@/components/top-bar";
 import { Button } from "@/components/button";
@@ -7,7 +7,7 @@ import { Ticket, type Accent } from "@/components/ticket";
 import { WalletStack } from "@/components/wallet-stack";
 import { useStore, type BoatView } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
-import { clearPendingInvitation, dismissInvitation, useInvitations, type Invitation } from "@/lib/invitations";
+import { dismissInvitation, useInvitations, type Invitation } from "@/lib/invitations";
 import { managerOf, type Manager } from "@/lib/fund";
 import { dateShort, pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
@@ -39,7 +39,6 @@ export default function Invitations() {
     [all, boats],
   );
   const [activeId, setActiveId] = useState<string | null>(null);
-  useEffect(() => clearPendingInvitation(), []); // arrived: sign-in no longer needs to send you here
   const active = list.find((x) => x.inv.fund === activeId) ?? list[0];
 
   const joined = (b: BoatView) => new Set(acts.filter((a) => a.kind === "boarded" && a.boat.toLowerCase() === b.address.toLowerCase()).map((a) => String((a.args as { crew?: string }).crew).toLowerCase())).size;
@@ -98,7 +97,7 @@ export default function Invitations() {
       </p>
       {b.state !== "Open" && <p className="mt-2 text-center text-[13px] text-loss">{I.closed}</p>}
       <div className="mt-5 grid grid-cols-2 gap-2.5">
-        <Button variant="secondary" onClick={() => { dismissInvitation(inv.fund); setActiveId(null); }} testId="invite-dismiss">{I.notNow}</Button>
+        <Button variant="secondary" onClick={() => { dismissInvitation(inv.to, inv.fund); setActiveId(null); }} testId="invite-dismiss">{I.notNow}</Button>
         <Button href={`/invitations/${b.address}`} testId="invite-open">{I.seeFund}</Button>
       </div>
     </Page>

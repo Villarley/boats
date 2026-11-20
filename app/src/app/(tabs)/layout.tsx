@@ -7,7 +7,6 @@ import { Sidebar } from "@/components/sidebar";
 import { useTrackScreens } from "@/components/top-bar";
 import { WithdrawSheet } from "@/components/withdraw-sheet";
 import { claimPendingName, useSavedName } from "@/lib/names";
-import { captureInvitation } from "@/lib/invitations";
 import { useStore } from "@/lib/store";
 import { isDeployed } from "@/lib/deployment";
 import { appCopy } from "@/lib/copy.app";
@@ -30,10 +29,6 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const path = usePathname();
   useTrackScreens();
-  // An invite link (/invitations?fund=…) is saved right away, even before sign-in sends you to Welcome.
-  useEffect(() => {
-    if (path === "/invitations" && captureInvitation(window.location.search)) window.history.replaceState(null, "", "/invitations");
-  }, [path]);
   // A new account names itself on Welcome; save that name once the account has an address.
   // (Never asked again inside the app: it can be changed from Profile.)
   const saved = useSavedName(wallet?.address);
