@@ -1,40 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
 import { ArrowDownLeft, ArrowLeftRight, Ban, Anchor, Flag as FlagIcon, ArrowUpRight, Coins } from "lucide-react";
 import type { Activity } from "@boats/sdk";
 import { Card, Proof, Row, Screen } from "@/components/ui";
 import { useCaptainLog } from "@/components/captain-log";
 import { useStore } from "@/lib/store";
+import { useActivityFeed } from "@/lib/activity";
 import { deployment } from "@/lib/deployment";
 import { assetName, usd } from "@/lib/format";
-
-// The server sends bigints as strings; turn the amounts back into bigints.
-const NUM = new Set(["amount", "startValue", "base", "fee", "amountIn", "amountOut", "finalValue", "crewPayout", "nav", "navAfter"]);
-function revive(a: Activity): Activity {
-  const args = Object.fromEntries(Object.entries(a.args as Record<string, unknown>).map(([k, v]) => [k, NUM.has(k) && typeof v === "string" ? BigInt(v) : v]));
-  return { ...a, blockNumber: BigInt(a.blockNumber as unknown as string), args };
-}
 
 type Item = { key: string; when: number; icon: typeof Ban; title: string; sub: string; hash?: string; danger?: boolean };
 
 export default function ActivityPage() {
   const { boats, wallet } = useStore();
-  const [acts, setActs] = useState<Activity[]>([]);
+  const acts = useActivityFeed();
   const log = useCaptainLog();
   const names = Object.fromEntries(boats.map((b) => [b.address.toLowerCase(), b.name]));
   const mineOrCaptained = new Set(boats.filter((b) => b.position.deposit > 0n || b.position.isCaptain).map((b) => b.address.toLowerCase()));
-
-  useEffect(() => {
-    let alive = true;
-    const load = () =>
-      fetch("/api/activity")
-        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-        .then((j: { activity: Activity[] }) => alive && setActs(j.activity.map(revive)))
-        .catch(() => {});
-    load();
-    const id = setInterval(() => !document.hidden && load(), 10_000);
-    return () => { alive = false; clearInterval(id); };
-  }, []);
 
   const me = wallet?.address.toLowerCase();
   const items: Item[] = [];

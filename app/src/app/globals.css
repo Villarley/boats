@@ -33,7 +33,7 @@ body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
 * { box-sizing: border-box; }
 
 .app-shell { max-width: 480px; margin: 0 auto; min-height: 100dvh; position: relative; padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
-.screen { padding: calc(8px + env(safe-area-inset-top)) var(--bt-gutter) 24px; display: flex; flex-direction: column; gap: 16px; }
+.screen { max-width: 600px; margin: 0 auto; padding: calc(8px + env(safe-area-inset-top)) var(--bt-gutter) 24px; display: flex; flex-direction: column; gap: 16px; }
 .screen-navy { background: var(--bt-flag-ink); color: #fff; min-height: 100dvh; }
 .bt-title { font-weight: 600; font-size: 1.5rem; letter-spacing: -0.02em; line-height: 1.15; }
 .bt-giant { font-weight: 300; font-size: 3.5rem; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
