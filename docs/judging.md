@@ -31,9 +31,10 @@ The [whitepaper implementation companion](whitepaper.md), based on Abraham's res
 | DeFi and Onchain Applications | $2,000 track winner | Non-custodial vault, first-loss waterfall, fixed voyage, full settlement proof | Unaudited; oracle, liquidity and liveness trust remain |
 | Best use of Arc | $1,000 within the track | Contracts, USDC deposits and settlement on chain 5042002; explorer links and verifier; production passkey onboarding | Testnet; other assets are mocks; sponsored boarding is unverified |
 | Gemini Prediction Markets | $2,500 / $1,000 / $500 | Public event API → threshold decision → on-chain swap memo; data validation and hold-on-failure tests | Uses market data to allocate a vault; no Gemini orders. The guide explicitly permits market data and/or trading endpoints; award merit is judged by Gemini and UBC |
+| Grok Bot | Mechanical keyboard per member + swag | [Grok Bot role](grok/README.md): external captain and crew workflows, with a linked fleet log | The official guide requires an authentic Grok Bot chat export showing how it was built or used; transaction logs complement that export |
 | Official UBC winner | $2,500 / $1,000 / $500 | Same project; clear reproducible demo and honest risk disclosures | Judged across all tracks |
 
-The prize targets above reflect the implemented integrations. Streams, voice and Grok Bot are outside this submission: no configured Streams delivery, voice integration or Grok Bot is implemented. An RPC endpoint alone would not satisfy the [requirement that Streams be a core data source](https://www.universityblockchain.org/programs/hackathon).
+Streams and voice are outside this submission: no configured Streams delivery or voice integration is implemented. An RPC endpoint alone would not satisfy the [requirement that Streams be a core data source](https://www.universityblockchain.org/programs/hackathon). Grok Bot operates as an external agent client; it is separate from the bundled deterministic captain, which has no embedded LLM.
 
 ## What an AI agent can actually do
 
