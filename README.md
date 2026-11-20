@@ -89,14 +89,16 @@ forge install foundry-rs/forge-std --no-git
 forge test -vv            # 18 tests incl. invariants
 ```
 
-Deploy to Arc testnet:
+Deploy to Arc testnet (one command, after funding three wallets at faucet.circle.com):
 
 ```bash
 cd contracts
-export USDC=0x...  CAPTAIN=0x<ai captain>  CAPTAIN_HUMAN=0x<captain smart account>
-forge script script/Deploy.s.sol --rpc-url arc_testnet --broadcast --private-key $DEPLOYER_KEY
-BOAT=0x<westerly> forge script script/Seed.s.sol --rpc-url arc_testnet --broadcast
+cp .env.example .env      # DEPLOYER_KEY, CAPTAIN_PRIVATE_KEY, CREW_PRIVATE_KEY, CAPTAIN_HUMAN
+./deploy-testnet.sh       # deploys, writes app/src/config/arc-deployment.json, seeds Westerly
+NEXT_PUBLIC_CHAIN=arc npm run build -w app
 ```
+
+Local demo (no wallets needed): `npm run chain -w app` in one terminal, `npm run build -w app && npm run start -w app` in another. `npm run e2e -w app` runs the full voyage on an iPhone viewport.
 
 AI captain: `cp captain/.env.example captain/.env`, fill it, then `npm run captain -w captain` (`captain:rogue` shows the contract blocking a bad trade).
 
@@ -114,5 +116,5 @@ _Filled after deploy._
 | Open Sea | |
 | USDC (Circle) | |
 | EURC (Circle) | |
-| USYC (mock) | |
+| USYC (mock; Circle's USYC needs an allowlist) | |
 | cirBTC (mock) | |
