@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { BOATS_WORD, Flag } from "@/components/flags";
+import { Wordmark } from "@/components/brand";
+import { appCopy } from "@/lib/copy.app";
 
 export default function NotFound() {
   return (
-    <main className="screen screen-navy flex flex-col justify-center gap-4" style={{ maxWidth: 480, margin: "0 auto" }}>
-      <div className="flex gap-1">{BOATS_WORD.map((c) => <Flag key={c} code={c} size={16} />)}</div>
-      <h1 className="bt-title text-[2rem] leading-tight">This page sailed off.</h1>
-      <p className="opacity-80">The link may be wrong. Your money is where you left it.</p>
-      <Link href="/home" className="btn bg-white text-[#0B1A30] mt-2">Back to my money</Link>
+    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center gap-4 px-5">
+      <div className="text-ink"><Wordmark width={112} /></div>
+      <h1 className="text-[30px] font-bold leading-[1.15] tracking-[-0.01em]">{appCopy.notFound.title}</h1>
+      <p className="text-[16px] text-muted">{appCopy.notFound.body}</p>
+      <Link href="/home" className="mt-2 inline-flex h-[52px] items-center justify-center rounded-full bg-signal text-[16px] font-semibold text-white">{appCopy.notFound.cta}</Link>
     </main>
   );
 }

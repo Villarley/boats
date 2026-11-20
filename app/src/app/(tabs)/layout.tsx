@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { WifiSlash, Info } from "@phosphor-icons/react";
 import { TabBar } from "@/components/tab-bar";
 import { Sidebar } from "@/components/sidebar";
@@ -22,11 +22,17 @@ function Banner({ icon, title, children }: { icon: ReactNode; title: string; chi
  * ≥ 1024: 240px sidebar + page (pages lay out their own `1fr 360px` grid).
  */
 export default function TabsLayout({ children }: { children: ReactNode }) {
-  const { ready, wallet, error } = useStore();
+  const { ready, wallet, error, mode, setMode } = useStore();
   const router = useRouter();
+  const path = usePathname();
   useEffect(() => {
     if (ready && !wallet) router.replace("/");
   }, [ready, wallet, router]);
+  // Manager screens put the app in manager mode (tab bar, FAB, sidebar); Home puts it back.
+  useEffect(() => {
+    if (path.startsWith("/captain") && mode !== "captain") setMode("captain");
+    if (path === "/home" && mode !== "crew") setMode("crew");
+  }, [path, mode, setMode]);
   if (!ready || !wallet) return <div className="min-h-dvh" />;
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[240px_1fr]">

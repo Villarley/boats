@@ -15,6 +15,7 @@ import { PromoCard } from "@/components/promo-card";
 import { StatusDot } from "@/components/status-dot";
 import { UserAvatar } from "@/components/user-avatar";
 import { WebTopBar } from "@/components/web-top-bar";
+import { BlockedSheet, useBlockedAlert } from "@/components/blocked-sheet";
 import { useMainAction } from "@/components/tab-bar";
 import { useStore, type BoatView } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
@@ -84,6 +85,7 @@ export default function Home() {
   const seriesFor = (r: string) => exampleSeries(toDollars(invested - delta), toDollars(invested), "zigzag", r === "1D" ? 6 : r === "1W" ? 10 : undefined);
   const deltaPct = deposits > 0n ? Number((delta * 10_000n) / deposits) : 0;
   const familyHref = "/invite";
+  const blocked = useBlockedAlert();
 
   const giftCard = (
     <>
@@ -270,6 +272,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <BlockedSheet event={blocked.event} onClose={blocked.dismiss} />
     </>
   );
 }
