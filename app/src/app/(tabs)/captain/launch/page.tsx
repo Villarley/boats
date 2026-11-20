@@ -98,6 +98,7 @@ function Create() {
     try {
       const now = BigInt(Math.floor(Date.now() / 1000));
       const r = await wallet!.send([buildCreateBoatCall(deployment.factory, {
+        inviteOnly: who === "private",
         name: name.trim(), captain: wallet!.address, usdc: deployment.tokens.USDC, oracle: deployment.oracle, router: deployment.adapter,
         assets: chosen.map((a) => deployment.tokens[a]), maxWeightBps: chosen.map(() => maxShare * 100),
         stopLossBps: loss * 100, takeProfitBps: (target || 100) * 100, endTime: now + BigInt(days * 86_400), feeBps: fee * 100, vestingDuration: 3n * 86_400n,

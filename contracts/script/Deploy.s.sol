@@ -126,7 +126,8 @@ contract Deploy is Script {
             takeProfitBps: takeProfitBps,
             endTime: uint64(block.timestamp + 7 days),
             feeBps: 2_000,
-            vestingDuration: 3 days
+            vestingDuration: 3 days,
+            inviteOnly: false
         });
     }
 }

@@ -1,75 +1,100 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { useStore } from "./store";
+import { useMemo, useSyncExternalStore } from "react";
+import type { Address } from "viem";
+import { useStore, type BoatView } from "./store";
+import { useActivityFeed } from "./activity";
+import { inviteCode } from "./invite-code";
+import { managerOf, type Manager } from "./fund";
+import { savedName } from "./names";
+
+export { inviteCode };
 
 /**
- * Invitations by wallet address: a manager invites an investor's account ID to a fund
- * (/api/invitations), and the investor's app lists the invites for its own address.
+ * Who invited you: the fund's manager account (the invite is signed by it). Uses the name that
+ * account goes by here (demo personas, or a name saved on this device), else the fund's manager.
  */
-export type Invitation = { to: string; fund: string; from: string; code: string; at: number };
+export function inviterOf(b: BoatView): Manager {
+  const m = managerOf(b);
+  const name = savedName(b.captain);
+  if (!name) return m;
+  return { ...m, name, first: name.split(" ")[0]!, initials: name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() };
+}
 
-const EMPTY: Invitation[] = [];
+/**
+ * Invitations are on-chain: a manager calls `invite([address])` on their fund, which emits
+ * `Invited(who)`. The shared activity feed carries those events, so the investor's app reads its
+ * own invites from there (no database). "Not now" is remembered on this device.
+ */
+export type Invitation = { to: string; fund: string; boat: BoatView; at?: number };
+
+const KEY = "boats.invites.dismissed";
 const listeners = new Set<() => void>();
-let mine: Invitation[] = EMPTY;
-let owner = "";
-const emit = () => listeners.forEach((l) => l());
+let dismissed: string[] | null = null;
+const EMPTY: string[] = [];
+function readDismissed(): string[] {
+  if (dismissed) return dismissed;
+  try { dismissed = JSON.parse(localStorage.getItem(KEY) ?? "[]"); } catch { dismissed = []; }
+  return dismissed!;
+}
 const subscribe = (l: () => void) => {
   listeners.add(l);
   return () => listeners.delete(l);
 };
+const key = (to: string, fund: string) => `${to.toLowerCase()}:${fund.toLowerCase()}`;
 
-async function load(address: string) {
-  try {
-    const r = await fetch(`/api/invitations?to=${address}`, { cache: "no-store" });
-    const j = (await r.json()) as { invitations?: Invitation[] };
-    if (owner === address.toLowerCase()) {
-      mine = j.invitations ?? EMPTY;
-      emit();
-    }
-  } catch {}
+/** The investor says Not now (the on-chain invite stays; it just leaves their list). */
+export function dismissInvitation(to: string, fund: string) {
+  dismissed = [...readDismissed(), key(to, fund)].slice(-200);
+  try { localStorage.setItem(KEY, JSON.stringify(dismissed)); } catch {}
+  listeners.forEach((l) => l());
 }
 
-/** Invitations for the signed-in account, kept fresh (every 20 s while the tab is visible). */
-export function useInvitations(): Invitation[] {
+/** Every fund that invited `who` on-chain (whatever the state), from the shared feed. */
+export function useInvitedFunds(): Set<string> {
   const { wallet } = useStore();
-  const address = wallet?.address;
-  useEffect(() => {
-    if (!address) return;
-    if (owner !== address.toLowerCase()) {
-      owner = address.toLowerCase();
-      mine = EMPTY;
-      emit();
+  const acts = useActivityFeed();
+  const me = wallet?.address.toLowerCase();
+  return useMemo(
+    () => new Set(acts.filter((a) => a.kind === "invited" && String((a.args as { who?: string }).who).toLowerCase() === me).map((a) => a.boat.toLowerCase())),
+    [acts, me],
+  );
+}
+
+/** Open invitations for the signed-in account: invited, still open to join, not in yet, not dismissed. */
+export function useInvitations(): Invitation[] {
+  const { wallet, boats } = useStore();
+  const acts = useActivityFeed();
+  const gone = useSyncExternalStore(subscribe, readDismissed, () => EMPTY);
+  const me = wallet?.address.toLowerCase();
+  return useMemo(() => {
+    if (!me) return [];
+    const seen = new Set<string>();
+    const out: Invitation[] = [];
+    for (const a of acts) {
+      if (a.kind !== "invited" || String((a.args as { who?: string }).who).toLowerCase() !== me) continue;
+      const fund = a.boat.toLowerCase();
+      if (seen.has(fund) || gone.includes(key(me, fund))) continue;
+      seen.add(fund);
+      const b = boats.find((x) => x.address.toLowerCase() === fund);
+      if (!b || b.state !== "Open" || b.position.deposit > 0n) continue;
+      out.push({ to: me, fund: b.address, boat: b, at: (a as { at?: number }).at });
     }
-    load(address);
-    const id = setInterval(() => !document.hidden && load(address), 20_000);
-    return () => clearInterval(id);
-  }, [address]);
-  return useSyncExternalStore(subscribe, () => mine, () => EMPTY);
+    return out;
+  }, [acts, boats, gone, me]);
 }
 
-/** The investor says Not now, or joined: the invite leaves their list. */
-export async function dismissInvitation(to: string, fund: string) {
-  mine = mine.filter((i) => i.fund.toLowerCase() !== fund.toLowerCase());
-  emit();
-  await fetch(`/api/invitations?to=${to}&fund=${fund}`, { method: "DELETE" }).catch(() => {});
-}
-
-/** A manager invites an account ID to one of their funds. */
-export async function sendInvitation(to: string, fund: string, from: string): Promise<boolean> {
-  const r = await fetch("/api/invitations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ to, fund, from }) }).catch(() => null);
-  return Boolean(r?.ok);
-}
-
-/** Who a fund has invited so far (manager's Invite screen). */
-export function useSentInvitations(fund?: string) {
-  const [list, setList] = useState<Invitation[]>(EMPTY);
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    if (!fund) return;
-    let alive = true;
-    fetch(`/api/invitations?fund=${fund}`, { cache: "no-store" }).then((r) => r.json())
-      .then((j: { invitations?: Invitation[] }) => alive && setList(j.invitations ?? EMPTY)).catch(() => {});
-    return () => { alive = false; };
-  }, [fund, tick]);
-  return { list, reload: () => setTick((t) => t + 1) };
+/** Who a fund has invited, and whether each has joined (manager's Invite screen). */
+export function useSentInvitations(fund?: Address) {
+  const acts = useActivityFeed();
+  return useMemo(() => {
+    if (!fund) return [];
+    const f = fund.toLowerCase();
+    const joined = new Set(acts.filter((a) => a.kind === "boarded" && a.boat.toLowerCase() === f).map((a) => String((a.args as { crew?: string }).crew).toLowerCase()));
+    const seen = new Set<string>();
+    return acts
+      .filter((a) => a.kind === "invited" && a.boat.toLowerCase() === f)
+      .map((a) => String((a.args as { who?: string }).who))
+      .filter((w) => !seen.has(w.toLowerCase()) && seen.add(w.toLowerCase()))
+      .map((to) => ({ to, joined: joined.has(to.toLowerCase()) }));
+  }, [acts, fund]);
 }

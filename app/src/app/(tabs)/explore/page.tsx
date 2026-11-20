@@ -16,6 +16,7 @@ import { useDisplayName } from "@/lib/names";
 import { fundHref, isExample, managerOf, riskOf, worstCaseBps } from "@/lib/fund";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { useInvitedFunds } from "@/lib/invitations";
 import { NotificationBell } from "@/components/notification-bell";
 
 function ExploreScreen() {
@@ -24,15 +25,19 @@ function ExploreScreen() {
   const [filter, setFilter] = useState<(typeof copy.explore.filters)[number]>("All");
   const name = useDisplayName(wallet?.address);
 
+  const invitedTo = useInvitedFunds();
   const list = useMemo(() => {
-    let l = boats.map((b) => ({ b, s: boatScore(b).total, m: managerOf(b) }));
+    // Private funds show only to their manager, people already in, and people invited.
+    let l = boats
+      .filter((b) => !b.inviteOnly || b.position.isCaptain || b.position.deposit > 0n || invitedTo.has(b.address.toLowerCase()))
+      .map((b) => ({ b, s: boatScore(b).total, m: managerOf(b) }));
     const risk = appCopy.explore.filterRisk[filter];
     if (risk) l = l.filter((x) => riskOf(x.b) === risk);
     if (filter === "AI managers") l = l.filter((x) => isAiCaptain(x.b) || x.m.kind === "ai");
     if (q) l = l.filter((x) => x.b.name.toLowerCase().includes(q) || x.m.name.toLowerCase().includes(q));
     // Safest first; closed funds last.
     return l.sort((a, b) => Number(a.b.state === "Closed") - Number(b.b.state === "Closed") || b.s - a.s || worstCaseBps(a.b) - worstCaseBps(b.b));
-  }, [boats, filter, q]);
+  }, [boats, filter, q, invitedTo]);
   const hero = list.find((x) => x.b.state !== "Closed" && x.m.verified && x.b.captainStake > 0n) ?? list[0];
 
   const row = ({ b, s, m }: (typeof list)[number]) => (

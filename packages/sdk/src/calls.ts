@@ -38,6 +38,10 @@ export const buildSailCall = (boat: Address): Call => boatCall(boat, encodeFunct
 export const buildSwapCall = (boat: Address, tokenIn: Address, tokenOut: Address, amountIn: bigint, minOut = 0n): Call =>
   boatCall(boat, encodeFunctionData({ abi: boatAbi, functionName: "swap", args: [tokenIn, tokenOut, amountIn, minOut] }));
 
+/** Captain invites crew to an invite-only boat (only while boarding). One call for the whole list. */
+export const buildInviteCall = (boat: Address, addresses: Address[]): Call =>
+  boatCall(boat, encodeFunctionData({ abi: boatAbi, functionName: "invite", args: [addresses] }));
+
 export const buildClaimCaptainCall = (boat: Address): Call =>
   boatCall(boat, encodeFunctionData({ abi: boatAbi, functionName: "claimCaptain" }));
 
@@ -58,9 +62,11 @@ export type BoatConfigInput = {
   endTime: bigint;
   feeBps: number;
   vestingDuration: bigint;
+  /** only addresses the captain invites can board; default false (public) */
+  inviteOnly?: boolean;
 };
 
 export const buildCreateBoatCall = (factory: Address, c: BoatConfigInput): Call => ({
   to: factory,
-  data: encodeFunctionData({ abi: factoryAbi, functionName: "createBoat", args: [c] }),
+  data: encodeFunctionData({ abi: factoryAbi, functionName: "createBoat", args: [{ ...c, inviteOnly: c.inviteOnly ?? false }] }),
 });

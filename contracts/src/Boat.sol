@@ -38,6 +38,7 @@ contract Boat {
         uint64 endTime;
         uint16 feeBps; // captain's share of the crew's profit, e.g. 2000 = 20%
         uint64 vestingDuration; // the fee is released linearly over this time after closing
+        bool inviteOnly; // only addresses the captain invited can board
     }
 
     // ---- immutable mandate ----
@@ -51,6 +52,7 @@ contract Boat {
     uint64 public immutable endTime;
     uint16 public immutable feeBps;
     uint64 public immutable vestingDuration;
+    bool public immutable inviteOnly;
     address[] internal _assets;
     mapping(address => uint16) public maxWeightBps; // 0 = not allowed
 
@@ -62,6 +64,7 @@ contract Boat {
     uint256 public startValue; // C + K at sail time
     mapping(address => uint256) public crewDeposit;
     mapping(address => bool) public crewWithdrawn;
+    mapping(address => bool) public invited; // only checked when `inviteOnly`
 
     // ---- settlement ----
     uint256 public finalValue; // V
@@ -81,6 +84,7 @@ contract Boat {
     event ReturnedToPort(uint256 finalValue, uint256 crewPayout, uint256 captainBase, uint256 captainFee);
     event CrewWithdrawn(address indexed crew, uint256 amount);
     event CaptainClaimed(uint256 base, uint256 fee);
+    event Invited(address indexed who);
 
     // ---- errors ----
     error NotCaptain();
@@ -89,6 +93,7 @@ contract Boat {
     error ZeroAmount();
     error BadConfig(string reason);
     error NothingToClaim();
+    error NotInvited();
 
     modifier onlyCaptain() {
         if (msg.sender != captain) revert NotCaptain();
@@ -117,6 +122,7 @@ contract Boat {
         endTime = c.endTime;
         feeBps = c.feeBps;
         vestingDuration = c.vestingDuration;
+        inviteOnly = c.inviteOnly;
         for (uint256 i; i < c.assets.length; ++i) {
             address a = c.assets[i];
             if (a == address(c.usdc) || a == address(0)) revert BadConfig("asset");
@@ -137,8 +143,18 @@ contract Boat {
         emit CaptainStaked(amount);
     }
 
+    /// @notice The captain invites crew to an invite-only boat. Only while boarding.
+    function invite(address[] calldata who) external onlyCaptain inState(State.Open) {
+        for (uint256 i; i < who.length; ++i) {
+            invited[who[i]] = true;
+            emit Invited(who[i]);
+        }
+    }
+
     /// @notice Crew deposits USDC. Everyone boards at the same price (1 share = 1 USDC).
+    ///         On an invite-only boat, only invited addresses can board.
     function board(uint256 amount) external inState(State.Open) {
+        if (inviteOnly && !invited[msg.sender]) revert NotInvited();
         if (amount == 0) revert ZeroAmount();
         usdc.safeTransferFrom(msg.sender, address(this), amount);
         crewDeposit[msg.sender] += amount;

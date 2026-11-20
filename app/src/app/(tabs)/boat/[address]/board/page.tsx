@@ -11,7 +11,7 @@ import { InvestReview } from "@/components/invest-review";
 import { TokenIcon } from "@/components/token-icon";
 import { Proof } from "@/components/proof";
 import { useBoat, useStore } from "@/lib/store";
-import { dismissInvitation, useInvitations } from "@/lib/invitations";
+import { dismissInvitation, useInvitedFunds, inviterOf } from "@/lib/invitations";
 import { managerOf } from "@/lib/fund";
 import { useInvest } from "@/lib/invest";
 import { usd } from "@/lib/format";
@@ -29,14 +29,12 @@ export default function Invest({ params }: { params: Promise<{ address: string }
   // Came from an invitation (P2 → ?invite=1): review asks "I know …", done is P4, back goes to the invite.
   const [fromInvite, setFromInvite] = useState(false);
   useEffect(() => setFromInvite(new URLSearchParams(window.location.search).get("invite") === "1"), []);
-  const invites = useInvitations();
-  const [joinedFrom, setJoinedFrom] = useState<string | null>(null); // the inviter's name, kept once joined
-  const invite = fromInvite ? invites.find((i) => i.fund.toLowerCase() === address.toLowerCase()) ?? null : null;
+  const invitedTo = useInvitedFunds();
   const back = fromInvite ? `/invitations/${address}` : `/boat/${address}`;
 
   if (!b) return <Page><TopBar left={<BackButton fallback={back} />} /><div className="mt-10 h-64 animate-pulse rounded-card bg-card" /></Page>;
 
-  const inviterFirst = b && fromInvite ? (joinedFrom ?? invite?.from.trim() ?? "").split(" ")[0] || managerOf(b).first : undefined;
+  const inviterFirst = b && fromInvite ? inviterOf(b).first : undefined;
   if (done && fromInvite && b)
     return (
       <Page testId="boarded">
@@ -69,6 +67,18 @@ export default function Invest({ params }: { params: Promise<{ address: string }
         <div className="mt-8 grid grid-cols-2 gap-2.5">
           <Button variant="secondary" onClick={() => router.push(back)}>{appCopy.invest.seeFund}</Button>
           <Button onClick={() => router.push("/home")}>{appCopy.invest.goHome}</Button>
+        </div>
+      </Page>
+    );
+
+  // Private fund and no invite: the contract would refuse (NotInvited), so say it up front.
+  if (b.state === "Open" && b.inviteOnly && !b.position.isCaptain && !invitedTo.has(b.address.toLowerCase()))
+    return (
+      <Page>
+        <TopBar left={<BackButton fallback={`/boat/${address}`} />} title={copy.invest.title(b.name)} />
+        <div className="mt-6 rounded-card bg-card p-4" data-testid="not-invited">
+          <b className="block text-[16px] font-semibold">{appCopy.privateFund.notInvitedTitle}</b>
+          <p className="mt-1 text-[14px] text-muted">{appCopy.privateFund.notInvitedBody(managerOf(b).first)}</p>
         </div>
       </Page>
     );
@@ -120,7 +130,7 @@ export default function Invest({ params }: { params: Promise<{ address: string }
 
       <Sheet open={review} onClose={() => setReview(false)} title={copy.invest.sheetTitle} testId="review-sheet">
         <InvestReview b={b} amount={inv.amount} worst={inv.worst} busy={inv.busy} err={inv.err} passkey={inv.passkey} knowManager={inviterFirst}
-          onConfirm={async () => { if (await inv.confirm()) { setReview(false); setDone(true); if (fromInvite && wallet) { setJoinedFrom(inviterFirst ?? null); dismissInvitation(wallet.address, address); } } }} />
+          onConfirm={async () => { if (await inv.confirm()) { setReview(false); setDone(true); if (fromInvite && wallet) dismissInvitation(wallet.address, address); } }} />
       </Sheet>
     </Page>
   );

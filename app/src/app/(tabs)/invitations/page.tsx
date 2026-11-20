@@ -5,9 +5,9 @@ import { BackButton, Page, TopBar } from "@/components/top-bar";
 import { Button } from "@/components/button";
 import { Ticket, type Accent } from "@/components/ticket";
 import { WalletStack } from "@/components/wallet-stack";
-import { useStore, type BoatView } from "@/lib/store";
+import type { BoatView } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
-import { dismissInvitation, useInvitations, type Invitation } from "@/lib/invitations";
+import { dismissInvitation, inviteCode, useInvitations, type Invitation, inviterOf } from "@/lib/invitations";
 import { managerOf, type Manager } from "@/lib/fund";
 import { dateShort, pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
@@ -18,26 +18,14 @@ const I = appCopy.invitations;
 const ACCENTS: Accent[] = ["navy", "teal", "indigo", "sky", "slate"];
 const MAX = 10; // family funds: up to 10 people (design M1)
 
-/** The inviter as the ticket's manager: their name from the link, the fund's verification. */
-function inviter(inv: Invitation, b: BoatView): Manager {
-  const m = managerOf(b);
-  const name = inv.from.trim() || m.name;
-  const initials = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  return { ...m, name, first: name.split(" ")[0]!, initials };
-}
+/** The inviter is the fund's manager (the on-chain invite comes from their account). */
+const inviter = (_inv: Invitation, b: BoatView): Manager => inviterOf(b);
 
 /** P1 · Invitations: funds a manager invited you to, as tickets in a wallet stack. */
 export default function Invitations() {
-  const { boats } = useStore();
   const acts = useActivityFeed();
   const all = useInvitations();
-  const list = useMemo(
-    () => all.flatMap((inv) => {
-      const b = boats.find((x) => x.address.toLowerCase() === inv.fund.toLowerCase());
-      return b ? [{ inv, b }] : [];
-    }),
-    [all, boats],
-  );
+  const list = useMemo(() => all.map((inv) => ({ inv, b: inv.boat })), [all]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const active = list.find((x) => x.inv.fund === activeId) ?? list[0];
 
@@ -60,7 +48,7 @@ export default function Invitations() {
   const n = Math.min(joined(b), MAX);
   const ticket = (
     <Ticket
-      kicker={I.kicker}
+      kicker={b.inviteOnly ? J.ticketKicker : I.kicker}
       fund={b.name}
       manager={m}
       invitedYou={J.invitedYou(m.first)}
@@ -75,7 +63,7 @@ export default function Invitations() {
       max={MAX}
       members={[]}
       codeLabel={J.inviteCode}
-      code={inv.code}
+      code={inviteCode(inv.fund)}
       expiresLabel={I.ends}
       expires={dateShort(b.endTime)}
       stacked={list.length > 1}

@@ -19,6 +19,8 @@ export type BoatInfo = {
   takeProfitBps: number;
   endTime: number;
   feeBps: number;
+  /** only addresses the captain invited can board */
+  inviteOnly: boolean;
   crewTotal: bigint;
   captainStake: bigint;
   startValue: bigint;
@@ -40,7 +42,7 @@ export async function listBoats(pc: PublicClient, factory: Address): Promise<Add
 
 export async function getBoat(pc: PublicClient, boat: Address, symbols: (a: Address) => string = (a) => a.slice(0, 6)): Promise<BoatInfo> {
   const c = { address: boat, abi: boatAbi } as const;
-  const [name, captain, state, endReason, usdc, assets, sl, tp, endTime, feeBps, crewTotal, captainStake, startValue, nav, finalValue, crewPayout] =
+  const [name, captain, state, endReason, usdc, assets, sl, tp, endTime, feeBps, crewTotal, captainStake, startValue, nav, finalValue, crewPayout, inviteOnly] =
     await pc.multicall({
       allowFailure: false,
       contracts: [
@@ -60,6 +62,7 @@ export async function getBoat(pc: PublicClient, boat: Address, symbols: (a: Addr
         { ...c, functionName: "nav" },
         { ...c, functionName: "finalValue" },
         { ...c, functionName: "crewPayout" },
+        { ...c, functionName: "inviteOnly" },
       ],
     });
   const tokens = [usdc as Address, ...(assets as Address[])];
@@ -97,6 +100,7 @@ export async function getBoat(pc: PublicClient, boat: Address, symbols: (a: Addr
     takeProfitBps: Number(tp),
     endTime: Number(endTime),
     feeBps: Number(feeBps),
+    inviteOnly: inviteOnly as boolean,
     crewTotal: crewTotal as bigint,
     captainStake: captainStake as bigint,
     startValue: sv,
@@ -143,8 +147,25 @@ export async function boatsCaptainedBy(pc: PublicClient, boats: Address[], who: 
   return boats.filter((_, i) => (caps[i] as Address).toLowerCase() === who.toLowerCase());
 }
 
+/** Whether `who` was invited to `boat` (only matters when the boat is invite-only). */
+export async function isInvited(pc: PublicClient, boat: Address, who: Address): Promise<boolean> {
+  return (await pc.readContract({ address: boat, abi: boatAbi, functionName: "invited", args: [who] })) as boolean;
+}
+
+/** Whether `who` may board `boat` right now as far as invites go: public boats are open to all. */
+export async function canBoard(pc: PublicClient, boat: Address, who: Address): Promise<boolean> {
+  const [inviteOnly, invited] = await pc.multicall({
+    allowFailure: false,
+    contracts: [
+      { address: boat, abi: boatAbi, functionName: "inviteOnly" },
+      { address: boat, abi: boatAbi, functionName: "invited", args: [who] },
+    ],
+  });
+  return !(inviteOnly as boolean) || (invited as boolean);
+}
+
 export type Activity = {
-  kind: "boarded" | "sailed" | "traded" | "ended" | "returned" | "withdrawn" | "staked" | "claimed";
+  kind: "boarded" | "sailed" | "traded" | "ended" | "returned" | "withdrawn" | "staked" | "claimed" | "invited";
   boat: Address;
   txHash: `0x${string}`;
   blockNumber: bigint;
@@ -160,6 +181,7 @@ const EVENTS = {
   returned: parseAbiItem("event ReturnedToPort(uint256 finalValue, uint256 crewPayout, uint256 captainBase, uint256 captainFee)"),
   withdrawn: parseAbiItem("event CrewWithdrawn(address indexed crew, uint256 amount)"),
   claimed: parseAbiItem("event CaptainClaimed(uint256 base, uint256 fee)"),
+  invited: parseAbiItem("event Invited(address indexed who)"),
 } as const;
 
 /** Arc's public RPC rejects eth_getLogs over 10,000 blocks, so scan in chunks under that. */

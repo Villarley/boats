@@ -13,6 +13,7 @@ import { symbolOf } from "@/lib/deployment";
 import { fundHref, managerOf, plainWords } from "@/lib/fund";
 import { assetName, dateShort, pct, usd } from "@/lib/format";
 import { appCopy } from "@/lib/copy.app";
+import { inviterOf } from "@/lib/invitations";
 
 const A = appCopy.activityPage;
 export type Category = "money" | "manager" | "alert";
@@ -88,6 +89,8 @@ export function useFeed(): FeedEntry[] {
           amount: dollars !== undefined ? usd(dollars, { cents: true }) : undefined,
           trade: { fund: b, tokenIn, tokenOut, dollars, log: entry?.kind === "trade" ? entry : undefined },
         });
+      } else if (a.kind === "invited" && String(args.who ?? "").toLowerCase() === me) {
+        out.push({ ...base, key: a.txHash + "i" + String(args.who), cat: "manager", leading: avatar, title: A.invitedYou(inviterOf(b).first, b.name), sub: b.inviteOnly ? A.invitedPrivate : A.invitedPublic, href: `/invitations/${b.address}` });
       } else if (a.kind === "boarded" && mine) {
         out.push({ ...base, key: a.txHash + "b", cat: "money", leading: <Ring color="var(--bt-signal)"><ArrowDownLeft weight="bold" /></Ring>,
           title: A.youInvested(b.name), sub: A.youInvestedSub, amount: usd(args.amount as bigint, { cents: true, sign: true }) });

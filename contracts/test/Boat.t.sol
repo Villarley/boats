@@ -72,7 +72,8 @@ contract BoatTest is Test {
             takeProfitBps: 1_500,
             endTime: uint64(block.timestamp + 30 days),
             feeBps: 2_000,
-            vestingDuration: vesting
+            vestingDuration: vesting,
+            inviteOnly: false
         });
     }
 
@@ -276,5 +277,82 @@ contract BoatTest is Test {
         _sail(boat);
         // Stop loss -10% on 11,000 with a 1,000 first-loss stake: crew loses 1% (100 bps).
         assertEq(boat.worstCaseCrewLossBps(), 100);
+    }
+
+    // 10. Invite-only boats: only crew the captain invited can board.
+    function _privateBoat() internal returns (Boat b) {
+        Boat.Config memory c = _config(0);
+        c.name = "Private Harbor";
+        c.inviteOnly = true;
+        b = factory.createBoat(c);
+        vm.prank(grandma);
+        usdc.approve(address(b), type(uint256).max);
+    }
+
+    function _invite(Boat b, address who) internal {
+        address[] memory list = new address[](1);
+        list[0] = who;
+        vm.prank(captain);
+        b.invite(list);
+    }
+
+    function test_PublicBoatBoardsWithoutInvite() public {
+        assertFalse(boat.inviteOnly());
+        vm.startPrank(grandma);
+        usdc.approve(address(boat), type(uint256).max);
+        boat.board(100 * U);
+        vm.stopPrank();
+        assertEq(boat.crewDeposit(grandma), 100 * U);
+    }
+
+    function test_InviteOnlyBlocksUninvited() public {
+        Boat b = _privateBoat();
+        assertTrue(b.inviteOnly());
+        vm.prank(grandma);
+        vm.expectRevert(Boat.NotInvited.selector);
+        b.board(100 * U);
+    }
+
+    function test_InvitedCrewCanBoard() public {
+        Boat b = _privateBoat();
+        vm.expectEmit(true, false, false, false, address(b));
+        emit Boat.Invited(grandma);
+        _invite(b, grandma);
+        assertTrue(b.invited(grandma));
+        vm.prank(grandma);
+        b.board(100 * U);
+        assertEq(b.crewDeposit(grandma), 100 * U);
+        // Someone else is still out.
+        vm.startPrank(crew2);
+        usdc.approve(address(b), type(uint256).max);
+        vm.expectRevert(Boat.NotInvited.selector);
+        b.board(100 * U);
+        vm.stopPrank();
+    }
+
+    function test_OnlyCaptainInvites() public {
+        Boat b = _privateBoat();
+        address[] memory list = new address[](1);
+        list[0] = grandma;
+        vm.prank(grandma);
+        vm.expectRevert(Boat.NotCaptain.selector);
+        b.invite(list);
+        assertFalse(b.invited(grandma));
+    }
+
+    function test_NoInvitesAfterSail() public {
+        Boat b = _privateBoat();
+        _invite(b, grandma);
+        vm.prank(grandma);
+        b.board(100 * U);
+        vm.startPrank(captain);
+        usdc.approve(address(b), type(uint256).max);
+        b.stakeCaptain(100 * U);
+        b.sail();
+        address[] memory list = new address[](1);
+        list[0] = crew2;
+        vm.expectRevert(abi.encodeWithSelector(Boat.WrongState.selector, Boat.State.Open, Boat.State.Sailing));
+        b.invite(list);
+        vm.stopPrank();
     }
 }

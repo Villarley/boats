@@ -116,7 +116,7 @@ async function main() {
   const block = await pc.getBlock();
   const cfg = (name, cap, w, sl, tp) => ({
     name, captain: cap, usdc: USDC, oracle, router: adapter, assets: [usyc, eurc, cirbtc], maxWeightBps: w, stopLossBps: sl, takeProfitBps: tp,
-    endTime: block.timestamp + 7n * 86_400n, feeBps: 2_000, vestingDuration: 3n * 86_400n,
+    endTime: block.timestamp + 7n * 86_400n, feeBps: 2_000, vestingDuration: 3n * 86_400n, inviteOnly: false,
   });
   const boats = [];
   for (const c of [cfg("Safe Harbor", human, [7_000, 3_000, 1_000], 1_000, 1_500), cfg("Westerly", captain.address, [6_000, 4_000, 2_000], 1_500, 2_000), cfg("Open Sea", human, [4_000, 3_000, 5_000], 2_500, 4_000)]) {

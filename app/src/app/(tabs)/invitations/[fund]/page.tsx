@@ -12,7 +12,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { BackButton, Page, TopBar } from "@/components/top-bar";
 import { useBoat, useStore } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
-import { dismissInvitation, useInvitations } from "@/lib/invitations";
+import { dismissInvitation, inviterOf } from "@/lib/invitations";
 import { boatScore } from "@/lib/boat";
 import { managerOf, riskOf, statusOf } from "@/lib/fund";
 import { assetName, pct, usd } from "@/lib/format";
@@ -30,12 +30,11 @@ export default function InvitedFund({ params }: { params: Promise<{ fund: string
   const { wallet } = useStore();
   const router = useRouter();
   const acts = useActivityFeed();
-  const inv = useInvitations().find((i) => i.fund.toLowerCase() === fund.toLowerCase());
 
   if (!b) return <Page><TopBar left={<BackButton fallback="/invitations" />} /><div className="mt-6 h-64 animate-pulse rounded-card bg-card" /></Page>;
 
   const m = managerOf(b);
-  const first = (inv?.from.trim() || m.name).split(" ")[0]!;
+  const first = inviterOf(b).first;
   const value = b.nav || b.crewTotal + b.captainStake;
   const people = new Set(acts.filter((a) => a.kind === "boarded" && a.boat.toLowerCase() === b.address.toLowerCase()).map((a) => String((a.args as { crew?: string }).crew).toLowerCase())).size;
   const room = CAP > value ? CAP - value : 0n;
@@ -48,7 +47,7 @@ export default function InvitedFund({ params }: { params: Promise<{ fund: string
     <Page testId="invited-fund">
       <TopBar left={<BackButton fallback="/invitations" />} title={b.name} right={<NotificationBell />} />
       <div className="mt-[18px] flex items-center justify-between">
-        <Badge>{P.badge(first)}</Badge>
+        <Badge>{b.inviteOnly ? P.badgePrivate : P.badge(first)}</Badge>
         <SafetyMeter score={boatScore(b).total} />
       </div>
       <p className="mt-3 text-[16px] text-muted">{copy.privateJoin.fundValue}</p>

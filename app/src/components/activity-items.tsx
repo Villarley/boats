@@ -7,9 +7,10 @@ import type { BlockedEvent } from "./blocked-sheet";
 import { useStore } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
 import { deployment } from "@/lib/deployment";
-import { fundHref } from "@/lib/fund";
+import { fundHref, managerOf } from "@/lib/fund";
 import { assetName, dateShort, usd } from "@/lib/format";
 import { appCopy } from "@/lib/copy.app";
+import { inviterOf } from "@/lib/invitations";
 
 export type ActivityEntry = {
   key: string;
@@ -59,6 +60,13 @@ export function useActivityItems() {
     const mine = String(args.crew ?? "").toLowerCase() === me;
     const relevant = mineOrManaged.has(a.boat.toLowerCase());
     let item: ActivityEntry | null = null;
+    if (a.kind === "invited") {
+      if (String(args.who ?? "").toLowerCase() !== me) continue;
+      const it: ActivityEntry = { ...base, key: a.txHash + "i", tile: activityTile.start, title: A.invitedYou(inviterOf(b).first, fund), sub: b.inviteOnly ? A.invitedPrivate : A.invitedPublic, href: `/invitations/${b.address}` };
+      everyone.push(it);
+      yours.push(it);
+      continue;
+    }
     if (a.kind === "boarded") item = { ...base, key: a.txHash, tile: activityTile.in, title: mine ? appCopy.activity.invested(fund) : A.someoneInvested(fund), sub: usd(args.amount as bigint) };
     else if (a.kind === "traded") item = { ...base, key: a.txHash, tile: activityTile.trade, title: A.traded(fund), sub: A.tradedSub(assetName(String(args.tokenIn)), assetName(String(args.tokenOut))) };
     else if (a.kind === "sailed") item = { ...base, key: a.txHash + "s", tile: activityTile.start, title: A.started(fund), sub: A.startedSub(usd(args.startValue as bigint)) };

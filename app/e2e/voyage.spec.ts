@@ -155,10 +155,11 @@ test("invitations: a manager invites an account ID, the investor finds the ticke
   await expect(laura.getByTestId("invite")).toContainText("Invite investors");
   await laura.getByTestId("invite-to").fill(d.demo.grandma);
   await laura.getByTestId("invite-send").click();
-  await expect(laura.getByTestId("invite-note")).toContainText("Invite sent");
+  await expect(laura.getByTestId("invite-note")).toContainText("Invited.", { timeout: 30_000 });
   const maria = await signIn(browser, "grandma");
+  // The invite is on-chain; the shared feed refreshes every few seconds.
   await maria.goto("/invitations");
-  await expect(maria.getByTestId("ticket")).toBeVisible();
+  await expect(maria.getByTestId("ticket")).toBeVisible({ timeout: 30_000 });
   await expect(maria.getByTestId("ticket")).toContainText("Laura invited you");
   // P2: the fund behind the invite, then the real invest flow with "I know Laura personally" (P3).
   await maria.getByTestId("invite-open").click();
