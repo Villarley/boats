@@ -36,6 +36,22 @@
         "message": "The AI captain tried to move all $15 into Bitcoin. Blocked by the contract: max weight exceeded.",
         "txHash": "0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630"
       }
+    ],
+    "log": [
+      {
+        "at": "2026-11-20T05:27:30.000Z",
+        "boat": "0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b",
+        "kind": "trade",
+        "message": "Odds of \"Hike 25bps\" at 91% (above 70%). Moving $7.50 to Treasuries.",
+        "txHash": "0xfc9335b11c63399060b7708db5aeb18705b51b8c1ac578d7091bc6913cbfda51"
+      },
+      {
+        "at": "2026-11-20T05:26:45.000Z",
+        "boat": "0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b",
+        "kind": "blocked",
+        "message": "Tried to move all $15 into Bitcoin. Blocked by the contract: max weight exceeded.",
+        "txHash": "0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630"
+      }
     ]
   }
 }

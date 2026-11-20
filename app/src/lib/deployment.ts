@@ -6,7 +6,7 @@ import arc from "@/config/arc-deployment.json";
 
 export type AppDeployment = Deployment & {
   startBlock: number;
-  demo: { ana?: Address; grandma?: Address; aiCaptain?: Address; blocked?: { message: string; txHash: string }[] };
+  demo: { ana?: Address; grandma?: Address; aiCaptain?: Address; blocked?: { message: string; txHash: string }[]; log?: { at: string; boat: string; kind: "trade" | "blocked" | "hold"; message: string; txHash?: string }[] };
 };
 
 export const CHAIN_NAME = (process.env.NEXT_PUBLIC_CHAIN ?? "local") as "local" | "arc";
