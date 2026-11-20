@@ -1,68 +1,108 @@
-/* Boats design tokens v3 · signal flags, tempered to a private-bank tone (Mercury) + Cash App structure (Nov 19 2026).
-   Fonts (next/font/google): Archivo (variable, wdth 62-125: use 125 for display), IBM Plex Mono (data, addresses).
-   Flag colors are the brand. 10px corners, 1px hairline borders, no soft shadows. Flags render at 24x16 as markers, never as decoration. */
+/* Boats design tokens v9 (Nov 20 2026). Replaces v3 (Archivo, signal flags, red captain stake).
+   Light only. White canvas, navy ink, ONE action color (Signal blue). Navy marks the manager.
+   Same --bt-* prefix as v3. The "legacy aliases" block at the bottom maps every v3 name the app
+   still uses to the new palette, so the app picks up the new look before components are rewritten.
+   Delete that block once no component references a v3 name. */
 :root {
-  /* Signal flag colors (fixed in both themes) */
-  --bt-flag-red: #B3261E;     /* antifouling red: the captain's stake, losses, "danger" */
-  --bt-flag-yellow: #E0A526;  /* caution, market odds. NEVER as text color */
-  --bt-flag-blue: #23408E;    /* crew money, primary action, gains */
-  --bt-flag-white: #FFFFFF;
-  --bt-flag-ink: #0B1A30;     /* flag black / outline */
+  /* surfaces */
+  --bt-bg: #FFFFFF;          /* app background */
+  --bt-card: #F3F5F9;        /* cards, inputs, list groups */
+  --bt-card-2: #E8ECF3;      /* secondary button, chips, neutral badges, active tab pill */
+  --bt-card-3: #DCE2EC;      /* toggle off, meter off, outlines, hairlines */
+  --bt-divider: #CBD3E0;     /* dotted dividers in Profile lists */
 
-  /* Theme roles */
-  --bt-paper: #F5F6F4;        /* chart white: app background */
-  --bt-surface: #FFFFFF;      /* cards */
-  --bt-ink: #0B1A30;          /* text + hard borders */
-  --bt-ink-2: #5A6478;        /* secondary text */
-  --bt-hair: #E2E5EA;         /* hairlines, graticule */
-  --bt-primary: #23408E;      /* primary button fill */
-  --bt-on-primary: #FFFFFF;
-  --bt-crew: #23408E;         /* crew money (above the waterline) */
-  --bt-captain: #B3261E;      /* captain's stake (below the waterline) */
-  --bt-up: #23408E;           /* gains: blue, not green */
-  --bt-down: #B3261E;         /* losses */
-  --bt-caution: #E0A526;      /* fill only */
-  --bt-tint-blue: #EBEEF5; --bt-tint-red: #F7E9E7; --bt-tint-yellow: #FFF4D1;
+  /* ink */
+  --bt-ink: #0B1A30;         /* text + navy */
+  --bt-muted: #5E6A7E;       /* subtitles, labels */
+  --bt-faint: #9AA4B6;       /* placeholders, disabled, axis labels */
 
-  /* Type */
-  --bt-font: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --bt-font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  /* Titles: Archivo 600, sentence case, -0.02em. Big numbers: Archivo 300, -0.04em. */
-  --bt-text-xs: 0.8125rem; --bt-text-sm: 1rem; --bt-text-md: 1.125rem; /* 18 body */
-  --bt-text-lg: 1.375rem; --bt-text-xl: 1.75rem; --bt-text-2xl: 2.25rem; --bt-text-3xl: 3rem; --bt-text-4xl: 4.5rem;
-  --bt-leading: 1.5; --bt-leading-tight: 1.05;
-  --bt-track-caps: 0.04em;
+  /* brand */
+  --bt-signal: #2B4FD8;      /* the only action color: primary button, Invest FAB, chart line, toggles on, safety meter, FolderCard, Ticket */
+  --bt-signal-deep: #1E3CB4; /* strip at the bottom of FolderCard */
+  --bt-signal-soft: #C9D4F6; /* light rings, ribbon 1, investors' segment */
+  --bt-signal-50: #E7ECFC;   /* light art panels (ribbon banners), seal ring */
+  --bt-navy: #0B1A30;        /* manager marker: avatar, Create FAB, manager's money in bars, value pill on charts */
+  --bt-brand-blue: #23408E;  /* logo / marketing only */
 
-  /* Space / shape */
-  --bt-s1: 4px; --bt-s2: 8px; --bt-s3: 12px; --bt-s4: 16px; --bt-s5: 24px; --bt-s6: 32px; --bt-s7: 48px; --bt-s8: 64px;
-  /* Radius scale. Nested shapes are concentric: inner = outer - padding. */
-  --bt-radius-chip: 8px;      /* score chips, tags */
-  --bt-radius-tile: 10px;     /* 36px icon tiles */
-  --bt-radius: 16px;          /* cards, buttons, inputs */
-  --bt-radius-sheet: 28px;    /* bottom sheets (top corners) */
-  --bt-radius-pill: 999px;    /* filter chips only */
-  --bt-radius-sm: var(--bt-radius-chip); --bt-radius-btn: var(--bt-radius); --bt-radius-card: var(--bt-radius);
-  /* Layout: 20px screen gutter, 16px card padding, 12px between cards, 56px min list row, 52px buttons 8px apart at the bottom. */
-  --bt-gutter: 20px; --bt-row: 56px; --bt-btn: 52px; --bt-tile: 36px;
-  --bt-line: #E3E6EB;         /* 1px card border. Border OR shadow, never both */
-  --bt-border: 1px;           /* hairline (--bt-hair) on cards and inputs */
-  --bt-tap: 56px;
+  /* accents: ribbons, Profile icon tiles, allocation bars, avatars. Never for text. */
+  --bt-indigo: #5B5BD6;
+  --bt-teal: #0E9F8A;
+  --bt-sky: #3A9BDC;
+  --bt-usdc: #2775CA;
+
+  /* semantic: values as colored text, solid fills only (never pastel tints) */
+  --bt-gain: #12935A;
+  --bt-loss: #D93A3F;
+
+  /* status dots */
+  --bt-status-open: #2B4FD8;
+  --bt-status-active: #12935A;
+  --bt-status-closing: #5E6A7E;
+  --bt-status-closed: #9AA4B6;
+
+  /* type: system stack until FK Grotesk is licensed; mono only for small caps labels */
+  --bt-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --bt-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --bt-text-display: 34px;   /* 700, -0.01em, tabular */
+  --bt-text-amount: 64px;    /* amount entry, 700 */
+  --bt-text-title: 22px;     /* 600 */
+  --bt-text-body: 16px;
+  --bt-text-caption: 13px;
+  --bt-text-label: 11px;     /* mono, uppercase, .07em */
+
+  /* shape */
+  --bt-radius-chip: 8px;
+  --bt-radius-tile: 9px;     /* 30px Profile icon tiles */
+  --bt-radius-input: 14px;
+  --bt-radius-card: 18px;
+  --bt-radius-hero: 22px;    /* FolderCard, Ticket, art banners */
+  --bt-radius-sheet: 34px;
+  --bt-radius-pill: 999px;   /* buttons, chips, tab bar */
+
+  /* layout */
+  --bt-gutter: 20px;
+  --bt-btn: 52px;            /* 46 in dense spots, 38 = sm */
+  --bt-row: 56px;
+  --bt-tabbar: 64px;
+
+  /* elevation (floating things only: tab bar, FAB, floating cards on art panels, Ticket) */
+  --bt-shadow-tabbar: 0 6px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06);
+  --bt-shadow-float: 0 14px 34px rgba(11,26,48,.18);
+  --bt-shadow-fab: 0 8px 22px rgba(43,79,216,.35);
+  --bt-shadow-fab-navy: 0 8px 22px rgba(11,26,48,.30);
+  --bt-shadow-ticket: 0 18px 38px rgba(43,79,216,.30);
+
   --bt-ease: cubic-bezier(.2,.7,.2,1); --bt-dur: 220ms;
+
+  /* ---------- legacy aliases (v3 names → v9 values). Remove when unused. ---------- */
+  --bt-paper: var(--bt-bg);
+  --bt-surface: var(--bt-card);
+  --bt-ink-2: var(--bt-muted);
+  --bt-hair: var(--bt-card-3);
+  --bt-line: var(--bt-card-3);
+  --bt-primary: var(--bt-signal);
+  --bt-on-primary: #FFFFFF;
+  --bt-crew: var(--bt-signal);
+  --bt-captain: var(--bt-navy);      /* v3 painted the captain red; v9 marks the manager navy */
+  --bt-up: var(--bt-gain);
+  --bt-down: var(--bt-loss);
+  --bt-caution: var(--bt-muted);
+  --bt-tint-blue: var(--bt-card);    /* tints are gone: neutral card instead */
+  --bt-tint-red: var(--bt-card);
+  --bt-tint-yellow: var(--bt-card);
+  --bt-flag-red: var(--bt-loss);
+  --bt-flag-yellow: var(--bt-muted);
+  --bt-flag-blue: var(--bt-signal);
+  --bt-flag-white: #FFFFFF;
+  --bt-flag-ink: var(--bt-navy);
+  --bt-radius: var(--bt-radius-card);
+  --bt-radius-sm: var(--bt-radius-chip);
+  --bt-tile: 30px;
+  --bt-track-caps: .07em;
+  --bt-text-md: var(--bt-text-body);
+  --bt-leading: 1.4;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bt-paper: #0B1A30; --bt-surface: #12243F; --bt-ink: #F2F4F8; --bt-ink-2: #A9B3C4; --bt-hair: #24365E;
-    --bt-primary: #FFFFFF; --bt-on-primary: #0B1A30; --bt-crew: #8FA8E0; --bt-captain: #F08A80; --bt-up: #8FA8E0; --bt-down: #F08A80;
-    --bt-tint-blue: #12305F; --bt-tint-red: #3A1A2A; --bt-tint-yellow: #3A3218; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bt-paper: #0B1A30; --bt-surface: #12243F; --bt-ink: #F2F4F8; --bt-ink-2: #A9B3C4; --bt-hair: #24365E;
-  --bt-primary: #FFFFFF; --bt-on-primary: #0B1A30; --bt-crew: #8FA8E0; --bt-captain: #F08A80; --bt-up: #8FA8E0; --bt-down: #F08A80;
-  --bt-tint-blue: #12305F; --bt-tint-red: #3A1A2A; --bt-tint-yellow: #3A3218; color-scheme: dark;
-}
-body { background: var(--bt-paper); color: var(--bt-ink); font: 400 var(--bt-text-md)/var(--bt-leading) var(--bt-font); }
-.bt-title { font-family: var(--bt-font); font-weight: 600; letter-spacing: -0.02em; line-height: 1.08; }
-.bt-giant { font-family: var(--bt-font); font-weight: 300; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+html, body { background: var(--bt-bg); color: var(--bt-ink); }
+body { font: 400 var(--bt-text-body)/1.4 var(--bt-font); -webkit-font-smoothing: antialiased; }
 .bt-num { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
