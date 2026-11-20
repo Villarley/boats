@@ -85,6 +85,8 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 
 ## Architecture: protocol first, apps on top
 
+[Economic whitepaper](docs/whitepaper.md): Abraham's first-loss model mapped to the implemented lifecycle, fee vesting, integer accounting, source code and reproducible evidence.
+
 | Layer | Path | What |
 |---|---|---|
 | Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 18 tests incl. invariants, CI on every push) |

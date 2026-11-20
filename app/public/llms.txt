@@ -13,6 +13,7 @@ The bundled captain uses deterministic rules, without an embedded LLM. MCP tools
 - [MCP server](https://github.com/Villarley/boats/tree/main/packages/mcp): 14 tools: `boats_deployment`, `boats_list`, `boats_get`, `boats_score`, `boats_worst_case`, `boats_check_trade`, `boats_position`, `boats_my_positions`, `boats_activity`, `boats_odds`, `boats_odds_contracts`, `boats_create`, `boats_act`, `boats_tx_status`
 - [Example agent session](https://github.com/Villarley/boats/blob/main/packages/mcp/examples/session.md)
 - [Judge evidence guide](https://github.com/Villarley/boats/blob/main/docs/judging.md): reproduce five proofs with npm run verify:proof, without a key or a new transaction; memos are self-reported, not Gemini attestations
+- [Economic whitepaper](https://github.com/Villarley/boats/blob/main/docs/whitepaper.md): first-loss equations, exact examples, fee vesting, integer rounding and implemented-versus-proposed controls, with source and verification links
 - [Partner research](https://github.com/Villarley/boats/blob/main/docs/partner-research.md): source-backed submission strategy and acceptance criteria
 - [@boats/sdk](https://github.com/Villarley/boats/tree/main/packages/sdk): reads, `checkTrade`, first-loss math, calldata builders, keeper, captain quickstart
 - [Contracts](https://github.com/Villarley/boats/tree/main/contracts/src): `Boat.sol`, `BoatFactory.sol`, `PriceOracle.sol`, `SwapAdapter.sol`

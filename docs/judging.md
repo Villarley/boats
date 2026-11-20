@@ -18,6 +18,8 @@ Neither command constructs a signer or sends a transaction. `verify:agent` uses 
 
 The recorded report passed **5/5** on November 20, 2026. The crew deposited **2 USDC** and withdrew **2.197402 USDC**, a **9.8701%** return in a controlled mock-price settlement test. This is not an investment return claim. The decision memo records a **$0.552475** swap, **91%** self-reported Gemini odds, event `FED261211`, the outcome, reason and fetch timestamp. A memo proves what the captain wrote, not the authenticity of its off-chain source.
 
+The [whitepaper implementation companion](whitepaper.md), based on Abraham's research draft, connects the economic equations to source and tests. It covers finite first-loss protection, linear fee vesting, integer rounding and where proposed controls exceed the current implementation.
+
 ## Prize fit and evidence
 
 [Official UBC guide](https://docs.google.com/document/d/1QaySCo7u3VxMVNdk3C5Ab3ewc2E46AuLntti-Uzx5EY/edit) and [Devpost](https://ubc-hackathon-2026.devpost.com/) allow one main track, one chain award and qualifying optional bounties. The amounts below are prize values, not forecasts or winning probabilities.

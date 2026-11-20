@@ -13,6 +13,7 @@
     "llms": "https://boats-liard.vercel.app/llms.txt",
     "deployment": "https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json",
     "judgeGuide": "https://github.com/Villarley/boats/blob/main/docs/judging.md",
+    "whitepaper": "https://github.com/Villarley/boats/blob/main/docs/whitepaper.md",
     "partnerResearch": "https://github.com/Villarley/boats/blob/main/docs/partner-research.md",
     "evidenceReport": "https://github.com/Villarley/boats/blob/main/docs/evidence-report.json"
   },
@@ -34,6 +35,7 @@
     { "command": "npm run verify:proof", "network": true, "signer": false, "sendsTransactions": false, "checks": "5 historical Arc receipts, calldata, events, historical mandate rejection and crew payout" }
   ],
   "claims": [
+    { "id": "first-loss-waterfall", "status": "verified-source-and-tests", "claim": "Crew principal is senior to captain stake; positive gains are shared pro rata with a fee on crew profit and configurable linear fee vesting", "source": "docs/whitepaper.md", "verify": "cd contracts && forge test", "scope": "Finite first-loss protection; integer allocation and tested vesting, not a guaranteed loss bound or cross-voyage clawback" },
     { "id": "mandate", "status": "verified-onchain", "claim": "A swap exceeding the Bitcoin weight limit reverted", "transaction": "0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6", "verify": "npm run verify:proof", "scope": "Specific historical testnet transaction; not a security audit" },
     { "id": "gemini-decision", "status": "verified-onchain-memo", "claim": "Captain recorded a 91% Gemini signal and reason in a successful swap", "transaction": "0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41", "verify": "npm run verify:proof", "scope": "Self-reported signal, not a Gemini-signed attestation; no Gemini exchange orders" },
     { "id": "settlement", "status": "verified-onchain", "claim": "A completed voyage paid 2.197402 test USDC for 2 USDC crew principal", "transaction": "0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e", "verify": "npm run verify:proof", "scope": "Controlled mock-price settlement test, not realized investment performance" },
