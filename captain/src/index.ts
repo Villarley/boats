@@ -1,6 +1,6 @@
 import type { Address, Hex } from "viem";
 import { boatAbi } from "@boats/sdk";
-import { clients, readBoat, revertReason, valueToAmount } from "@boats/sdk";
+import { buildSwapCall, clients, readBoat, revertReason, valueToAmount, type DecisionMemo } from "@boats/sdk";
 import { fetchOdds, type Odds } from "@boats/sdk";
 import { log, txLink } from "./log.js";
 import { decide, type Rule } from "./rules.js";
@@ -35,7 +35,8 @@ export function configFromEnv(env = process.env): CaptainConfig {
     oracle: need("ORACLE") as Address,
     tokens: { usdc: need("USDC") as Address, usyc, eurc: env.EURC as Address, cirbtc: env.CIRBTC as Address },
     gemini: { event: env.GEMINI_EVENT || "FED261211", match },
-    rules: [
+    // RULES_JSON overrides the default rule, e.g. [{"kind":"odds-above","threshold":0.8,"to":"0x...","targetFraction":0.3,"text":"..."}]
+    rules: env.RULES_JSON ? (JSON.parse(env.RULES_JSON) as Rule[]) : [
       {
         kind: "odds-above",
         threshold: trigger,
@@ -106,8 +107,14 @@ export async function runOnce(c: CaptainConfig, opts: { rogue?: boolean } = {}) 
 
   const amountIn = await valueToAmount(pc, c.oracle, d.from, boat.usdc, d.amountValue);
   try {
-    const { request } = await pc.simulateContract({ account, address: c.boat, abi: boatAbi, functionName: "swap", args: [d.from, d.to, amountIn, 0n] });
-    const hash = await wc!.writeContract(request);
+    await pc.simulateContract({ account, address: c.boat, abi: boatAbi, functionName: "swap", args: [d.from, d.to, amountIn, 0n] });
+    // The decision and the odds it used ride in the swap's calldata, so anyone can audit it on the explorer.
+    const memo: DecisionMemo = {
+      why: d.reason,
+      signal: d.odds ? { source: "gemini-prediction-markets", event: d.odds.eventTicker, contract: d.odds.contractLabel, probability: d.odds.probability, at: d.odds.fetchedAt } : undefined,
+    };
+    const call = buildSwapCall(c.boat, d.from, d.to, amountIn, 0n, memo);
+    const hash = await wc!.sendTransaction({ account: account!, chain: wc!.chain, to: call.to, data: call.data });
     const rcpt = await pc.waitForTransactionReceipt({ hash });
     const ok = rcpt.status === "success";
     await log({ at: at(), boat: c.boat, kind: ok ? "trade" : "error", message: ok ? d.reason : `Trade failed on chain. ${d.reason}`, odds: oddsLog(d.odds), txHash: hash, explorer: txLink(hash) }, c.webhook);

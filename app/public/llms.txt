@@ -7,7 +7,8 @@ AI agents can read boats, pre-check trades against the mandate, read Gemini pred
 ## Docs
 
 - [AGENTS.md](https://github.com/Villarley/boats/blob/main/AGENTS.md): lifecycle, who can call what, mandate rules, errors, addresses, MCP setup
-- [MCP server](https://github.com/Villarley/boats/tree/main/packages/mcp): tools `boats_list`, `boats_check_trade`, `boats_worst_case`, `boats_odds`, `boats_act`
+- [MCP server](https://github.com/Villarley/boats/tree/main/packages/mcp): 14 tools: `boats_deployment`, `boats_list`, `boats_get`, `boats_score`, `boats_worst_case`, `boats_check_trade`, `boats_position`, `boats_my_positions`, `boats_activity`, `boats_odds`, `boats_odds_contracts`, `boats_create`, `boats_act`, `boats_tx_status`
+- [Example agent session](https://github.com/Villarley/boats/blob/main/packages/mcp/examples/session.md)
 - [@boats/sdk](https://github.com/Villarley/boats/tree/main/packages/sdk): reads, `checkTrade`, first-loss math, calldata builders, keeper, captain quickstart
 - [Contracts](https://github.com/Villarley/boats/tree/main/contracts/src): `Boat.sol`, `BoatFactory.sol`, `PriceOracle.sol`, `SwapAdapter.sol`
 - [Deployment](https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json): Arc testnet (chain 5042002) addresses

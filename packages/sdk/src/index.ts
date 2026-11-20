@@ -10,6 +10,7 @@ export * from "./chain.js";
 export * from "./gemini.js";
 export * from "./keeper.js";
 export * from "./mandate.js";
+export * from "./memo.js";
 export * from "./reads.js";
 export * from "./score.js";
 export * from "./wallet.js";

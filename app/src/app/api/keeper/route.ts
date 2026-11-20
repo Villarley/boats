@@ -26,9 +26,23 @@ function sameOrigin(req: Request): boolean {
   }
 }
 
+const TRADED = "0x825f67dcf8bc9df74117166defc432f4cdf0a331eff757dd049327c83c2e02e1";
+
+/**
+ * QuickNode Stream payload ({ logs }, see docs/quicknode.md): a Traded log only needs its own boat checked.
+ * A PriceUpdated log, an unknown payload or none (cron, button) checks every official boat.
+ */
+function boatsToCheck(official: `0x${string}`[], body: unknown): `0x${string}`[] {
+  const logs = (body as { logs?: { address?: string; topics?: string[] }[] } | null)?.logs;
+  if (!Array.isArray(logs) || logs.length === 0) return official;
+  if (logs.some((l) => l.topics?.[0] !== TRADED)) return official;
+  const hit = new Set(logs.map((l) => (l.address ?? "").toLowerCase()));
+  return official.filter((b) => hit.has(b.toLowerCase()));
+}
+
 export async function POST(req: Request) {
   const secret = process.env.KEEPER_SECRET;
-  const authed = !secret || req.headers.get("x-keeper-secret") === secret;
+  const authed = !!secret && req.headers.get("x-keeper-secret") === secret; // fail closed if the secret is unset
   if (!authed) {
     if (!sameOrigin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     const now = Date.now();
@@ -41,7 +55,8 @@ export async function POST(req: Request) {
   if (!key) return NextResponse.json({ error: "keeper not configured" }, { status: 503 });
   const pc = publicClient();
   const wc = createWalletClient({ chain, transport: http(rpcUrl), account: privateKeyToAccount(key) });
-  const boats = await listOfficialBoats(pc, deployment);
+  const official = await listOfficialBoats(pc, deployment);
+  const boats = boatsToCheck(official, await req.json().catch(() => null));
   const results = [];
   for (const b of boats) {
     const r = await keepBoat(pc, wc, b);

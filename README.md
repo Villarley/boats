@@ -6,6 +6,8 @@
 
 **Your money sails. Nobody can take it.**
 
+> **TL;DR for judges.** A fund where the manager (human or AI) can only call `swap()` inside an on-chain mandate, loses first, and can never withdraw. Live on Arc testnet: an AI captain [traded on Gemini odds](https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea), a rogue trade was [refused by the contract](https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6), and a full voyage [ended at take profit and paid the crew +9.9%](https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e). Any AI agent can be a captain through our [MCP server](packages/mcp) ([AGENTS.md](AGENTS.md)).
+
 **Try it on your phone: [boats-liard.vercel.app](https://boats-liard.vercel.app)** (Arc testnet; you get $5 of test USDC on first open)
 
 Boats is infrastructure for delegated money on Arc. A captain (a person or an AI) trades a crew's money inside an on-chain mandate. The captain can never withdraw it, puts up a stake that takes the first loss, and every voyage ends at a stop loss, a take profit or a date that the contract enforces.
@@ -38,7 +40,8 @@ Addresses are in [Contract addresses](#contract-addresses-arc-testnet).
 
 Any agent can be a captain or crew member. The contract, not the model, is what keeps the money safe.
 
-- **MCP server** (`packages/mcp`): `boats_list`, `boats_check_trade` (dry-run against the mandate, with the max allowed amount), `boats_worst_case`, `boats_odds` (live Gemini), `boats_act` (board, swap, stake and sail, check voyage...). Run `npx tsx packages/mcp/src/server.ts`.
+- **MCP server** (`packages/mcp`, 14 tools): read boats, score them, compute the worst case before boarding, dry-run a trade against the mandate, read live Gemini odds, launch a boat, and act as captain or crew. Every write tool checks state, role and mandate before returning a call, so an agent never gets a transaction that would revert. Run `npx tsx packages/mcp/src/server.ts`. Example: [agent session](packages/mcp/examples/session.md).
+- **Auditable AI decisions:** an agent's swap carries its reasoning and the odds it used inside the transaction itself (`decodeSwapMemo()` in the SDK). No contract change: Solidity ignores trailing calldata.
 - **[AGENTS.md](AGENTS.md)**: lifecycle, who can call what, mandate rules, revert reasons, addresses.
 - **[llms.txt](https://boats-liard.vercel.app/llms.txt)** on the live app.
 - **[@boats/sdk](packages/sdk)**: captain quickstart in TypeScript.
@@ -124,7 +127,7 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 
 ## Gemini Prediction Markets
 
-The AI captain reads the public market-data API (`GET /v1/prediction-markets/events/{ticker}`). A contract's YES price is its implied probability. Live rule: *"If the odds of a Fed hike 25bps go above 70%, move half to Treasuries."* (event `FED261211`, "Fed decision in December?"). The app shows the same live odds on every boat card. The odds inform the decision, and the contract limits what can execute. If market data is down, the captain holds and says so in its log. Odds also appear on every boat card as a risk signal.
+The AI captain reads the public market-data API (`GET /v1/prediction-markets/events/{ticker}`). A contract's YES price is its implied probability. Live rule: *"If the odds of a Fed hike 25bps go above 70%, move half to Treasuries."* (event `FED261211`, "Fed decision in December?"). The app shows the same live odds on every boat card. The odds inform the decision, and the contract limits what can execute. Each swap carries a decision memo (rule, event, contract, probability, timestamp) in its calldata, so anyone can check the trade against the odds the captain saw (`decodeSwapMemo()`). `boats_odds_contracts` in the MCP server lists every contract of an event so an agent can pick its own market. If market data is down, the captain holds and says so in its log. Odds also appear on every boat card as a risk signal.
 
 ## QuickNode Streams
 
