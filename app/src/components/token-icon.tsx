@@ -9,11 +9,18 @@ export function TokenIcon({ symbol, size = 22, ring, className = "" }: { symbol:
   return <img src={src} alt={symbol} width={size} height={size} className={`inline-block flex-none rounded-full object-cover ${className}`} style={style} />;
 }
 
-/** Overlapping token logos (30px, −9px overlap, 3px ring in the surface color). */
-export function TokenStack({ symbols, ring = "var(--bt-card)" }: { symbols: string[]; ring?: string }) {
+/**
+ * Overlapping token logos (30px, −9px overlap, 3px ring in the surface color). Past `max`,
+ * the rest collapse into "+N". The names stay available to screen readers and on hover.
+ */
+export function TokenStack({ symbols, ring = "var(--bt-card)", size = 30, max = 5, label }: { symbols: string[]; ring?: string; size?: number; max?: number; label?: string }) {
+  const shown = symbols.slice(0, max);
+  const rest = symbols.length - shown.length;
+  const names = label ?? symbols.join(", ");
   return (
-    <span className="inline-flex items-center">
-      {symbols.map((s, i) => <TokenIcon key={s} symbol={s} size={30} ring={ring} className={i ? "-ml-[9px]" : ""} />)}
+    <span className="inline-flex items-center" role="img" aria-label={names} title={names}>
+      {shown.map((s, i) => <TokenIcon key={s} symbol={s} size={size} ring={ring} className={i ? "-ml-[9px]" : ""} />)}
+      {rest > 0 && <span className="bt-num ml-1.5 text-[15px] font-semibold text-ink">+{rest}</span>}
     </span>
   );
 }

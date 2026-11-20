@@ -8,7 +8,7 @@ import { Button } from "@/components/button";
 import { Chips, Segmented, StickyActions, Toggle } from "@/components/controls";
 import { ListGroup, ListRow } from "@/components/list-group";
 import { LabelRows } from "@/components/label-rows";
-import { TokenIcon } from "@/components/token-icon";
+import { TokenIcon, TokenStack } from "@/components/token-icon";
 import { useStore } from "@/lib/store";
 import { deployment } from "@/lib/deployment";
 import { worstCaseCrewLossBps } from "@boats/sdk";
@@ -193,7 +193,7 @@ function Create() {
           <ScoreCard total={s.total} factors={s.factors} sub={appCopy.create.scoreSub(target10)} />
           <LabelRows rows={[
             { label: appCopy.create.reviewRows.name, value: name },
-            { label: appCopy.create.reviewRows.holds, value: ["USDC", ...chosen].join(" · ") },
+            { label: appCopy.create.reviewRows.holds, value: <TokenStack symbols={["USDC", ...chosen]} ring="#FFFFFF" size={28} label={["USDC", ...chosen].join(" · ")} /> },
             { label: appCopy.create.reviewRows.limits, value: <><span className="text-loss">−{loss}%</span> · <span className="text-gain">{target ? `+${target}%` : appCopy.create.none}</span></> },
             { label: appCopy.create.reviewRows.fee, value: `${fee}%` },
           ]} />
