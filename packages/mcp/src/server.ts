@@ -10,7 +10,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import type { Hex } from "viem";
+import { getAddress, type Hex } from "viem";
 import { clients, revertReason, type Call } from "@boats/sdk";
 import {
   activityTool,
@@ -95,7 +95,19 @@ const server = new McpServer(
 server.registerTool(
   "boats_deployment",
   { description: "Chain id, RPC, explorer, contract and token addresses of the live Boats deployment on Arc testnet, and whether this server can sign (signer).", inputSchema: {} },
-  wrap(async () => ({ ...deployment, rpcUrl, explorer: "https://testnet.arcscan.app", faucet: "https://faucet.circle.com", signer: account?.address ?? null })),
+  wrap(async () => ({
+    chainId: deployment.chainId,
+    factory: getAddress(deployment.factory),
+    oracle: getAddress(deployment.oracle),
+    router: getAddress(deployment.adapter),
+    tokens: Object.fromEntries(Object.entries(deployment.tokens).map(([k, v]) => [k, getAddress(v)])),
+    testnetMocks: deployment.mocks,
+    boats: "Call boats_list for the current official boats.",
+    rpcUrl,
+    explorer: "https://testnet.arcscan.app",
+    faucet: "https://faucet.circle.com",
+    signer: account?.address ?? null,
+  })),
 );
 
 server.registerTool(

@@ -41,7 +41,7 @@ Addresses are in [Contract addresses](#contract-addresses-arc-testnet).
 Any agent can be a captain or crew member. The contract, not the model, is what keeps the money safe.
 
 - **MCP server** (`packages/mcp`, 14 tools): read boats, score them, compute the worst case before boarding, dry-run a trade against the mandate, read live Gemini odds, launch a boat, and act as captain or crew. Every write tool checks state, role and mandate before returning a call, so an agent never gets a transaction that would revert. Run `npx tsx packages/mcp/src/server.ts`. Example: [agent session](packages/mcp/examples/session.md).
-- **Auditable AI decisions:** an agent's swap carries its reasoning and the odds it used inside the transaction itself (`decodeSwapMemo()` in the SDK). No contract change: Solidity ignores trailing calldata.
+- **Auditable AI decisions (new, in code):** the AI captain and `boats_act swap` can write the reasoning and the odds used into the swap transaction itself (`withMemo()` / `decodeSwapMemo()` in the SDK). No contract change: Solidity ignores trailing calldata. The proof swaps above predate this feature, so they carry no memo.
 - **[AGENTS.md](AGENTS.md)**: lifecycle, who can call what, mandate rules, revert reasons, addresses.
 - **[llms.txt](https://boats-liard.vercel.app/llms.txt)** on the live app.
 - **[@boats/sdk](packages/sdk)**: captain quickstart in TypeScript.
@@ -49,6 +49,8 @@ Any agent can be a captain or crew member. The contract, not the model, is what 
 ## Why
 
 To let someone manage your money today, you have to hand over custody. They can take it, take too much risk, or charge fees while they lose. That holds for a fund manager, a friend who "knows crypto", a trading bot and an AI agent. In a controlled experiment with real USDC (I-HITL, Cornell Tech and Yale/IC3, Oct 2026), 9 of 10 AI models raised their own spending cap at least once. Boats removes custody from the equation: the contract holds the money, and the captain's only power is `swap()` inside the rules.
+
+**Who it's for.** Someone who wants a person or an AI to manage savings without handing over the keys: a parent saving in dollars, a family pooling money, a crypto newcomer following a friend who trades well. **Who pays.** Captains earn a share of the crew's profit only (no management fee), and only after their own stake has absorbed any losses. The protocol could take a cut of that fee. **Why now.** AI agents are starting to manage money, and the safe way to let them is a mandate the model can't break.
 
 ## How it works
 
@@ -127,7 +129,7 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 
 ## Gemini Prediction Markets
 
-The AI captain reads the public market-data API (`GET /v1/prediction-markets/events/{ticker}`). A contract's YES price is its implied probability. Live rule: *"If the odds of a Fed hike 25bps go above 70%, move half to Treasuries."* (event `FED261211`, "Fed decision in December?"). The app shows the same live odds on every boat card. The odds inform the decision, and the contract limits what can execute. Each swap carries a decision memo (rule, event, contract, probability, timestamp) in its calldata, so anyone can check the trade against the odds the captain saw (`decodeSwapMemo()`). `boats_odds_contracts` in the MCP server lists every contract of an event so an agent can pick its own market. If market data is down, the captain holds and says so in its log. Odds also appear on every boat card as a risk signal.
+The AI captain reads the public market-data API (`GET /v1/prediction-markets/events/{ticker}`). A contract's YES price is its implied probability. Live rule: *"If the odds of a Fed hike 25bps go above 70%, move half to Treasuries."* (event `FED261211`, "Fed decision in December?"). The app shows the same live odds on every boat card. The odds inform the decision, and the contract limits what can execute. From this version on, the captain appends a decision memo (rule, event, contract, probability, timestamp) to each swap's calldata, so anyone can check the trade against the odds it saw (`decodeSwapMemo()`). The earlier proof swap predates it. `boats_odds_contracts` in the MCP server lists every contract of an event so an agent can pick its own market. If market data is down, the captain holds and says so in its log. Odds also appear on every boat card as a risk signal.
 
 ## QuickNode Streams
 

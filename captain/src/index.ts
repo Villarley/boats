@@ -107,13 +107,13 @@ export async function runOnce(c: CaptainConfig, opts: { rogue?: boolean } = {}) 
 
   const amountIn = await valueToAmount(pc, c.oracle, d.from, boat.usdc, d.amountValue);
   try {
-    await pc.simulateContract({ account, address: c.boat, abi: boatAbi, functionName: "swap", args: [d.from, d.to, amountIn, 0n] });
     // The decision and the odds it used ride in the swap's calldata, so anyone can audit it on the explorer.
     const memo: DecisionMemo = {
       why: d.reason,
       signal: d.odds ? { source: "gemini-prediction-markets", event: d.odds.eventTicker, contract: d.odds.contractLabel, probability: d.odds.probability, at: d.odds.fetchedAt } : undefined,
     };
     const call = buildSwapCall(c.boat, d.from, d.to, amountIn, 0n, memo);
+    await pc.call({ account, to: call.to, data: call.data }); // simulate the exact calldata that will be sent
     const hash = await wc!.sendTransaction({ account: account!, chain: wc!.chain, to: call.to, data: call.data });
     const rcpt = await pc.waitForTransactionReceipt({ hash });
     const ok = rcpt.status === "success";

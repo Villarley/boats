@@ -8,8 +8,10 @@
  *   and a swap must pass the mandate. Unsigned calls come with chainId and a plain-words summary.
  */
 import { formatUnits, getAddress, parseUnits, type Address, type Hex, type PublicClient } from "viem";
+import type { Holding } from "@boats/sdk";
 import {
   arcTestnetDeployment,
+  boatAbi,
   buildBoardCalls,
   buildCheckVoyageCall,
   buildClaimCaptainCall,
@@ -50,6 +52,24 @@ export const SPREAD_BPS = 10;
 
 export class ToolError extends Error {}
 
+/**
+ * Largest value (to the cent) that passes the mandate for this pair: the same check as Boat.swap(),
+ * searched over the source balance. Returns 0 when nothing fits.
+ */
+export function exactMaxAllowed(holdings: Holding[], usdc: Address, from: Address, to: Address, spreadBps = SPREAD_BPS): bigint {
+  const src = holdings.find((h) => h.token.toLowerCase() === from.toLowerCase());
+  if (!src) return 0n;
+  const CENT = 10_000n;
+  let lo = 0n;
+  let hi = src.value / CENT;
+  while (lo < hi) {
+    const mid = (lo + hi + 1n) / 2n;
+    if (checkTrade(holdings, usdc, from, to, mid * CENT, spreadBps).ok) lo = mid;
+    else hi = mid - 1n;
+  }
+  return lo * CENT;
+}
+
 /** "$12.50" or "12.5" or 12.5 -> 12_500_000n (USDC base units, 6 decimals). */
 export function parseUsd(v: string | number): bigint {
   const s = String(v).replace(/[$,\s]/g, "");
@@ -84,6 +104,16 @@ export function allowedActions(b: BoatInfo) {
     captain: { Open: ["stake_and_sail"], Sailing: ["swap"], Returning: [], Closed: ["claim_captain"] }[b.state],
     anyone: { Open: [], Sailing: ["check_voyage"], Returning: ["return_to_port"], Closed: [] }[b.state],
   };
+}
+
+export function allowedWords(b: BoatInfo): string {
+  const a = allowedActions(b);
+  const parts = [
+    a.crew.length ? `crew can ${a.crew.join(", ")}` : "crew can't act",
+    a.captain.length ? `captain can ${a.captain.join(", ")}` : "captain can't act",
+    a.anyone.length ? `anyone can ${a.anyone.join(", ")}` : "",
+  ].filter(Boolean);
+  return `Right now ${parts.join("; ")}.`;
 }
 
 /** JSON view of a boat for an agent. */
@@ -169,7 +199,7 @@ export async function checkTradeTool(pc: PublicClient, a: { boat: string; from: 
       : {
           brokenRule: r.rule,
           ...(r.weightAfterBps !== undefined ? { weightAfterPct: r.weightAfterBps / 100 } : {}),
-          ...(r.maxAllowed !== undefined ? { maxAllowedUsd: usd(r.maxAllowed), maxAllowedNote: "Rounded down to whole dollars so it stays inside the cap." } : {}),
+          ...(r.rule === "max-weight" || r.rule === "insufficient-balance" ? { maxAllowedUsd: usd(exactMaxAllowed(b.holdings, b.usdc, from, to)), maxAllowedNote: "Largest amount, to the cent, that passes both the balance and the max weight right now." } : {}),
         }),
     enforcedBy: "Boat.swap() on chain. This is a dry run of the same rule.",
   };
@@ -207,8 +237,24 @@ export async function positionTool(pc: PublicClient, a: { boat: string; who: str
     crewValueNowUsd: usd(p.valueNow),
     withdrawn: p.withdrawn,
     canWithdraw: b.state === "Closed" && p.deposit > 0n && !p.withdrawn,
-    ...(p.isCaptain ? { captainStakeUsd: usd(b.captainStake), canClaimAsCaptain: b.state === "Closed" } : {}),
+    ...(p.isCaptain ? await captainView(pc, b) : {}),
   };
+}
+
+async function captainView(pc: PublicClient, b: BoatInfo) {
+  if (b.state !== "Closed") return { captainStakeUsd: usd(b.captainStake) };
+  const c = { address: b.address, abi: boatAbi } as const;
+  const [base, baseClaimed, vested, feeClaimed] = (await pc.multicall({
+    allowFailure: false,
+    contracts: [
+      { ...c, functionName: "captainBase" },
+      { ...c, functionName: "captainBaseClaimed" },
+      { ...c, functionName: "vestedFee" },
+      { ...c, functionName: "captainFeeClaimed" },
+    ],
+  })) as [bigint, boolean, bigint, bigint];
+  const claimable = (baseClaimed ? 0n : base) + (vested - feeClaimed);
+  return { captainStakeUsd: usd(b.captainStake), captainClaimableUsd: usd(claimable), canClaimAsCaptain: claimable > 0n };
 }
 
 export async function myPositionsTool(pc: PublicClient, a: { who: string }, d = deployment) {
@@ -226,7 +272,7 @@ export async function myPositionsTool(pc: PublicClient, a: { who: string }, d = 
       role: p.isCaptain ? (p.deposit > 0n ? "captain and crew" : "captain") : "crew",
       crewDepositUsd: usd(p.deposit),
       crewValueNowUsd: usd(p.valueNow),
-      ...(p.isCaptain ? { captainStakeUsd: usd(b.captainStake) } : {}),
+      ...(p.isCaptain ? await captainView(pc, b) : {}),
       canWithdraw: b.state === "Closed" && p.deposit > 0n && !p.withdrawn,
     });
   }
@@ -259,8 +305,29 @@ const KIND_WORDS: Record<string, string> = {
   ended: "voyage ended", returned: "returned to port", withdrawn: "crew withdrew", claimed: "captain claimed",
 };
 
+const END_WORDS = ["none", "stop loss", "take profit", "end date"];
+
+function activityDetails(d: Deployment, kind: string, args: Record<string, unknown>, decimals: Record<string, number>) {
+  if (kind === "traded") {
+    const tin = symbolOf(d, args.tokenIn as Address);
+    const tout = symbolOf(d, args.tokenOut as Address);
+    const amt = (sym: string, v: unknown) => (sym === "USDC" ? usd(v as bigint) : Number(formatUnits(v as bigint, decimals[sym] ?? 18)));
+    return { sold: tin, soldAmount: amt(tin, args.amountIn), bought: tout, boughtAmount: amt(tout, args.amountOut), boatValueAfterUsd: usd(args.navAfter as bigint) };
+  }
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(args)) {
+    if (k === "reason") out.reason = END_WORDS[Number(v)] ?? Number(v);
+    else if (typeof v === "bigint") out[`${k}Usd`] = usd(v);
+    else out[k] = v;
+  }
+  return out;
+}
+
 export async function activityTool(pc: PublicClient, a: { boat?: string; limit?: number }, d = deployment) {
   const boats = a.boat ? [getAddress((await loadOfficialBoat(pc, a.boat, d)).address)] : await officialBoats(pc, d);
+  const syms = Object.keys(d.tokens) as (keyof Deployment["tokens"])[];
+  const decs = (await pc.multicall({ allowFailure: false, contracts: syms.map((k) => ({ address: d.tokens[k], abi: erc20Abi, functionName: "decimals" }) as const) })) as number[];
+  const decimals = Object.fromEntries(syms.map((k, i) => [k, Number(decs[i])]));
   const acts = await getActivity(pc, boats, START_BLOCK);
   return {
     events: acts.slice(0, a.limit ?? 20).map((x) => ({
@@ -269,9 +336,9 @@ export async function activityTool(pc: PublicClient, a: { boat?: string; limit?:
       boat: getAddress(x.boat),
       block: Number(x.blockNumber),
       tx: explorerTx(x.txHash),
-      details: Object.fromEntries(Object.entries(x.args).map(([k, v]) => [k, typeof v === "bigint" ? (k === "reason" ? Number(v) : usd(v)) : v])),
+      details: activityDetails(d, x.kind, x.args, decimals),
     })),
-    note: "Amounts in details are dollars (USDC value), except amountOut for non-USDC tokens, which is in token units.",
+    note: "Dollar amounts end in Usd. Swap amounts are in units of the named token (soldAmount of USDC is dollars).",
   };
 }
 
@@ -298,7 +365,8 @@ export async function txStatusTool(pc: PublicClient, a: { hash: string }) {
     const r = await pc.getTransactionReceipt({ hash: a.hash as Hex });
     return { hash: a.hash, status: r.status, block: Number(r.blockNumber), explorer: explorerTx(a.hash) };
   } catch {
-    return { hash: a.hash, status: "pending or unknown", explorer: explorerTx(a.hash) };
+    const tx = await pc.getTransaction({ hash: a.hash as Hex }).catch(() => null);
+    return { hash: a.hash, status: tx ? "pending" : "not found", explorer: explorerTx(a.hash) };
   }
 }
 
@@ -310,7 +378,7 @@ const NEED_STATE: Record<Action, BoatInfo["state"]> = {
 };
 const CAPTAIN_ONLY = new Set<Action>(["stake_and_sail", "swap", "claim_captain"]);
 
-export type Planned = { ok: true; boat: string; summary: string; calls: Call[] } | { ok: false; boat: string; problems: string[] };
+export type Planned = { ok: true; boat: string; summary: string; calls: Call[]; warnings?: string[] } | { ok: false; boat: string; problems: string[] };
 
 /** Checks an action against the boat's state, the caller's role and the mandate, then builds its calls. */
 export async function planAction(
@@ -321,7 +389,15 @@ export async function planAction(
   const b = await loadOfficialBoat(pc, a.boat, d);
   const boat = getAddress(b.address);
   const problems: string[] = [];
-  if (b.state !== NEED_STATE[a.action]) problems.push(`${a.action} needs the boat to be ${NEED_STATE[a.action]}; it is ${b.state}. Allowed now: ${JSON.stringify(allowedActions(b))}.`);
+  const warnings: string[] = [];
+  if (b.state !== NEED_STATE[a.action]) problems.push(`${a.action} needs the boat to be ${NEED_STATE[a.action]}; it is ${b.state}. ${allowedWords(b)}`);
+  if (!a.caller) warnings.push("No caller given and no signer configured, so the role, balance and deposit checks were skipped. Pass `caller` to check them.");
+  if (a.caller && a.action === "withdraw") {
+    const dep = (await pc.readContract({ address: boat, abi: boatAbi, functionName: "crewDeposit", args: [getAddress(a.caller)] })) as bigint;
+    const done = (await pc.readContract({ address: boat, abi: boatAbi, functionName: "crewWithdrawn", args: [getAddress(a.caller)] })) as boolean;
+    if (dep === 0n) problems.push(`${a.caller} never boarded ${b.name}; there is nothing to withdraw.`);
+    else if (done) problems.push(`${a.caller} already withdrew from ${b.name}.`);
+  }
   if (a.caller && CAPTAIN_ONLY.has(a.action) && a.caller.toLowerCase() !== b.captain.toLowerCase()) problems.push(`Only the captain (${b.captain}) can ${a.action}.`);
   const amount = () => {
     if (a.amountUsd === undefined) throw new ToolError(`${a.action} needs amountUsd (dollars).`);
@@ -348,7 +424,7 @@ export async function planAction(
       const to = resolveToken(d, a.to);
       const value = amount();
       const r = checkTrade(b.holdings, b.usdc, from, to, value, SPREAD_BPS);
-      if (!r.ok) problems.push(r.message + (r.maxAllowed !== undefined ? ` Max allowed now: $${usd(r.maxAllowed)}.` : ""));
+      if (!r.ok) problems.push(r.message + (r.rule === "max-weight" || r.rule === "insufficient-balance" ? ` Max allowed now: $${usd(exactMaxAllowed(b.holdings, b.usdc, from, to))}.` : ""));
       if (problems.length) break;
       const slip = Math.max(0, Math.min(5, a.slippagePct ?? 1));
       const amountIn = await valueToAmount(pc, d.oracle, from, d.tokens.USDC, value);
@@ -375,7 +451,7 @@ export async function planAction(
       summary = `Sell ${b.name}'s holdings back to dollars and settle the first-loss waterfall.`;
       break;
   }
-  return problems.length ? { ok: false, boat: b.name, problems } : { ok: true, boat: b.name, summary, calls };
+  return problems.length ? { ok: false, boat: b.name, problems } : { ok: true, boat: b.name, summary, calls, ...(warnings.length ? { warnings } : {}) };
 }
 
 export type NewBoat = {
@@ -393,7 +469,7 @@ export function planCreateBoat(n: NewBoat, d = deployment, now = Date.now()): Pl
   const problems: string[] = [];
   if (!n.name.trim()) problems.push("Give the boat a name.");
   if (!/^0x[0-9a-fA-F]{40}$/.test(n.captain)) problems.push("captain must be an address.");
-  if (!(n.stopLossPct > 0 && n.stopLossPct < 100)) problems.push("stopLossPct must be between 0 and 100 (e.g. 10 for -10%).");
+  if (!(n.stopLossPct > 0 && n.stopLossPct < 100)) problems.push("stopLossPct must be above 0 and below 100 (e.g. 10 means the voyage ends at -10%).");
   if (!(n.takeProfitPct > 0)) problems.push("takeProfitPct must be above 0.");
   if (!(n.captainFeePct >= 0 && n.captainFeePct <= 50)) problems.push("captainFeePct must be 0 to 50 (share of the crew's profit).");
   if (!(n.days > 0)) problems.push("days must be above 0.");
@@ -415,6 +491,7 @@ export function planCreateBoat(n: NewBoat, d = deployment, now = Date.now()): Pl
     assets.push(t);
     weights.push(Math.round(x.maxWeightPct * 100));
   }
+  if (n.assets.length === 0) problems.push("List at least one asset besides dollars, or the captain has nothing to trade.");
   if (problems.length) return { ok: false, boat: n.name, problems };
   const call = buildCreateBoatCall(d.factory, {
     name: n.name.trim(),

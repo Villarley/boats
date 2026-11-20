@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PublicClient } from "viem";
-import { deployment, parseUsd, planAction, planCreateBoat, resolveToken, usd, worstCaseTool, checkTradeTool } from "../src/tools.js";
+import { deployment, exactMaxAllowed, parseUsd, planAction, planCreateBoat, resolveToken, usd, worstCaseTool, checkTradeTool } from "../src/tools.js";
 
 describe("helpers", () => {
   it("parses dollar amounts into USDC base units", () => {
@@ -99,5 +99,17 @@ describe("planCreateBoat", () => {
     const p = planCreateBoat({ ...base, captainFeePct: 80, assets: [{ token: "USDC", maxWeightPct: 50 }] });
     expect(p.ok).toBe(false);
     if (!p.ok) expect(p.problems.length).toBe(2);
+  });
+});
+
+describe("exactMaxAllowed", () => {
+  it("finds the largest amount, to the cent, that passes the max weight", () => {
+    const h = [
+      { token: T.USDC, symbol: "USDC", value: 11_000_000n },
+      { token: T.cirBTC, symbol: "cirBTC", value: 0n, maxWeightBps: 2000 },
+    ];
+    const m = exactMaxAllowed(h, T.USDC, T.USDC, T.cirBTC, 10);
+    expect(m).toBeGreaterThan(2_000_000n);
+    expect(m % 10_000n).toBe(0n);
   });
 });

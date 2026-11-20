@@ -70,7 +70,7 @@ Amounts are USDC base units (6 decimals). Prices come from `PriceOracle` (18 dec
 ## Mandate rules (enforced in `Boat.swap()`)
 
 - Only the captain, only while `Sailing`.
-- Only through the boat's router, only between USDC and the boat's listed assets.
+- Only through the boat's router, only between assets of the boat (USDC or its listed assets, in any direction).
 - After the trade, each asset's value must stay at or below its `maxWeightBps` of NAV.
 - Reverts: `NotCaptain()`, `WrongState(expected, actual)`, `MandateViolation(reason)`, `ZeroAmount()`. Constructor: `BadConfig(reason)`.
 

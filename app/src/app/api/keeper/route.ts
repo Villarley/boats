@@ -6,6 +6,7 @@ import { chain, deployment, rpcUrl } from "@/lib/deployment";
 import { publicClient } from "@/lib/client";
 import { serverKey } from "@/lib/server/keys";
 import { pushLog } from "@/lib/server/log";
+import { boatsToCheck } from "@/lib/keeper-scope";
 
 /**
  * Keeper: QuickNode Stream webhook (and the "Check limits now" button).
@@ -24,20 +25,6 @@ function sameOrigin(req: Request): boolean {
   } catch {
     return false;
   }
-}
-
-const TRADED = "0x825f67dcf8bc9df74117166defc432f4cdf0a331eff757dd049327c83c2e02e1";
-
-/**
- * QuickNode Stream payload ({ logs }, see docs/quicknode.md): a Traded log only needs its own boat checked.
- * A PriceUpdated log, an unknown payload or none (cron, button) checks every official boat.
- */
-function boatsToCheck(official: `0x${string}`[], body: unknown): `0x${string}`[] {
-  const logs = (body as { logs?: { address?: string; topics?: string[] }[] } | null)?.logs;
-  if (!Array.isArray(logs) || logs.length === 0) return official;
-  if (logs.some((l) => l.topics?.[0] !== TRADED)) return official;
-  const hit = new Set(logs.map((l) => (l.address ?? "").toLowerCase()));
-  return official.filter((b) => hit.has(b.toLowerCase()));
 }
 
 export async function POST(req: Request) {

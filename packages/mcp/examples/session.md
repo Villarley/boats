@@ -1,6 +1,6 @@
-# Example agent session (live, Arc testnet)
+# Example agent session (live reads on Arc testnet, unsigned writes)
 
-Real output of the Boats MCP server against the live deployment, captured 2026-11-20. No private key was configured, so write tools return checked, unsigned calls.
+Real output of the Boats MCP server against the live deployment, captured 2026-11-20. No private key was configured, so write tools return checked, unsigned calls; with `BOATS_PRIVATE_KEY` set, `boats_act` simulates and sends them and returns explorer links.
 
 ## Crew agent: is Safe Harbor safe enough for $5?
 
@@ -81,7 +81,7 @@ boats_act {"action":"board","boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
   "ok": false,
   "boat": "Westerly",
   "problems": [
-    "board needs the boat to be Open; it is Sailing. Allowed now: {\"crew\":[],\"captain\":[\"swap\"],\"anyone\":[\"check_voyage\"]}."
+    "board needs the boat to be Open; it is Sailing. Right now crew can't act; captain can swap; anyone can check_voyage."
   ],
   "note": "Nothing was built or sent. Fix the problems above and try again."
 }
@@ -108,7 +108,7 @@ boats_odds_contracts {}
     },
     {
       "label": "Hike >25bps",
-      "probability": 0.035
+      "probability": 0.09
     },
     {
       "label": "Cut >25bps",
@@ -139,16 +139,16 @@ boats_check_trade {"boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359","from":"U
   ],
   "brokenRule": "max-weight",
   "weightAfterPct": 27.26,
-  "maxAllowedUsd": 2,
-  "maxAllowedNote": "Rounded down to whole dollars so it stays inside the cap.",
+  "maxAllowedUsd": 2.2,
+  "maxAllowedNote": "Largest amount, to the cent, that passes both the balance and the max weight right now.",
   "enforcedBy": "Boat.swap() on chain. This is a dry run of the same rule."
 }
 ```
 
-## It sizes the trade down and records why
+## It sizes the trade down to what the mandate allows and records why
 
 ```
-boats_act {"action":"swap","boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359","from":"USDC","to":"bitcoin","amountUsd":1,"caller":"0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF","reason":"Hike 25bps at 91%: small Bitcoin hedge inside the 20% cap"}
+boats_act {"action":"swap","boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359","from":"USDC","to":"bitcoin","amountUsd":2,"caller":"0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF","reason":"Hike 25bps at 91%: small Bitcoin hedge inside the 20% cap"}
 ```
 
 ```json
@@ -156,7 +156,7 @@ boats_act {"action":"swap","boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359","
   "ok": true,
   "signed": false,
   "boat": "Westerly",
-  "summary": "Swap $1 of USDC into cirBTC on Westerly, reverting if it returns less than $0.99 of value (1% slippage cap). Your reason is recorded in the transaction (decodeSwapMemo).",
+  "summary": "Swap $2 of USDC into cirBTC on Westerly, reverting if it returns less than $1.98 of value (1% slippage cap). Your reason is recorded in the transaction (decodeSwapMemo).",
   "calls": [
     {
       "step": 1,
@@ -167,5 +167,43 @@ boats_act {"action":"swap","boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359","
     }
   ],
   "howToSend": "Send these transactions in order, from the wallet that will act, on Arc testnet (chainId 5042002). Gas is paid in USDC."
+}
+```
+
+## Anyone can audit what happened on chain
+
+```
+boats_activity {"boat":"0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359","limit":2}
+```
+
+```json
+{
+  "events": [
+    {
+      "what": "captain swapped",
+      "kind": "traded",
+      "boat": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
+      "block": 73190893,
+      "tx": "https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea",
+      "details": {
+        "sold": "USDC",
+        "soldAmount": 5.5,
+        "bought": "USYC",
+        "boughtAmount": 5.232856,
+        "boatValueAfterUsd": 10.99
+      }
+    },
+    {
+      "what": "voyage started",
+      "kind": "sailed",
+      "boat": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
+      "block": 73190767,
+      "tx": "https://testnet.arcscan.app/tx/0x62fc5ac78b956aa1748c080ee949ecb815d65d59d4c19bfc093365ca2d0e42d5",
+      "details": {
+        "startValueUsd": 11
+      }
+    }
+  ],
+  "note": "Dollar amounts end in Usd. Swap amounts are in units of the named token (soldAmount of USDC is dollars)."
 }
 ```
