@@ -19,9 +19,13 @@ export type Odds = {
 
 type Prices = { bestBid?: string | null; bestAsk?: string | null; lastTradePrice?: string | null };
 type Contract = { ticker?: string; label?: string; status?: string; instrumentSymbol?: string; prices?: Prices };
-type EventResponse = { ticker?: string; title?: string; contracts?: Contract[] };
+type EventResponse = { ticker?: string; title?: string; status?: string; contracts?: Contract[] };
 
-const num = (s?: string | null) => (s == null || s === "" ? undefined : Number(s));
+const num = (s?: string | null) => {
+  if (s == null || !s.trim()) return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 && n <= 1 ? n : undefined;
+};
 
 /** Picks a probability from a contract's prices: mid if both sides exist, else last trade, else one side. */
 export function probabilityFromPrices(p: Prices | undefined): { probability: number; source: Odds["source"] } | null {
@@ -29,7 +33,7 @@ export function probabilityFromPrices(p: Prices | undefined): { probability: num
   const bid = num(p.bestBid);
   const ask = num(p.bestAsk);
   const last = num(p.lastTradePrice);
-  if (bid !== undefined && ask !== undefined && ask >= bid) return { probability: (bid + ask) / 2, source: "bestBid/bestAsk mid" };
+  if (bid !== undefined && ask !== undefined) return ask >= bid ? { probability: (bid + ask) / 2, source: "bestBid/bestAsk mid" } : null;
   if (last !== undefined) return { probability: last, source: "lastTradePrice" };
   if (ask !== undefined) return { probability: ask, source: "bestAsk" };
   if (bid !== undefined) return { probability: bid, source: "bestBid" };
@@ -39,11 +43,11 @@ export function probabilityFromPrices(p: Prices | undefined): { probability: num
 /** Parses one event response and returns the odds of the contract whose label/ticker matches `match`. */
 export function parseEventOdds(ev: EventResponse, match: string, now = new Date()): Odds | null {
   const m = match.toLowerCase();
+  if (!m.trim() || (ev.status && !["active", "open"].includes(ev.status.toLowerCase()))) return null;
   const contracts = ev.contracts ?? [];
-  const c =
-    contracts.find((x) => (x.label ?? "").toLowerCase().includes(m) || (x.ticker ?? "").toLowerCase().includes(m)) ??
-    (contracts.length === 1 ? contracts[0] : undefined);
-  if (!c) return null;
+  const matches = contracts.filter((x) => (x.label ?? "").toLowerCase().includes(m) || (x.ticker ?? "").toLowerCase().includes(m));
+  const c = matches.length === 1 ? matches[0] : undefined;
+  if (!c || (c.status && !["active", "open"].includes(c.status.toLowerCase()))) return null;
   const p = probabilityFromPrices(c.prices);
   if (!p || !(p.probability >= 0 && p.probability <= 1)) return null;
   return {
@@ -60,6 +64,7 @@ export function parseEventOdds(ev: EventResponse, match: string, now = new Date(
 export async function fetchOdds(eventTicker: string, match: string, fetchImpl: typeof fetch = fetch): Promise<Odds> {
   const res = await fetchImpl(`${GEMINI_BASE}/v1/prediction-markets/events/${encodeURIComponent(eventTicker)}`, {
     headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Gemini ${res.status} for ${eventTicker}`);
   const odds = parseEventOdds((await res.json()) as EventResponse, match);

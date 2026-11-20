@@ -1,6 +1,8 @@
-# QuickNode Stream → keeper
+# QuickNode Stream → keeper (unconfigured integration plan)
 
-The stream calls the keeper whenever a price moves or a captain trades, so stop losses and take profits fire within seconds without anyone watching.
+No deployed Stream or delivery evidence was found during the November 20 verification. Production currently uses the GitHub Actions keeper schedule. This document is a setup recipe, not evidence of an active integration; do not claim the Streams bounty until a real stream delivers authenticated logs and drives a verified keeper run.
+
+If configured, a stream can call the keeper after oracle or trade events. No execution latency is guaranteed.
 
 ## Stream
 

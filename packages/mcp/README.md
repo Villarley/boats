@@ -1,6 +1,6 @@
 # @boats/mcp
 
-An MCP server that lets any AI agent (Claude, GPT, an agent framework) be a Boats captain or crew member on Arc testnet. It wraps `@boats/sdk`, so an agent gets exactly the powers our own AI captain has, and the contract still rejects anything outside the mandate.
+An MCP server that lets MCP-capable AI agents act as Boats captains or crew on Arc testnet. It wraps `@boats/sdk`; the contract enforces trading permissions independently of the agent. The bundled Gemini-driven captain uses deterministic rules, with no embedded LLM.
 
 ```bash
 npx tsx packages/mcp/src/server.ts
@@ -13,7 +13,13 @@ npx tsx packages/mcp/src/server.ts
 
 Tools (14): `boats_deployment`, `boats_list`, `boats_get`, `boats_score`, `boats_worst_case`, `boats_check_trade`, `boats_position`, `boats_my_positions`, `boats_activity`, `boats_odds`, `boats_odds_contracts`, `boats_create`, `boats_act`, `boats_tx_status`. Details and conventions in [AGENTS.md](../../AGENTS.md). A real session: [examples/session.md](examples/session.md).
 
-Safety: every write tool checks that the boat is official, in the right state, that the caller has the right role and, for swaps, that the trade passes the mandate. It answers `ok: false` with `problems` instead of returning a call that would revert. Swaps get a 1% slippage cap by default and can carry the agent's `reason` on chain.
+Pre-checks verify the official deployment, state and swap mandate. Pass `caller` for role, balance and deposit checks; unsigned plans disclose skipped checks in `warnings`. Detected failures return `ok: false` and `problems`. State, prices and liquidity can change after planning, so success cannot be guaranteed. Swaps get a 1% default slippage cap and can carry a self-reported `reason` in calldata.
+
+All tools publish read/write annotations and matching text/`structuredContent` responses. Signed actions reject a mismatched `caller`, simulate each step and return all sent hashes on partial failure. Check pending hashes with `boats_tx_status` before retrying. Without a key, or with `dryRun: true`, no transaction is sent.
+
+Captain setup: `boats_create` → `boats_act stake` → crew `board` → `boats_act sail`. Posting a stake leaves boarding open; sailing requires crew and captain capital. `stake_and_sail` is available once crew has joined.
+
+Judge verification: `npm run verify:proof` at the repository root checks five submitted transactions, decodes the Gemini decision memo, replays the rejected swap historically and verifies the crew payout. No key or write transaction is needed. For a proxy environment use `NODE_USE_ENV_PROXY=1 npm run verify:proof`. See [judge guide](../../docs/judging.md) and [recorded evidence](../../docs/evidence-report.json).
 
 Example session: *"List the boats. On Westerly, check whether I can move $3 into Bitcoin. Then read the Fed odds and, if hike is above 70%, move half to Treasuries."* The agent calls `boats_list`, `boats_check_trade` (which answers with the max-weight rule and the max allowed amount), `boats_odds`, then `boats_act swap`.
 

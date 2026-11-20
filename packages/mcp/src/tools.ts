@@ -7,7 +7,7 @@
  * - Every write is checked before any call is returned: the boat must be official, in the right state,
  *   and a swap must pass the mandate. Unsigned calls come with chainId and a plain-words summary.
  */
-import { formatUnits, getAddress, parseUnits, type Address, type Hex, type PublicClient } from "viem";
+import { formatUnits, getAddress, parseUnits, TransactionNotFoundError, TransactionReceiptNotFoundError, type Address, type Hex, type PublicClient } from "viem";
 import type { Holding } from "@boats/sdk";
 import {
   arcTestnetDeployment,
@@ -17,6 +17,7 @@ import {
   buildClaimCaptainCall,
   buildCreateBoatCall,
   buildReturnToPortCall,
+  buildSailCall,
   buildStakeCalls,
   buildSwapCall,
   buildWithdrawCall,
@@ -74,7 +75,9 @@ export function exactMaxAllowed(holdings: Holding[], usdc: Address, from: Addres
 export function parseUsd(v: string | number): bigint {
   const s = String(v).replace(/[$,\s]/g, "");
   if (!/^\d+(\.\d{1,6})?$/.test(s)) throw new ToolError(`Not a dollar amount: ${v}. Use a positive number like 5 or 12.50.`);
-  return parseUnits(s, 6);
+  const amount = parseUnits(s, 6);
+  if (amount === 0n) throw new ToolError("Amount must be greater than zero.");
+  return amount;
 }
 
 /** USDC base units -> dollars as a number with cents. */
@@ -101,7 +104,7 @@ const sym = (d: Deployment) => (a: Address) => symbolOf(d, a);
 export function allowedActions(b: BoatInfo) {
   return {
     crew: { Open: ["board"], Sailing: [], Returning: [], Closed: ["withdraw"] }[b.state],
-    captain: { Open: ["stake_and_sail"], Sailing: ["swap"], Returning: [], Closed: ["claim_captain"] }[b.state],
+    captain: { Open: ["stake", ...(b.crewTotal > 0n ? ["stake_and_sail", ...(b.captainStake > 0n ? ["sail"] : [])] : [])], Sailing: ["swap"], Returning: [], Closed: ["claim_captain"] }[b.state],
     anyone: { Open: [], Sailing: ["check_voyage"], Returning: ["return_to_port"], Closed: [] }[b.state],
   };
 }
@@ -364,19 +367,23 @@ export async function txStatusTool(pc: PublicClient, a: { hash: string }) {
   try {
     const r = await pc.getTransactionReceipt({ hash: a.hash as Hex });
     return { hash: a.hash, status: r.status, block: Number(r.blockNumber), explorer: explorerTx(a.hash) };
-  } catch {
-    const tx = await pc.getTransaction({ hash: a.hash as Hex }).catch(() => null);
+  } catch (e) {
+    if (!(e instanceof TransactionReceiptNotFoundError)) throw e;
+    const tx = await pc.getTransaction({ hash: a.hash as Hex }).catch((error: unknown) => {
+      if (error instanceof TransactionNotFoundError) return null;
+      throw error;
+    });
     return { hash: a.hash, status: tx ? "pending" : "not found", explorer: explorerTx(a.hash) };
   }
 }
 
-export type Action = "board" | "withdraw" | "stake_and_sail" | "swap" | "check_voyage" | "return_to_port" | "claim_captain";
+export type Action = "board" | "withdraw" | "stake" | "sail" | "stake_and_sail" | "swap" | "check_voyage" | "return_to_port" | "claim_captain";
 
 const NEED_STATE: Record<Action, BoatInfo["state"]> = {
-  board: "Open", stake_and_sail: "Open", swap: "Sailing", check_voyage: "Sailing",
+  board: "Open", stake: "Open", sail: "Open", stake_and_sail: "Open", swap: "Sailing", check_voyage: "Sailing",
   return_to_port: "Returning", withdraw: "Closed", claim_captain: "Closed",
 };
-const CAPTAIN_ONLY = new Set<Action>(["stake_and_sail", "swap", "claim_captain"]);
+const CAPTAIN_ONLY = new Set<Action>(["stake", "sail", "stake_and_sail", "swap", "claim_captain"]);
 
 export type Planned = { ok: true; boat: string; summary: string; calls: Call[]; warnings?: string[] } | { ok: false; boat: string; problems: string[] };
 
@@ -399,11 +406,13 @@ export async function planAction(
     else if (done) problems.push(`${a.caller} already withdrew from ${b.name}.`);
   }
   if (a.caller && CAPTAIN_ONLY.has(a.action) && a.caller.toLowerCase() !== b.captain.toLowerCase()) problems.push(`Only the captain (${b.captain}) can ${a.action}.`);
+  if ((a.action === "sail" || a.action === "stake_and_sail") && b.crewTotal === 0n) problems.push("No crew has boarded. Use stake to post first-loss capital, wait for crew to board, then sail.");
+  if (a.action === "sail" && b.captainStake === 0n) problems.push("The captain must stake first-loss capital before sailing. Use stake first.");
   const amount = () => {
     if (a.amountUsd === undefined) throw new ToolError(`${a.action} needs amountUsd (dollars).`);
     return parseUsd(a.amountUsd);
   };
-  if ((a.action === "board" || a.action === "stake_and_sail") && a.caller) {
+  if ((a.action === "board" || a.action === "stake" || a.action === "stake_and_sail") && a.caller) {
     const bal = (await pc.readContract({ address: d.tokens.USDC, abi: erc20Abi, functionName: "balanceOf", args: [getAddress(a.caller)] })) as bigint;
     if (bal < amount()) problems.push(`The wallet holds $${usd(bal)} USDC, less than $${usd(amount())}. Get test USDC at https://faucet.circle.com (Arc testnet).`);
   }
@@ -417,6 +426,14 @@ export async function planAction(
     case "stake_and_sail":
       calls = buildStakeCalls(boat, d.tokens.USDC, amount(), true);
       summary = `Approve and stake $${usd(amount())} as first-loss capital, then sail ${b.name}.`;
+      break;
+    case "stake":
+      calls = buildStakeCalls(boat, d.tokens.USDC, amount());
+      summary = `Approve and stake $${usd(amount())} as first-loss capital on ${b.name}. Boarding stays open; sail after crew joins.`;
+      break;
+    case "sail":
+      calls = [buildSailCall(boat)];
+      summary = `Close boarding and sail ${b.name} with its existing captain stake and crew deposits.`;
       break;
     case "swap": {
       if (!a.from || !a.to) throw new ToolError("swap needs from and to (e.g. from: USDC, to: treasuries).");
@@ -510,7 +527,7 @@ export function planCreateBoat(n: NewBoat, d = deployment, now = Date.now()): Pl
   return {
     ok: true,
     boat: n.name,
-    summary: `Create "${n.name}" on the official factory, oracle and router: ends at -${n.stopLossPct}% / +${n.takeProfitPct}% or in ${n.days} days, captain fee ${n.captainFeePct}% of crew profit. Then call boats_act stake_and_sail.`,
+    summary: `Create "${n.name}" on the official factory, oracle and router: ends at -${n.stopLossPct}% / +${n.takeProfitPct}% or in ${n.days} days, captain fee ${n.captainFeePct}% of crew profit. Then stake, wait for crew to board, and sail.`,
     calls: [call],
   };
 }

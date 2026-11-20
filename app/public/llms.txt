@@ -1,14 +1,17 @@
 # Boats
 
-> A fund manager who can't take your money. On Arc testnet, a captain (human or AI) trades a crew's USDC only through `swap()` inside an on-chain mandate, puts up a first-loss stake, and every voyage ends at a contract-enforced stop loss, take profit or date.
+> Delegated USDC trading on Arc testnet. Captains trade through an on-chain mandate and stake first-loss capital. Public transactions trigger settlement at thresholds or the end date; prices, liquidity, transaction inclusion and contract risks remain.
 
 AI agents can read boats, pre-check trades against the mandate, read Gemini prediction-market odds and act as captain or crew through the Boats MCP server or the TypeScript SDK.
+
+The bundled captain uses deterministic rules, without an embedded LLM. MCP tools provide structured JSON and read/write annotations. Without a signer they return unsigned calls; pass caller for role and balance checks and read all warnings. Captain setup: create, stake, wait for crew to board, then sail. Check returned transaction hashes before retrying a partial failure.
 
 ## Docs
 
 - [AGENTS.md](https://github.com/Villarley/boats/blob/main/AGENTS.md): lifecycle, who can call what, mandate rules, errors, addresses, MCP setup
 - [MCP server](https://github.com/Villarley/boats/tree/main/packages/mcp): 14 tools: `boats_deployment`, `boats_list`, `boats_get`, `boats_score`, `boats_worst_case`, `boats_check_trade`, `boats_position`, `boats_my_positions`, `boats_activity`, `boats_odds`, `boats_odds_contracts`, `boats_create`, `boats_act`, `boats_tx_status`
 - [Example agent session](https://github.com/Villarley/boats/blob/main/packages/mcp/examples/session.md)
+- [Judge evidence guide](https://github.com/Villarley/boats/blob/main/docs/judging.md): reproduce five proofs with npm run verify:proof, without a key or a new transaction; memos are self-reported, not Gemini attestations
 - [@boats/sdk](https://github.com/Villarley/boats/tree/main/packages/sdk): reads, `checkTrade`, first-loss math, calldata builders, keeper, captain quickstart
 - [Contracts](https://github.com/Villarley/boats/tree/main/contracts/src): `Boat.sol`, `BoatFactory.sol`, `PriceOracle.sol`, `SwapAdapter.sol`
 - [Deployment](https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json): Arc testnet (chain 5042002) addresses

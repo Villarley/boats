@@ -14,6 +14,7 @@ export type CaptainConfig = {
   gemini: { event: string; match: string };
   rules: Rule[];
   spreadBps: number;
+  slippageBps?: number;
   webhook?: string;
 };
 
@@ -26,6 +27,8 @@ export function configFromEnv(env = process.env): CaptainConfig {
   const usyc = need("USYC") as Address;
   const trigger = Number(env.ODDS_TRIGGER ?? "0.7");
   const fraction = Number(env.MOVE_FRACTION ?? "0.5");
+  const slippageBps = Number(env.SLIPPAGE_BPS ?? "100");
+  if (!Number.isInteger(slippageBps) || slippageBps < 0 || slippageBps > 500) throw new Error("SLIPPAGE_BPS must be an integer from 0 to 500.");
   // Gemini's live "Fed decision in December?" market. Rising rates: park part of the boat in Treasuries.
   const match = env.GEMINI_CONTRACT_MATCH || "Hike 25bps";
   return {
@@ -46,6 +49,7 @@ export function configFromEnv(env = process.env): CaptainConfig {
       },
     ],
     spreadBps: Number(env.SPREAD_BPS ?? "10"),
+    slippageBps,
     webhook: env.LOG_WEBHOOK || undefined,
   };
 }
@@ -112,7 +116,9 @@ export async function runOnce(c: CaptainConfig, opts: { rogue?: boolean } = {}) 
       why: d.reason,
       signal: d.odds ? { source: "gemini-prediction-markets", event: d.odds.eventTicker, contract: d.odds.contractLabel, probability: d.odds.probability, at: d.odds.fetchedAt } : undefined,
     };
-    const call = buildSwapCall(c.boat, d.from, d.to, amountIn, 0n, memo);
+    const minValue = d.amountValue * BigInt(10_000 - (c.slippageBps ?? 100)) / 10_000n;
+    const minOut = await valueToAmount(pc, c.oracle, d.to, boat.usdc, minValue);
+    const call = buildSwapCall(c.boat, d.from, d.to, amountIn, minOut, memo);
     await pc.call({ account, to: call.to, data: call.data }); // simulate the exact calldata that will be sent
     const hash = await wc!.sendTransaction({ account: account!, chain: wc!.chain, to: call.to, data: call.data });
     const rcpt = await pc.waitForTransactionReceipt({ hash });

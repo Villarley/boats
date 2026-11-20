@@ -11,7 +11,7 @@ const holdings = (cash: bigint, usyc = 0n, cap = 6000): Holding[] => [
   { token: USDC, symbol: "Dollars", value: cash },
   { token: USYC, symbol: "Treasuries", value: usyc, maxWeightBps: cap },
 ];
-const odds = (p: number): Odds => ({ eventTicker: "FED", eventTitle: "", contractLabel: "Cut 25bps", probability: p, source: "lastTradePrice", fetchedAt: "" });
+const odds = (p: number): Odds => ({ eventTicker: "FED", eventTitle: "", contractLabel: "Cut 25bps", probability: p, source: "lastTradePrice", fetchedAt: new Date().toISOString() });
 
 describe("AI captain decisions", () => {
   it("holds below the trigger and says the number", () => {
@@ -37,5 +37,14 @@ describe("AI captain decisions", () => {
   it("holds when market data is down", () => {
     const d = decide({ rules, holdings: holdings(10_000n * U), usdc: USDC, odds: null, oddsError: "Gemini 503" });
     expect(d).toMatchObject({ action: "hold", reason: "Market data unavailable (Gemini 503). Holding position." });
+  });
+  it.each([NaN, Infinity, -0.1, 1.1])("holds on invalid probability %s", (p) => {
+    expect(decide({ rules, holdings: holdings(15n * U), usdc: USDC, odds: odds(p) }).action).toBe("hold");
+  });
+  it.each(["", "bad date", "2020-01-01T00:00:00Z", "2099-01-01T00:00:00Z"])("holds on invalid or stale snapshot time %s", (fetchedAt) => {
+    expect(decide({ rules, holdings: holdings(15n * U), usdc: USDC, odds: { ...odds(0.91), fetchedAt } }).action).toBe("hold");
+  });
+  it("holds on a malformed rule instead of converting NaN to a trade amount", () => {
+    expect(decide({ rules: [{ ...rules[0]!, targetFraction: NaN } as Rule], holdings: holdings(15n * U), usdc: USDC, odds: odds(0.91) }).action).toBe("hold");
   });
 });
