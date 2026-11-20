@@ -440,6 +440,8 @@ export const appCopy = {
     demoInvestor: "Demo: María, investor",
     demoManager: "Demo: Laura, manager",
     settingUp: "Setting up your account…",
+    serviceDown: "We couldn't reach the sign-in service. Try again in a moment.",
+    signInFailed: "We couldn't open your account. Try again.",
     chip: "Only you can take it out",
   },
   notFound: {

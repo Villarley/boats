@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ScanSmiley } from "@phosphor-icons/react";
-import { friendlyError } from "@boats/sdk";
 import { Button } from "@/components/button";
 import { ArtBanner } from "@/components/art-banner";
 import { WelcomeHero } from "@/components/welcome-hero";
@@ -43,7 +42,11 @@ export default function Welcome() {
       await signIn(demo ? { demo } : undefined);
       router.replace("/home");
     } catch (e) {
-      setErr(/NotAllowed|cancel/i.test(String(e)) ? appCopy.unlock.failed(how) : friendlyError(e));
+      const m = String((e as Error)?.message ?? e);
+      // Signing in moves no money: say what actually failed.
+      setErr(/NotAllowed|cancel/i.test(m) ? appCopy.unlock.failed(how)
+        : /credential|401|unauthor/i.test(m) ? appCopy.welcome.serviceDown
+        : appCopy.welcome.signInFailed);
     } finally {
       setBusy(null);
     }
