@@ -224,6 +224,16 @@ export const appCopy = {
     after: "After you create it, put in your money from the Dashboard.",
     tooWide: "Loss limits wider than −25% aren't allowed.",
   },
+  notifications: {
+    title: "Notifications",
+    seeAll: "See all activity",
+    empty: "Nothing yet. Your investments, your managers' trades and payouts show up here.",
+    unread: "New activity",
+    justNow: "Just now",
+    minutes: (n: number) => `${n}m ago`,
+    hours: (n: number) => `${n}h ago`,
+    days: (n: number) => `${n}d ago`,
+  },
   activityPage: {
     title: "Activity",
     yours: "Yours",

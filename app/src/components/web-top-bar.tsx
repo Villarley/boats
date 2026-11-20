@@ -1,10 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Bell, MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
-import { IconButton } from "./button";
+import { NotificationBell } from "./notification-bell";
 import { copy } from "@/lib/copy";
-import { appCopy } from "@/lib/copy.app";
 
 /** Web ≥1024 page header: title, fund search, bell. */
 export function WebTopBar({ title }: { title: ReactNode }) {
@@ -24,7 +23,7 @@ export function WebTopBar({ title }: { title: ReactNode }) {
         <MagnifyingGlass weight="bold" className="size-4 text-muted" />
         <input name="q" placeholder={copy.explore.search} aria-label={copy.explore.search} className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-faint" />
       </form>
-      <IconButton href="/activity" label={appCopy.nav.notifications}><Bell weight="fill" /></IconButton>
+      <NotificationBell />
     </div>
   );
 }

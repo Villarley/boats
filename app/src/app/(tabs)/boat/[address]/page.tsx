@@ -1,9 +1,9 @@
 "use client";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ScanSmiley } from "@phosphor-icons/react";
+import { ScanSmiley } from "@phosphor-icons/react";
 import { BackButton, Page, TopBar } from "@/components/top-bar";
-import { Button, IconButton } from "@/components/button";
+import { Button } from "@/components/button";
 import { StickyActions } from "@/components/controls";
 import { CushionCard } from "@/components/cushion-card";
 import { FundChart, fundExampleSeries } from "@/components/fund-chart";
@@ -25,6 +25,7 @@ import { fundHref, managerOf, riskOf, statusOf } from "@/lib/fund";
 import { assetName, pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { NotificationBell } from "@/components/notification-bell";
 
 const dollars = (v: bigint) => Number(v) / 1e6;
 
@@ -175,7 +176,7 @@ export default function FundPage({ params }: { params: Promise<{ address: string
         <TopBar
           left={<BackButton fallback="/explore" />}
           title={<><ManagerAvatar manager={m} size="sm" />{b.name}</>}
-          right={<IconButton href="/activity" label={appCopy.nav.notifications}><Bell weight="fill" /></IconButton>}
+          right={<NotificationBell />}
         />
         <p className="mt-[18px] text-[16px] text-muted">{copy.fund.value}</p>
         <p className="bt-num mt-0.5 text-[34px] font-bold leading-[1.15] tracking-[-0.01em]" data-testid="fund-value">{usd(value, { cents: true })}</p>
@@ -206,7 +207,7 @@ export default function FundPage({ params }: { params: Promise<{ address: string
           <h1 className="text-[22px] font-semibold">{b.name}</h1>
           <SafetyMeter score={s} />
           <span className="flex-1" />
-          <IconButton href="/activity" label={appCopy.nav.notifications}><Bell weight="fill" /></IconButton>
+          <NotificationBell />
         </div>
         <div className="mt-[22px] grid max-w-[1280px] grid-cols-[1fr_360px] items-start gap-6">
           <div className="flex min-w-0 flex-col gap-4">

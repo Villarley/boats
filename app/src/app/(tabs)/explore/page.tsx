@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bell, CaretRight, MagnifyingGlass } from "@phosphor-icons/react";
+import { CaretRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { Button, IconButton } from "@/components/button";
 import { Chips } from "@/components/controls";
 import { ListGroup, ListRow, TitleRow } from "@/components/list-group";
@@ -16,6 +16,7 @@ import { useDisplayName } from "@/lib/names";
 import { fundHref, isExample, managerOf, riskOf, worstCaseBps } from "@/lib/fund";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { NotificationBell } from "@/components/notification-bell";
 
 function ExploreScreen() {
   const { boats, loading, wallet } = useStore();
@@ -53,7 +54,7 @@ function ExploreScreen() {
         <UserAvatar name={name} />
         <div className="flex gap-2">
           <IconButton href="/explore" label={appCopy.nav.search}><MagnifyingGlass weight="bold" /></IconButton>
-          <IconButton href="/activity" label={appCopy.nav.notifications}><Bell weight="fill" /></IconButton>
+          <NotificationBell />
         </div>
       </div>
       <h1 className="mt-4 text-[34px] font-bold leading-[1.15] tracking-[-0.01em] lg:hidden">{copy.explore.title}</h1>

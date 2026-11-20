@@ -39,6 +39,15 @@ test("investor: María invests $100 in Safe Harbor and sees the worst case first
   await expect(page.getByTestId("boarded")).toBeVisible();
   await page.goto("/home");
   await expect(page.getByTestId("my-boat-Safe Harbor")).toBeVisible();
+  // The bell shows it as new, and the panel lists it.
+  await page.goto("/explore");
+  const bell = page.locator('[data-testid="bell"]:visible');
+  // The shared feed is cached 8 s on the server and polled every 10 s, so allow for both.
+  await expect(page.locator('[data-testid="bell-dot"]:visible')).toBeVisible({ timeout: 30_000 });
+  await bell.click();
+  await expect(page.getByTestId("notifications").getByText("Invested in Safe Harbor")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator('[data-testid="bell-dot"]:visible')).toHaveCount(0);
 });
 
 test("investor: not enough dollars offers to add the difference inline", async ({ browser }) => {

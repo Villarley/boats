@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import { ArrowDownRight, ArrowsDownUp, Bell, Coins, Gauge, Play, RocketLaunch } from "@phosphor-icons/react";
+import { ArrowDownRight, ArrowsDownUp, Coins, Gauge, Play, RocketLaunch } from "@phosphor-icons/react";
 import { buildClaimCaptainCall, buildSailCall, buildStakeCalls, friendlyError } from "@boats/sdk";
 import { Page } from "@/components/top-bar";
-import { Button, IconButton } from "@/components/button";
+import { Button } from "@/components/button";
 import { HelmIcon } from "@/components/brand";
 import { IconTile, ListGroup, ListRow, TitleRow } from "@/components/list-group";
 import { LossStack } from "@/components/loss-stack";
@@ -22,6 +22,7 @@ import { managerOf, statusOf } from "@/lib/fund";
 import { pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { NotificationBell } from "@/components/notification-bell";
 
 const amt = (v: bigint) => usd(v, { cents: false });
 
@@ -151,7 +152,7 @@ export default function Dashboard() {
           <UserAvatar name={name} manager />
           <div className="flex items-center gap-2">
             <span className="flex h-[30px] items-center gap-1.5 rounded-full bg-card-2 px-3 text-[13px] font-semibold"><HelmIcon size={14} />{appCopy.manager.chip}</span>
-            <IconButton href="/activity" label={appCopy.nav.notifications}><Bell weight="fill" /></IconButton>
+            <NotificationBell />
           </div>
         </div>
         {top}
