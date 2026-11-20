@@ -28,6 +28,9 @@ Everything below happened on chain and can be checked on the explorer.
 | The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat to Treasuries | [`swap()`](https://testnet.arcscan.app/tx/0xfc9335b11c63399060b7708db5aeb18705b51b8c1ac578d7091bc6913cbfda51) |
 | A rogue captain tries to put all $15 into Bitcoin. The contract refuses: max weight exceeded | [reverted `swap()`](https://testnet.arcscan.app/tx/0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630) |
 | Safe Harbor: captain stakes $3, crew boards $5, still boarding (visitors can join) | [`board()`](https://testnet.arcscan.app/tx/0x8b10f5a30547f4a8c1cb5d0ce975eb061d9b7342f328ea8e22ae1b166381de57) |
+| A full voyage, start to finish (Trade Winds): captain stakes $1, crew boards $2, captain buys Bitcoin | [`sail()`](https://testnet.arcscan.app/tx/0x580951bfbaf3b72e691117b12e40c071c99294fa3a1876b4e5882f3421fe7d3d) · [`swap()`](https://testnet.arcscan.app/tx/0xf64350b88352f09443b81b702f532f306dce499f8944462371a715c9de542a9d) |
+| Bitcoin +25%: anyone calls `checkVoyage()`, the +10% goal is hit, the boat sells everything back to dollars | [`checkVoyage()`](https://testnet.arcscan.app/tx/0x9c0de83a2fcce85797733c37fd2bba910c8541f6b8ec59065ba2d0a519395c67) · [`returnToPort()`](https://testnet.arcscan.app/tx/0x8f22980e560604b58a23eaf48a8b1435125cbeef717df36d3e2deb940fd5e3fb) |
+| The crew withdraws $2.20 for $2 in (+9.8% after the captain's 20% fee); the captain claims stake + fee | [`withdraw()`](https://testnet.arcscan.app/tx/0xcf45df3eb237b834d77f1956bb4b98601962d2961d3c41d120fb440973f02c68) · [`claimCaptain()`](https://testnet.arcscan.app/tx/0x81aa1f4b4a698583d6305c53b76f54b4d58c4857ca1922521c3c91906bf53589) |
 
 Addresses are in [Contract addresses](#contract-addresses-arc-testnet).
 
@@ -134,7 +137,7 @@ Deploy to Arc testnet without Foundry (viem + solc-js), after funding three wall
 # contracts/.env: DEPLOYER_KEY, CAPTAIN_PRIVATE_KEY, CREW_PRIVATE_KEY
 ADAPTER_USDC=10 STAKE=3 CREW_AMOUNT=12 npm run deploy:arc -w app
 npm run deploy:arc -w app -- --seed-open   # stake + seed crew on Safe Harbor and Open Sea
-npm run deploy:arc -w app -- --refresh     # re-post oracle prices (they expire after 1 day)
+npm run deploy:arc -w app -- --refresh     # re-post oracle prices (testnet max age: 30 days)
 ```
 
 Or with Foundry:
@@ -152,7 +155,7 @@ AI captain: `cp captain/.env.example captain/.env`, fill it, then `npm run capta
 
 ## Contract addresses (Arc testnet)
 
-Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). Oracle prices expire after 1 day: refresh with `node app/scripts/deploy-arc.mjs --refresh`.
+Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). On testnet the oracle accepts prices up to 30 days old ([`setParams`](https://testnet.arcscan.app/tx/0x9d6eccca309ba3743c52055c22a5a43aa490c70cf3de21b5e80e03aca13a8bdb)) so the demo never goes stale; production would use a live feed with a short max age. Re-post prices with `node app/scripts/deploy-arc.mjs --refresh`.
 
 | Contract | Address |
 |---|---|
@@ -162,6 +165,7 @@ Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contrac
 | Safe Harbor | [`0x2A923331aA7f452fD3A566DE1a85D1Dc16673092`](https://testnet.arcscan.app/address/0x2A923331aA7f452fD3A566DE1a85D1Dc16673092) |
 | Westerly (AI captain, sailing) | [`0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b`](https://testnet.arcscan.app/address/0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b) |
 | Open Sea | [`0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392`](https://testnet.arcscan.app/address/0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392) |
+| Trade Winds (finished voyage) | [`0xe0b4c04A1A17d032F140F89BF64d7AF8A358e153`](https://testnet.arcscan.app/address/0xe0b4c04A1A17d032F140F89BF64d7AF8A358e153) |
 | USDC (Circle) | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
 | EURC (mock) | [`0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e`](https://testnet.arcscan.app/address/0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e) |
 | USYC (mock; Circle's USYC needs an allowlist) | [`0x95e88570e02d6071ec88874fa18e64c45a123431`](https://testnet.arcscan.app/address/0x95e88570e02d6071ec88874fa18e64c45a123431) |
