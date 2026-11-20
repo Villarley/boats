@@ -75,7 +75,9 @@ export default function Profile() {
           <>
             <ListRow dense href="/add" leading={<IconTile color="teal"><Bank weight="fill" /></IconTile>} title={copy.profile.rows[1]} sub={appCopy.profile.demoBalance(usd(cash, { cents: true }))} trailing={chev} />
             <ListRow dense href="/activity" leading={<IconTile color="loss"><Bell weight="fill" /></IconTile>} title={copy.profile.rows[2]} trailing={chev} />
-            <ListRow dense href="/invite" leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={copy.profile.rows[3]} trailing={chev} />
+            {isManager
+              ? <ListRow dense href="/invite" leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.invite.title} trailing={chev} />
+              : <ListRow dense href="/invitations" leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.invitations.title} trailing={chev} />}
           </>
         )}
         <ListRow dense leading={<IconTile color="muted"><Lifebuoy weight="fill" /></IconTile>} title={copy.profile.rows[4]} trailing={chev} />

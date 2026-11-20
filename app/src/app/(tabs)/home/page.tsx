@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowDown, ArrowsLeftRight, CaretRight, CircleNotch, Gift, Plus, UserPlus } from "@phosphor-icons/react";
+import { ArrowDown, ArrowsLeftRight, CaretRight, CircleNotch, Gift, Plus, Ticket } from "@phosphor-icons/react";
 import { exampleSeries } from "@/components/area-chart";
 import { ArtBanner } from "@/components/art-banner";
 import { BalanceCard } from "@/components/balance-card";
@@ -26,6 +26,7 @@ import { appCopy } from "@/lib/copy.app";
 import { assetName, pct, usd } from "@/lib/format";
 import { useDisplayName, useSavedName } from "@/lib/names";
 import { openWithdraw } from "@/lib/ui-state";
+import { useInvitations } from "@/lib/invitations";
 import { fundHref, managerOf, myFunds, riskOf, statusOf, worstCaseBps } from "@/lib/fund";
 import { NotificationBell } from "@/components/notification-bell";
 
@@ -87,7 +88,7 @@ export default function Home() {
   const week = exampleSeries(toDollars(total - delta), toDollars(total), "week");
   const seriesFor = (r: string) => exampleSeries(toDollars(invested - delta), toDollars(invested), "zigzag", r === "1D" ? 6 : r === "1W" ? 10 : undefined);
   const deltaPct = deposits > 0n ? Number((delta * 10_000n) / deposits) : 0;
-  const familyHref = "/invite";
+  const invitations = useInvitations();
   const blocked = useBlockedAlert();
 
   const G = appCopy.home.gift;
@@ -174,8 +175,9 @@ export default function Home() {
         <div className="flex h-11 items-center justify-between">
           <UserAvatar name={name} dot={!(wallet instanceof PasskeyWallet)} />
           <div className="flex items-center gap-2">
-            <Link href={familyHref} className="flex h-[38px] items-center gap-[7px] rounded-full bg-card-2 px-3.5 text-[14px] font-semibold">
-              <UserPlus weight="fill" className="size-4" />{copy.home.invite}
+            <Link href="/invitations" className="relative flex h-[38px] items-center gap-[7px] rounded-full bg-card-2 px-3.5 text-[14px] font-semibold" data-testid="invitations-link">
+              <Ticket weight="fill" className="size-4" />{appCopy.invitations.title}
+              {invitations.length > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-signal px-1.5 text-[11.5px] font-bold text-white">{invitations.length}</span>}
             </Link>
             <NotificationBell />
           </div>
@@ -245,7 +247,7 @@ export default function Home() {
                 <>
                   <Button href={main.href} size="sm" block={false} icon={<Plus weight="bold" />}>{terms.invest}</Button>
                   <Button onClick={openWithdraw} size="sm" variant="white" block={false} icon={<ArrowDown weight="bold" />} testId="withdraw-web">{terms.withdraw}</Button>
-                  <Button href={familyHref} size="sm" variant="white" block={false} icon={<UserPlus weight="fill" />}>{copy.home.invite}</Button>
+                  <Button href="/invitations" size="sm" variant="white" block={false} icon={<Ticket weight="fill" />}>{appCopy.invitations.title}{invitations.length > 0 ? ` · ${invitations.length}` : ""}</Button>
                 </>
               }
             />
@@ -268,9 +270,9 @@ export default function Home() {
             )}
             <OrbitBanner
               title={copy.home.familyTitle}
-              body={copy.home.familyBody}
-              cta={copy.home.invite}
-              href={familyHref}
+              body={appCopy.home.familyBodyInvestor}
+              cta={appCopy.home.familyCta}
+              href="/manager"
               potLabel={copy.home.familyPot}
               potValue="$4,800"
               potSub={appCopy.home.joined(4, 10)}

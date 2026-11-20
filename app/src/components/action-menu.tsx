@@ -2,7 +2,7 @@
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowDown, ArrowsDownUp, ChartLineUp, Plus, RocketLaunch, UserPlus } from "@phosphor-icons/react";
+import { ArrowDown, ArrowsDownUp, ChartLineUp, Plus, RocketLaunch, Ticket, UserPlus } from "@phosphor-icons/react";
 import { HelmIcon } from "./brand";
 import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
@@ -25,7 +25,7 @@ const INVESTOR: Action[] = [
   { key: "invest", ...A.invest, href: "/explore", icon: <ChartLineUp weight="bold" />, hide: (p) => p === "/home" || p === "/explore" || isFund(p) },
   { key: "add", ...A.add, href: "/add", icon: <Plus weight="bold" />, hide: on("/add") },
   { key: "withdraw", ...A.withdraw, run: openWithdraw, icon: <ArrowDown weight="bold" />, hide: on("/home") },
-  { key: "invite", ...A.invite, href: "/invite", icon: <UserPlus weight="fill" />, hide: on("/home", "/invite") },
+  { key: "invitations", ...A.invitations, href: "/invitations", icon: <Ticket weight="fill" />, hide: on("/home", "/invitations") },
   // Only where the others are hidden (Home), so the menu still has something to offer.
   { key: "manage", title: copy.profile.manageOthers, sub: copy.profile.manageOthersSub, href: "/manager", icon: <HelmIcon size={20} />, hide: (p) => p !== "/home" },
 ];

@@ -10,6 +10,7 @@ import { Wordmark } from "@/components/brand";
 import { NameField } from "@/components/name-field";
 import { PasskeyWallet } from "@/lib/wallet/passkey";
 import { setPendingName } from "@/lib/names";
+import { takePendingInvitation } from "@/lib/invitations";
 import { useStore } from "@/lib/store";
 import { CHAIN_NAME } from "@/lib/deployment";
 import { copy } from "@/lib/copy";
@@ -32,7 +33,7 @@ export default function Welcome() {
   useEffect(() => { setIsNew(!PasskeyWallet.hasSaved()); }, []);
 
   useEffect(() => {
-    if (ready && wallet) router.replace("/home");
+    if (ready && wallet) router.replace(takePendingInvitation() ? "/invitations" : "/home");
   }, [ready, wallet, router]);
 
   const go = async (demo?: "ana" | "grandma") => {
@@ -41,7 +42,7 @@ export default function Welcome() {
     try {
       if (!demo && isNew) setPendingName(name);
       await signIn(demo ? { demo } : undefined);
-      router.replace("/home");
+      router.replace(takePendingInvitation() ? "/invitations" : "/home");
     } catch (e) {
       setErr(/NotAllowed|cancel/i.test(String(e)) ? appCopy.unlock.failed(how) : friendlyError(e));
     } finally {

@@ -149,6 +149,21 @@ test("manager: a family member creates their own fund, puts money in first, and 
   await expect(page.getByTestId("boat-card-Abuela's Harbor")).toBeVisible();
 });
 
+test("invitations: a manager's link shows up as a ticket in the investor's Invitations", async ({ browser }) => {
+  const laura = await signIn(browser, "ana");
+  await laura.goto("/invite");
+  await expect(laura.getByTestId("invite")).toContainText("Invite investors");
+  const wa = await laura.getByRole("link", { name: /WhatsApp/ }).getAttribute("href");
+  const link = decodeURIComponent(wa!.split("text=")[1]!).split(" ").pop()!;
+  expect(link).toContain("/invitations?fund=");
+  const maria = await signIn(browser, "grandma");
+  await maria.goto(new URL(link).pathname + new URL(link).search);
+  await expect(maria.getByTestId("ticket")).toBeVisible();
+  await expect(maria.getByTestId("ticket")).toContainText("Laura invited you");
+  await maria.getByTestId("invite-dismiss").click();
+  await expect(maria.getByTestId("invitations-empty")).toBeVisible();
+});
+
 test("missing pages and funds fail gracefully", async ({ browser }) => {
   const page = await signIn(browser, "grandma");
   await page.goto("/boat/0x0000000000000000000000000000000000000bad");
