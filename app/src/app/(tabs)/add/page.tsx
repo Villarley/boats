@@ -7,7 +7,7 @@ import { AmountDisplay, Keypad } from "@/components/amount-input";
 import { Button } from "@/components/button";
 import { useStore } from "@/lib/store";
 import { CHAIN_NAME } from "@/lib/deployment";
-import { parseUsd } from "@/lib/format";
+import { parseUsd, usd } from "@/lib/format";
 import { appCopy } from "@/lib/copy.app";
 
 const A = appCopy.add;
@@ -20,8 +20,13 @@ export default function AddDollars() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [faucetOn, setFaucetOn] = useState<boolean | null>(null);
+  // Arc: the faucet hands out up to its drip (FAUCET_DRIP_USD); local mints up to $10,000.
+  const [maxUsd, setMaxUsd] = useState(CHAIN_NAME === "arc" ? 5 : 10_000);
   useEffect(() => {
-    fetch("/api/faucet").then((r) => r.json()).then((j) => setFaucetOn(Boolean(j.enabled))).catch(() => setFaucetOn(false));
+    fetch("/api/faucet").then((r) => r.json()).then((j) => {
+      setFaucetOn(Boolean(j.enabled));
+      if (j.drip) setMaxUsd(Number(j.drip) / 1e6);
+    }).catch(() => setFaucetOn(false));
   }, []);
   const amount = parseUsd(v);
 
@@ -49,21 +54,20 @@ export default function AddDollars() {
   return (
     <Page testId="add">
       <TopBar left={<BackButton fallback="/home" />} title={A.title} />
-      {CHAIN_NAME === "arc" ? (
-        <div className="mt-6 flex flex-col gap-3">
-          <p className="rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{A.noteArc}</p>
-          {err && <p role="alert" className="text-[14px] text-loss">{err}</p>}
-          {faucetOn !== false && <Button onClick={() => post({})} loading={busy || faucetOn === null} testId="confirm-add">{A.gift}</Button>}
-          <Button variant={faucetOn === false ? "primary" : "secondary"} icon={<ArrowSquareOut weight="bold" />} onClick={circle} testId="circle-faucet">{faucetOn === false ? A.circle : A.circleMore}</Button>
-          <p className="text-center text-[13px] text-muted">{A.circleHint}</p>
-        </div>
-      ) : (
+      <AmountDisplay value={v} caption={A.upTo(usd(BigInt(Math.round(maxUsd * 1e6)), { cents: false }))} className="mt-[46px]" />
+      <Keypad value={v} onChange={setV} max={maxUsd} quick={[
+        { label: "MAX", value: String(maxUsd) },
+        { label: "50%", value: String(Math.floor(maxUsd * 50) / 100) },
+        { label: "25%", value: String(Math.floor(maxUsd * 25) / 100) },
+        { label: A.clear, value: "" },
+      ]} />
+      <p className="mt-4 text-center text-[13px] text-muted">{CHAIN_NAME === "arc" ? A.noteArc : A.note}</p>
+      {err && <p role="alert" className="mt-2 text-center text-[14px] text-loss">{err}</p>}
+      <Button className="mt-4" onClick={() => post({ amount: amount.toString() })} disabled={amount === 0n || faucetOn === false} loading={busy} testId="confirm-add">{A.cta(v || "0")}</Button>
+      {CHAIN_NAME === "arc" && (
         <>
-          <AmountDisplay value={v} className="mt-[46px]" />
-          <Keypad value={v} onChange={setV} max={10_000} />
-          <p className="mt-4 text-center text-[13px] text-muted">{A.note}</p>
-          {err && <p role="alert" className="mt-2 text-center text-[14px] text-loss">{err}</p>}
-          <Button className="mb-6 mt-4" onClick={() => post({ amount: amount.toString() })} disabled={amount === 0n} loading={busy} testId="confirm-add">{A.cta(v || "0")}</Button>
+          <Button className="mt-2.5" variant="secondary" icon={<ArrowSquareOut weight="bold" />} onClick={circle} testId="circle-faucet">{A.circleMore}</Button>
+          <p className="mb-6 mt-2 text-center text-[13px] text-muted">{A.circleHint}</p>
         </>
       )}
     </Page>

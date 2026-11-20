@@ -27,7 +27,8 @@ type Store = {
   setMode: (m: Mode) => void;
   boats: BoatView[];
   cash: bigint;
-  gift: { state: "sending" | "sent" | "unavailable"; hash?: string; amount?: bigint } | null;
+  gift: Gift | null;
+  claimGift: () => Promise<void>;
   captainOf: Address[];
   loading: boolean;
   error: string | null;
@@ -35,6 +36,9 @@ type Store = {
   signIn: (opts?: { demo?: "ana" | "grandma" }) => Promise<void>;
   signOut: () => void;
 };
+
+/** Arc testnet test dollars: ready to claim → sending → sent, or failed / unavailable (no faucet). */
+export type Gift = { state: "ready" | "sending" | "sent" | "failed" | "unavailable"; hash?: string; amount?: bigint; reason?: "have" | "sent" | "empty" };
 
 const Ctx = createContext<Store | null>(null);
 const MODE_KEY = "boats.mode";
@@ -57,7 +61,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const inflight = useRef(false);
   const fails = useRef(0);
   // Arc testnet: every new wallet gets a one-time drip of test dollars, so a visitor can board right away.
-  const [gift, setGift] = useState<{ state: "sending" | "sent" | "unavailable"; hash?: string; amount?: bigint } | null>(null);
+  const [gift, setGift] = useState<Gift | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -120,33 +124,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, [ready, refresh]);
 
+  // Arc testnet: $5 of test dollars the person claims from Home (never sent on its own).
   useEffect(() => {
-    if (!wallet || CHAIN_NAME !== "arc") return;
-    const flag = `boats.gift.${wallet.address.toLowerCase()}`;
-    try {
-      if (localStorage.getItem(flag)) return;
-    } catch {}
+    if (!wallet || CHAIN_NAME !== "arc") return setGift(null);
+    let claimed = false;
+    try { claimed = Boolean(localStorage.getItem(`boats.gift.${wallet.address.toLowerCase()}`)); } catch {}
+    if (claimed) return setGift(null);
     let alive = true;
-    (async () => {
-      const info = await fetch("/api/faucet").then((r) => r.json()).catch(() => ({ enabled: false }));
-      if (!info.enabled) return alive && setGift({ state: "unavailable" });
-      const bal = (await publicClient().readContract({ address: deployment.tokens.USDC, abi: erc20Abi, functionName: "balanceOf", args: [wallet.address] })) as bigint;
-      if (bal >= 1_000_000n) return;
-      if (alive) setGift({ state: "sending" });
+    fetch("/api/faucet").then((r) => r.json())
+      .then((info: { enabled?: boolean; drip?: string }) => alive && setGift(info.enabled ? { state: "ready", amount: BigInt(info.drip ?? "0") } : { state: "unavailable" }))
+      .catch(() => alive && setGift({ state: "unavailable" }));
+    return () => { alive = false; };
+  }, [wallet]);
+
+  const claimGift = useCallback(async () => {
+    if (!wallet) return;
+    setGift((g) => ({ state: "sending", amount: g?.amount }));
+    try {
       const r = await fetch("/api/faucet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address: wallet.address }) });
       const body = await r.json().catch(() => ({}));
-      if (!alive) return;
-      if (r.ok) {
-        try {
-          localStorage.setItem(flag, body.hash);
-        } catch {}
-        setGift({ state: "sent", hash: body.hash, amount: BigInt(body.amount ?? 0) });
-        refresh();
-      } else setGift({ state: "unavailable" });
-    })().catch(() => alive && setGift({ state: "unavailable" }));
-    return () => {
-      alive = false;
-    };
+      if (!r.ok) throw new Error(body.error ?? "faucet");
+      try { localStorage.setItem(`boats.gift.${wallet.address.toLowerCase()}`, body.hash); } catch {}
+      setGift({ state: "sent", hash: body.hash, amount: BigInt(body.amount ?? 0) });
+      refresh();
+    } catch (e) {
+      const m = String((e as Error).message);
+      setGift((g) => ({ state: "failed", amount: g?.amount, reason: m === "you already have dollars" ? "have" : m === "already sent" ? "sent" : "empty" }));
+    }
   }, [wallet, refresh]);
 
   // Captain mode only makes sense if you captain something.
@@ -172,8 +176,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [setMode]);
 
   const value = useMemo(
-    () => ({ ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut, gift }),
-    [ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut, gift],
+    () => ({ ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut, gift, claimGift }),
+    [ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut, gift, claimGift],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

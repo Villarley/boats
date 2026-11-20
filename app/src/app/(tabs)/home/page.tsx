@@ -70,7 +70,7 @@ const FAMILY = [
 ];
 
 export default function Home() {
-  const { boats, cash, loading, gift, wallet } = useStore();
+  const { boats, cash, loading, gift, claimGift, wallet } = useStore();
   const main = useMainAction();
   const name = useDisplayName(wallet?.address);
   const saved = useSavedName(wallet?.address);
@@ -90,27 +90,50 @@ export default function Home() {
   const familyHref = "/invite";
   const blocked = useBlockedAlert();
 
+  const G = appCopy.home.gift;
+  const openCircle = () => { navigator.clipboard?.writeText(wallet!.address).catch(() => {}); window.open("https://faucet.circle.com", "_blank", "noopener"); };
+  const giftAmount = usd(gift?.amount ?? 5_000_000n, { cents: false });
   const giftCard = (
     <>
+      {gift?.state === "ready" && cash < 1_000_000n && mine.length === 0 && (
+        <div className="mt-4 flex items-center gap-3 rounded-card bg-card p-4" data-testid="gift">
+          <IconTile color="signal"><Gift weight="fill" /></IconTile>
+          <div className="min-w-0 flex-1">
+            <b className="block text-[15px] font-semibold">{G.claimTitle()}</b>
+            <p className="text-[13px] text-muted">{G.claimSub}</p>
+          </div>
+          <Button size="dense" block={false} onClick={claimGift} testId="claim-gift">{G.claim(giftAmount)}</Button>
+        </div>
+      )}
       {gift?.state === "sending" && (
         <ListGroup className="mt-4" testId="gift">
-          <ListRow leading={<IconTile color="signal"><CircleNotch weight="bold" className="animate-spin" /></IconTile>} title={appCopy.home.gift.sending} sub={appCopy.home.gift.sendingSub} />
+          <ListRow leading={<IconTile color="signal"><CircleNotch weight="bold" className="animate-spin" /></IconTile>} title={G.sending(giftAmount)} sub={G.sendingSub} />
         </ListGroup>
       )}
-      {gift?.state === "sent" && cash > 0n && mine.length === 0 && (
+      {gift?.state === "sent" && mine.length === 0 && (
         <ListGroup className="mt-4" testId="gift">
-          <ListRow leading={<IconTile color="gain"><Gift weight="fill" /></IconTile>} title={appCopy.home.gift.sent(usd(gift.amount ?? 0n))} sub={appCopy.home.gift.sentSub} />
+          <ListRow leading={<IconTile color="gain"><Gift weight="fill" /></IconTile>} title={G.sent(usd(gift.amount ?? 0n))} sub={G.sentSub} />
         </ListGroup>
+      )}
+      {gift?.state === "failed" && (
+        <div className="mt-4 rounded-card bg-card p-4" data-testid="gift">
+          <b className="block text-[15px] font-semibold">{G.failedTitle}</b>
+          <p className="mt-1 text-[13px] text-muted">{gift.reason === "have" ? G.failedHave : gift.reason === "sent" ? G.failedSent : G.failedEmpty}</p>
+          <div className="mt-3 flex gap-2">
+            <Button variant="secondary" size="dense" block={false} onClick={openCircle}>{G.faucetCta}</Button>
+            {gift.reason === "empty" && <Button variant="outline" size="dense" block={false} onClick={claimGift}>{G.retry}</Button>}
+          </div>
+        </div>
       )}
       {cash === 0n && mine.length === 0 && !loading && (CHAIN_NAME === "local" || gift?.state === "unavailable") && (
         <div className="mt-4 rounded-card bg-card p-4">
-          <b className="block text-[15px] font-semibold">{appCopy.home.gift.faucetTitle}</b>
-          {CHAIN_NAME === "arc" && <p className="mt-1 text-[13px] text-muted">{appCopy.home.gift.faucetBody}</p>}
+          <b className="block text-[15px] font-semibold">{G.faucetTitle}</b>
+          {CHAIN_NAME === "arc" && <p className="mt-1 text-[13px] text-muted">{G.faucetBody}</p>}
           <div className="mt-3">
             {CHAIN_NAME === "local" ? (
-              <Button href="/add" variant="secondary" size="dense" testId="add-dollars">{appCopy.home.gift.faucetCta}</Button>
+              <Button href="/add" variant="secondary" size="dense" testId="add-dollars">{G.faucetCta}</Button>
             ) : (
-              <Button variant="secondary" size="dense" onClick={() => { navigator.clipboard?.writeText(wallet!.address).catch(() => {}); window.open("https://faucet.circle.com", "_blank", "noopener"); }}>{appCopy.home.gift.faucetCta}</Button>
+              <Button variant="secondary" size="dense" onClick={openCircle}>{G.faucetCta}</Button>
             )}
           </div>
         </div>
@@ -180,7 +203,7 @@ export default function Home() {
           title={copy.home.yourFunds}
           action={<Link href="/explore" className="flex items-center gap-0.5 text-[14px] text-muted">{copy.home.seeAll}<CaretRight weight="bold" className="size-3.5" /></Link>}
         />
-        {empty || (
+        {mine.length === 0 ? empty : (
           <ListGroup testId="your-funds">
             {fundRows.map(({ b, m, d }) => (
               <ListRow
@@ -227,7 +250,7 @@ export default function Home() {
               }
             />
             {giftCard}
-            {empty || (
+            {mine.length === 0 ? empty : (
               <FundsTable
                 headers={appCopy.home.fundsTable}
                 rows={fundRows.map(({ b, m, d }) => ({

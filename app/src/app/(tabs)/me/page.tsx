@@ -16,6 +16,7 @@ import { usd } from "@/lib/format";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { useUnlock } from "@/lib/unlock";
+import { passkeyAvailable } from "@/lib/wallet/passkey";
 
 const chev = <CaretRight weight="bold" className="size-4 text-faint" />;
 
@@ -67,7 +68,9 @@ export default function Profile() {
             <ListRow dense leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.profile.privateFunds} sub={appCopy.profile.privateFundsSub} trailing={<><b className="text-[15px] font-semibold">0</b>{chev}</>} />
           </>
         )}
-        <ListRow dense leading={<IconTile color="gain"><ScanSmiley weight="fill" /></IconTile>} title={passkey ? `${unlock.how[0]!.toUpperCase()}${unlock.how.slice(1)} · ${appCopy.unlock.row}` : appCopy.unlock.row} trailing={<><span className="text-[15px] font-medium text-muted">{passkey ? appCopy.profile.on : appCopy.profile.off}</span>{chev}</>} />
+        <ListRow dense leading={<IconTile color="gain"><ScanSmiley weight="fill" /></IconTile>} title={passkey ? `${unlock.how[0]!.toUpperCase()}${unlock.how.slice(1)} · ${appCopy.unlock.row}` : appCopy.unlock.row}
+          sub={passkey ? undefined : passkeyAvailable() ? appCopy.unlock.nextTime : appCopy.unlock.notYet}
+          trailing={<span className="text-[15px] font-medium text-muted">{passkey ? appCopy.profile.on : appCopy.profile.off}</span>} />
         {!isManager && (
           <>
             <ListRow dense href="/add" leading={<IconTile color="teal"><Bank weight="fill" /></IconTile>} title={copy.profile.rows[1]} sub={appCopy.profile.demoBalance(usd(cash, { cents: true }))} trailing={chev} />

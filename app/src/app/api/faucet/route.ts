@@ -39,10 +39,18 @@ export async function POST(req: Request) {
     }
     if (amt <= 0n || amt > MAX) return NextResponse.json({ error: "amount out of range" }, { status: 400 });
   } else {
+    // Any amount up to the drip (default: the whole drip), once an hour, to wallets under the drip.
+    let want = DRIP;
+    try {
+      if (amount) want = BigInt(amount);
+    } catch {
+      return NextResponse.json({ error: "bad amount" }, { status: 400 });
+    }
+    if (want <= 0n) return NextResponse.json({ error: "amount out of range" }, { status: 400 });
     if (Date.now() - (last.get(address.toLowerCase()) ?? 0) < 60 * 60_000) return NextResponse.json({ error: "already sent" }, { status: 429 });
     const bal = await pc.readContract({ address: usdc, abi, functionName: "balanceOf", args: [address] });
-    if (bal >= 1_000_000n) return NextResponse.json({ error: "you already have dollars" }, { status: 429 });
-    amt = DRIP;
+    if (bal >= DRIP) return NextResponse.json({ error: "you already have dollars" }, { status: 429 });
+    amt = want > DRIP ? DRIP : want;
   }
 
   const wc = createWalletClient({ chain, transport: http(rpcUrl), account: privateKeyToAccount(key) });
