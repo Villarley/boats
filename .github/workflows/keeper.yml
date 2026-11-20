@@ -1,0 +1,23 @@
+name: keeper
+
+# Public keeper: every 10 minutes, ask the live app to check every boat's
+# stop loss / take profit. checkVoyage() and returnToPort() are public, and
+# the app only spends gas when a limit is actually hit.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  keep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run keeper
+        env:
+          APP_URL: ${{ vars.APP_URL || 'https://boats-liard.vercel.app' }}
+          KEEPER_SECRET: ${{ secrets.KEEPER_SECRET }}
+        run: |
+          curl -fsS -X POST "$APP_URL/api/keeper" -H "x-keeper-secret: $KEEPER_SECRET" | tee result.json
+          echo
+          jq -r '.results[] | "\(.boat) \(.state) \(.action) \(.message)"' result.json
