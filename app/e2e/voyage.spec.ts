@@ -25,7 +25,7 @@ test("investor: María invests $100 in Safe Harbor and sees the worst case first
   await expect(page.getByTestId("fund")).toBeVisible();
   await expect(page.getByTestId("fund").getByTestId("cushion")).toBeVisible();
   await page.getByTestId("board-cta").click();
-  await expect(page.getByText("$500.00 available")).toBeVisible();
+  await expect(page.getByTestId("invest").getByText("$500.00 available")).toBeVisible();
   for (const k of ["1", "0", "0"]) await page.getByTestId(`key-${k}`).click();
   await expect(page.getByTestId("amount")).toHaveText("$100");
   // The worst case in dollars is on screen before any money button.

@@ -10,6 +10,8 @@ export const appCopy = {
     notifications: "Notifications",
     modeSwitch: "Investor or manager",
     actions: "Quick actions",
+    available: (v: string) => `${v} available`,
+    managerRole: "Manager",
     closeActions: "Close quick actions",
   },
   // FAB / sidebar menu: one place for every way to move money, each with its own destination.
@@ -356,6 +358,7 @@ export const appCopy = {
     demoInvestor: "Demo: María, investor",
     demoManager: "Demo: Laura, manager",
     settingUp: "Setting up your account…",
+    chip: "Only you can take it out",
   },
   notFound: {
     title: "This page doesn't exist",
