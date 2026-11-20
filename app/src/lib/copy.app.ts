@@ -282,7 +282,6 @@ export const appCopy = {
     yours: "Yours",
     everyone: "Across all funds",
     empty: "Nothing yet. Your investments, your managers' trades and withdrawals show here, each with its receipt.",
-    quiet: "Quiet by design: only trades, stopped trades, investments and payouts.",
     traded: (fund: string) => `Manager traded on ${fund}`,
     tradedSub: (from: string, to: string) => `${from} to ${to}`,
     someoneInvested: (fund: string) => `Someone invested in ${fund}`,

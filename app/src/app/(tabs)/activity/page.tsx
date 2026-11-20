@@ -107,7 +107,7 @@ function ActivityScreen() {
           ) : (
             <p className="mt-4 rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{day === today ? A.empty : A.nothingDay}</p>
           )}
-          <p className="mb-6 mt-4 text-center text-[13px] text-muted">{A.quiet}</p>
+          <div className="h-6" />
         </div>
         <aside className="sticky top-6 hidden rounded-[24px] border border-card-3 bg-white p-5 lg:block" data-testid="activity-panel">
           {panel ? (panel.trade ? <MoveDetail e={panel} all={all} /> : <EntryDetail e={panel} />) : <p className="text-[14px] text-muted">{A.pick}</p>}
