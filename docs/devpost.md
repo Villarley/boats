@@ -30,7 +30,7 @@ A fund manager who can't take your money. A human or AI captain trades inside a 
 
 ## Built with
 
-arc, usdc, circle-modular-wallets, solidity, foundry, viem, typescript, next.js, gemini-prediction-markets, quicknode-streams ⚠️ QuickNode
+arc, usdc, circle-modular-wallets, solidity, foundry, viem, typescript, next.js, gemini-prediction-markets, mcp, quicknode-streams ⚠️ QuickNode
 
 ## About the project (pegar todo este bloque)
 
@@ -56,14 +56,15 @@ The crew signs in with Face ID, never sees a seed phrase or gas, and reads the w
 ## Proof on Arc testnet
 - The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat into Treasuries: https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea
 - A rogue captain tries to put everything into Bitcoin. The contract refuses: https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6
-- A full voyage (Trade Winds): Bitcoin rises, anyone calls `checkVoyage()`, the +10% goal is hit, the boat sells back to dollars, and the crew withdraws +9.9% after the captain's fee: https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e
+- A full voyage (Trade Winds): Bitcoin rises, anyone calls `checkVoyage()` (https://testnet.arcscan.app/tx/0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8), the +10% goal is hit, the boat sells back to dollars (https://testnet.arcscan.app/tx/0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2), and the crew withdraws +9.9% after the captain's fee: https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e
 
 ## How we built it
-- **Contracts (Solidity, Foundry):** `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. 18 tests, including invariants: value is conserved, the captain can't siphon funds, weights hold, the crew is protected in a loss.
+- **Contracts (Solidity, Foundry):** `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. 18 Foundry tests, including invariants (plus SDK, captain, MCP and end-to-end tests in CI): value is conserved, the captain can't siphon funds, weights hold, the crew is protected in a loss.
 - **@boats/sdk (TypeScript, viem):** reads, a mandate pre-check that mirrors the contract, first-loss math (tested to match `Boat.waterfall()`), the seaworthiness score, calldata builders and the keeper.
 - **PWA (Next.js):** crew and captain modes in one app. Invisible wallet: a Circle Modular Wallets passkey smart account plus paymaster, so boarding is one sponsored user operation. ⚠️ passkey
 - **AI captain:** reads Gemini Prediction Markets odds and acts on plain-words rules ("if Fed hike odds pass 70%, move half to Treasuries"). The odds inform the decision; the contract limits what can execute.
-- **Keeper:** a QuickNode Stream on oracle and trade logs calls our webhook, which runs `checkVoyage()` and `returnToPort()`. ⚠️ QuickNode
+- **Keeper:** a QuickNode Stream on oracle and trade logs calls our webhook, which runs `checkVoyage()` and `returnToPort()`. ⚠️ QuickNode A GitHub Actions cron calls the same webhook every 10 minutes as a backup.
+- **Agent-ready:** an MCP server (`packages/mcp`) and AGENTS.md / llms.txt, so any AI agent (Claude, GPT) can read boats, dry-run a trade against the mandate, read Gemini odds and act as captain or crew. The agent gets the same powers as our AI captain, and the contract still rejects anything outside the mandate.
 - **Arc:** USDC is the gas token, so the crew only ever holds dollars. One factory and no custom code per boat, so code risk is equal for every boat and the score measures strategy risk only.
 - **CI:** contract, SDK and captain tests plus a full-voyage end-to-end test on an iPhone viewport on every push.
 
@@ -87,7 +88,7 @@ Non-custodial vaults already exist for perp traders (Hyperliquid, Drift). What's
 - Real USYC and cirBTC instead of testnet mocks.
 
 ## Honest notes
-Testnet prototype. We post the oracle prices ourselves; EURC, USYC and cirBTC are labelled mocks; USDC is Circle's. In production, captains would need to be licensed or boats self-managed.
+Testnet prototype. We post the oracle prices ourselves; EURC, USYC and cirBTC are labelled mocks; USDC is Circle's. The factory is permissionless, so the app, keeper and MCP server only list boats on our oracle and router; mainnet would enforce that on chain. Trust assumptions are in the README. In production, captains would need to be licensed or boats self-managed.
 ```
 
 ---

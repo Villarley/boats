@@ -1,0 +1,24 @@
+# Boats
+
+> A fund manager who can't take your money. On Arc testnet, a captain (human or AI) trades a crew's USDC only through `swap()` inside an on-chain mandate, puts up a first-loss stake, and every voyage ends at a contract-enforced stop loss, take profit or date.
+
+AI agents can read boats, pre-check trades against the mandate, read Gemini prediction-market odds and act as captain or crew through the Boats MCP server or the TypeScript SDK.
+
+## Docs
+
+- [AGENTS.md](https://github.com/Villarley/boats/blob/main/AGENTS.md): lifecycle, who can call what, mandate rules, errors, addresses, MCP setup
+- [MCP server](https://github.com/Villarley/boats/tree/main/packages/mcp): tools `boats_list`, `boats_check_trade`, `boats_worst_case`, `boats_odds`, `boats_act`
+- [@boats/sdk](https://github.com/Villarley/boats/tree/main/packages/sdk): reads, `checkTrade`, first-loss math, calldata builders, keeper, captain quickstart
+- [Contracts](https://github.com/Villarley/boats/tree/main/contracts/src): `Boat.sol`, `BoatFactory.sol`, `PriceOracle.sol`, `SwapAdapter.sol`
+- [Deployment](https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json): Arc testnet (chain 5042002) addresses
+
+## HTTP API (this site)
+
+- `GET /api/odds`: live Gemini odds used by the AI captain
+- `GET /api/activity`: recent on-chain activity of all official boats
+- `GET /api/captain-log`: the AI captain's decisions with transaction links
+- `POST /api/keeper`: runs `checkVoyage()` / `returnToPort()` on every boat (header `x-keeper-secret`)
+
+## Optional
+
+- [README](https://github.com/Villarley/boats#readme): proof transactions on Arc, risk assumptions

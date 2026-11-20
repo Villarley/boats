@@ -34,9 +34,18 @@ Everything below happened on chain and can be checked on the explorer.
 
 Addresses are in [Contract addresses](#contract-addresses-arc-testnet).
 
+## For AI agents
+
+Any agent can be a captain or crew member. The contract, not the model, is what keeps the money safe.
+
+- **MCP server** (`packages/mcp`): `boats_list`, `boats_check_trade` (dry-run against the mandate, with the max allowed amount), `boats_worst_case`, `boats_odds` (live Gemini), `boats_act` (board, swap, stake and sail, check voyage...). Run `npx tsx packages/mcp/src/server.ts`.
+- **[AGENTS.md](AGENTS.md)**: lifecycle, who can call what, mandate rules, revert reasons, addresses.
+- **[llms.txt](https://boats-liard.vercel.app/llms.txt)** on the live app.
+- **[@boats/sdk](packages/sdk)**: captain quickstart in TypeScript.
+
 ## Why
 
-To let someone manage your money today, you have to hand over custody. They can take it, take too much risk, or charge fees while they lose. That holds for a fund manager, a friend who "knows crypto", a trading bot and an AI agent. In a controlled experiment with real USDC (I-HITL, Cornell Tech / IC3, Oct 2026), 9 of 10 AI models raised their own spending cap at least once. Boats removes custody from the equation: the contract holds the money, and the captain's only power is `swap()` inside the rules.
+To let someone manage your money today, you have to hand over custody. They can take it, take too much risk, or charge fees while they lose. That holds for a fund manager, a friend who "knows crypto", a trading bot and an AI agent. In a controlled experiment with real USDC (I-HITL, Cornell Tech and Yale/IC3, Oct 2026), 9 of 10 AI models raised their own spending cap at least once. Boats removes custody from the equation: the contract holds the money, and the captain's only power is `swap()` inside the rules.
 
 ## How it works
 
@@ -61,7 +70,7 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 ```
 
 1. **A boat is a voyage, not an open fund.** Everyone boards at the same price, so one floor and one goal apply to the whole crew.
-2. **The captain can only swap.** It goes through an allowlisted router, only into listed assets, and only below each asset's max weight. There is no transfer, withdraw or approve for the captain: those functions don't exist.
+2. **The captain can only swap.** It goes through the boat's router (the app only lists boats on the official adapter), only into listed assets, and only below each asset's max weight. There is no transfer, withdraw or approve for the captain: those functions don't exist.
 3. **The captain takes the first loss.** Losses hit the captain's stake before the crew's money. The fee is a share of the crew's profit only, and it vests over time.
 4. **Limits are enforced on chain.** `checkVoyage()` is public. A keeper (fed by a QuickNode Stream) or anyone else can call it.
 5. **One factory, no custom code.** Code risk is the same for every boat, so the seaworthiness score measures strategy risk only.
@@ -73,6 +82,7 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 | Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 18 tests incl. invariants, CI on every push) |
 | SDK | `packages/sdk/` | `@boats/sdk`: reads, mandate pre-check, waterfall, score, calldata builders, wallet interface, keeper, Gemini odds |
 | App | `app/` | PWA for crew and captains. Invisible wallet: passkey smart account (Circle Modular Wallets) + paymaster, no seed phrase, no gas |
+| MCP server | `packages/mcp/` | Any AI agent (Claude, GPT...) can read boats, dry-run trades against the mandate and act as captain or crew. See [AGENTS.md](AGENTS.md) |
 | AI captain | `captain/` | Reads Gemini prediction-market odds, decides by plain-words rules, trades only via `Boat.swap()` |
 | Keeper | `packages/sdk/src/keeper.ts` + `app/api/keeper` | Webhook for the QuickNode Stream: `checkVoyage()` then `returnToPort()` |
 
@@ -96,10 +106,13 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 ## Risk assumptions
 
 - **Oracle.** On testnet we push the prices ourselves. `PriceOracle` rejects prices older than `maxAge` and caps each update at `maxDeviationBps`. A production version would plug in a decentralized oracle behind the same interface.
-- **Liquidity.** Arc testnet has no liquidity for these pairs, so `SwapAdapter` swaps at the oracle price minus a spread, against liquidity we fund. Boats trade only through an allowlisted router, so a real DEX router can replace it.
+- **Liquidity.** Arc testnet has no liquidity for these pairs, so `SwapAdapter` swaps at the oracle price minus a spread, against liquidity we fund. A real DEX router can replace it without changing `Boat`.
+- **Official boats only.** `BoatFactory` is permissionless and each boat stores its oracle and router, so someone could launch a boat with their own router. The app, the MCP server and the keeper only list boats that use the deployment's oracle, adapter and USDC (`listOfficialBoats()` in the SDK). In production the factory would enforce this allowlist on chain.
+- **Owner key (testnet).** One key owns `PriceOracle` (prices, max age, deviation cap) and `SwapAdapter` (liquidity). It could move prices or pull liquidity, which would end or freeze voyages. It cannot call any function that sends crew money elsewhere. Mainnet plan: decentralized feeds, a multisig with a timelock, and an in-kind exit if the router fails.
+- **Limits are checked when called.** `swap()` doesn't check the stop loss itself; `checkVoyage()` does. The keeper runs it at least every 10 minutes, and anyone can call it.
 - **Exit slippage.** `returnToPort()` accepts up to 1% below the oracle value. The app shows the real figure.
 - **Assets.** USDC is Circle's testnet token. Assets we couldn't fund on Arc testnet (EURC liquidity, USYC needs an allowlist, cirBTC) are deployed as clearly labelled mocks.
-- **Captain liveness.** If the captain disappears, the money stays inside the rules, and the voyage still ends at its date. Anyone can bring it back to port.
+- **Captain liveness.** If the captain disappears after sailing, the money stays inside the rules, and the voyage still ends at its date. Anyone can bring it back to port. Known gap: a boat that never sails keeps its crew deposits until the captain calls `sail()`; v2 adds a refund after the end date.
 - **Dilution.** A larger crew dilutes the captain's cushion. The app computes the worst case at review time with `worstCaseIfBoarding()`, not a static number.
 
 ## How we use Arc
@@ -117,14 +130,14 @@ The AI captain reads the public market-data API (`GET /v1/prediction-markets/eve
 
 - **Network:** Arc Testnet. **Dataset:** logs.
 - **Filter:** `PriceUpdated` from the oracle and `Traded` from the boats (by address and topic0). See `docs/quicknode.md`.
-- **Destination:** webhook `POST /api/keeper`. The keeper recomputes NAV and calls `checkVoyage()`, and then `returnToPort()`, when a limit is crossed.
-- The same stream feeds each captain's value history for the track-record factor of the score.
+- **Destination:** webhook `POST /api/keeper` (header `x-keeper-secret`). The keeper simulates `checkVoyage()` on every official boat, sends it when a limit is crossed, then calls `returnToPort()`.
+- **Backup:** a GitHub Actions cron (`.github/workflows/keeper.yml`) calls the same endpoint every 10 minutes.
 
 ## Run it
 
 ```bash
 npm install               # workspaces: sdk, captain, app
-npm test                  # SDK + captain unit tests
+npm test                  # SDK, captain and MCP unit tests
 
 cd contracts
 forge install foundry-rs/forge-std --no-git

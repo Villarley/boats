@@ -18,7 +18,7 @@ export async function GET() {
       body = null;
     }
   }
-  body ??= { probability: 0.72, label: "Cut 25bps", event: "SAMPLE", title: "Fed decision (sample)", fetchedAt: new Date().toISOString(), sample: true };
+  body ??= { probability: 0.91, label: "Hike 25bps", event: "SAMPLE", title: "Fed decision (sample)", fetchedAt: new Date().toISOString(), sample: true };
   cache = { at: Date.now(), body };
   return NextResponse.json(body);
 }
