@@ -66,7 +66,7 @@ const server = new McpServer(
   { name: "boats", version: "0.2.0" },
   {
     instructions: [
-      "Boats: funds ('boats') on Arc testnet where a captain (human or AI) can only swap inside an on-chain mandate, stakes first-loss money, and every voyage ends at a stop loss, take profit or date.",
+      "Boats: funds ('boats') on Arc testnet where a captain (human or AI) trades inside an on-chain mandate and stakes first-loss money. Public transactions trigger settlement at a stop loss, take profit or date; oracle, liquidity and liveness risks remain.",
       "Typical flows. Crew: boats_list -> boats_score + boats_worst_case -> boats_act board -> later boats_my_positions -> boats_act withdraw.",
       "Captain: boats_create -> boats_act stake -> crew boards -> boats_act sail -> boats_odds -> boats_check_trade -> boats_act swap -> boats_act claim_captain.",
       "Money is in US dollars (fields ending in Usd); percentages are positive numbers (fields ending in Pct). Write tools check state, role and mandate before returning calls.",
@@ -133,13 +133,13 @@ server.registerTool(
 
 server.registerTool(
   "boats_score",
-  { description: "Seaworthiness score 0-100 of a boat with points and a plain-words reason for each factor (captain's stake, floor, asset risk, concentration, track record).", annotations: READ, inputSchema: { boat: boatArg } },
+  { description: "Heuristic seaworthiness score 0-100 of a boat with points and a reason per factor (stake, threshold, asset risk, concentration, track record). Not a safety certification or security audit.", annotations: READ, inputSchema: { boat: boatArg } },
   wrap(async ({ boat }: { boat: string }) => scoreTool(pc, { boat })),
 );
 
 server.registerTool(
   "boats_worst_case",
-  { description: "Before boarding: can this boat be boarded now, and the crew's target worst-case loss in dollars and percent for a deposit, after the captain's first-loss stake.", annotations: READ, inputSchema: { boat: boatArg, amountUsd: dollars("Deposit") } },
+  { description: "Before boarding: can this boat be boarded now, and the modeled crew loss at an exit exactly at the stop threshold, after the captain's first-loss stake. Before exit costs; not a guaranteed maximum loss.", annotations: READ, inputSchema: { boat: boatArg, amountUsd: dollars("Deposit") } },
   wrap(async (a: { boat: string; amountUsd: string | number }) => worstCaseTool(pc, a)),
 );
 

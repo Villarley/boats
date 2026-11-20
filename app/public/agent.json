@@ -54,7 +54,7 @@
     "Threshold settlement needs a caller, gas, transaction inclusion, oracle and liquidity; it is not a guaranteed loss bound",
     "Crew cannot currently withdraw from a boat that never sails",
     "The bundled captain uses deterministic rules with no embedded LLM; external LLM agents connect through MCP",
-    "Circle client-domain correction removed HTTP 401; passkey relying-party domain and interactive production login still need verification",
+    "Circle client and passkey domains are corrected: login options return HTTP 200, a challenge and rpId boats-liard.vercel.app; interactive production login and sponsored boarding remain unverified",
     "Pre-checks and synthetic replay do not establish profitable trading, production safety or legal readiness"
   ]
 }

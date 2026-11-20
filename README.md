@@ -89,7 +89,7 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 |---|---|---|
 | Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 18 tests incl. invariants, CI on every push) |
 | SDK | `packages/sdk/` | `@boats/sdk`: reads, mandate pre-check, waterfall, score, calldata builders, wallet interface, keeper, Gemini odds |
-| App | `app/` | PWA for crew and captains; Circle Modular Wallets integration plus a local demo-wallet fallback. Client-domain correction removed the HTTP 401; passkey-domain correction and interactive production login verification remain pending |
+| App | `app/` | PWA for crew and captains; Circle Modular Wallets integration plus a local demo-wallet fallback. Both production domains are corrected; login options return HTTP 200 and the correct rpId. Interactive login verification remains pending |
 | MCP server | `packages/mcp/` | Any AI agent (Claude, GPT...) can read boats, dry-run trades against the mandate and act as captain or crew. See [AGENTS.md](AGENTS.md) |
 | AI captain | `captain/` | Reads Gemini prediction-market odds, decides by plain-words rules, trades only via `Boat.swap()` |
 | Keeper | `packages/sdk/src/keeper.ts` + `app/src/app/api/keeper/route.ts` | Authenticated webhook called by a GitHub Actions schedule: `checkVoyage()` then `returnToPort()` |
@@ -126,7 +126,7 @@ The same math lives in `Boat.waterfall()` and in `@boats/sdk` `waterfall()`. Tes
 ## How we use Arc
 
 - All contracts are deployed on **Arc testnet** (chain 5042002). USDC is the gas token.
-- **Wallet integration:** Circle Modular Wallets code supports passkeys and sponsored `approve` + `board` user operations. Correcting the client key's web domain removed the Nov 20 HTTP 401; the passkey domain and interactive production login still need verification. Do not present onboarding or sponsored boarding as demonstrated until a real-device test passes.
+- **Wallet integration:** Circle Modular Wallets code supports passkeys and sponsored `approve` + `board` user operations. Correcting the client key's web domain and passkey domain changed the Nov 20 login-options request from HTTP 401 to HTTP 200 with a challenge and `rpId: boats-liard.vercel.app`. Interactive login and sponsored boarding remain unverified.
 - Real Circle USDC (gas and deposits); other assets are labelled mocks.
 - Every trade, blocked attempt and withdrawal links to the Arc explorer.
 
