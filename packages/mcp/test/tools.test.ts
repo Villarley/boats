@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { PublicClient } from "viem";
-import { deployment, exactMaxAllowed, parseUsd, planAction, planCreateBoat, resolveToken, usd, worstCaseTool, checkTradeTool } from "../src/tools.js";
+import { TransactionNotFoundError, TransactionReceiptNotFoundError, type PublicClient } from "viem";
+import { deployment, exactMaxAllowed, parseUsd, planAction, planCreateBoat, resolveToken, txStatusTool, usd, worstCaseTool, checkTradeTool } from "../src/tools.js";
 
 describe("helpers", () => {
   it("parses dollar amounts into USDC base units", () => {
@@ -9,6 +9,7 @@ describe("helpers", () => {
     expect(parseUsd(0.25)).toBe(250_000n);
     expect(() => parseUsd("-1")).toThrow();
     expect(() => parseUsd("abc")).toThrow();
+    expect(() => parseUsd(0)).toThrow(/greater than zero/);
   });
   it("returns dollars as numbers with cents", () => {
     expect(usd(5_504_999n)).toBe(5.5);
@@ -30,11 +31,12 @@ describe("helpers", () => {
 const BOAT = "0x00000000000000000000000000000000000000b1";
 const CAPTAIN = "0x00000000000000000000000000000000000000c1";
 const T = deployment.tokens;
-function fakeChain(state: number): PublicClient {
+function fakeChain(state: number, overrides: Record<string, unknown> = {}): PublicClient {
   const boat: Record<string, unknown> = {
     name: "Test", captain: CAPTAIN, state, endReason: 0, usdc: T.USDC, assets: [T.USYC, T.cirBTC], stopLossBps: 1000n, takeProfitBps: 1500n,
     endTime: 2_000_000_000n, feeBps: 2000n, crewTotal: 10_000_000n, captainStake: 1_000_000n, startValue: 11_000_000n, nav: 11_000_000n,
     finalValue: 0n, crewPayout: 0n, oracle: deployment.oracle, router: deployment.adapter,
+    ...overrides,
   };
   const read = (fn: string, args?: unknown[]) => {
     if (fn === "valueOf") return String(args![0]).toLowerCase() === T.USDC.toLowerCase() ? 11_000_000n : 0n;
@@ -51,6 +53,31 @@ function fakeChain(state: number): PublicClient {
 }
 
 describe("planAction refuses calls that would revert", () => {
+  it("doesn't stake and lock capital before discovering there is no crew", async () => {
+    const p = await planAction(fakeChain(0, { crewTotal: 0n }), { action: "stake_and_sail", boat: BOAT, amountUsd: 1, caller: CAPTAIN });
+    expect(p.ok).toBe(false);
+    if (!p.ok) expect(p.problems.join(" ")).toMatch(/No crew has boarded/);
+    expect(p).not.toHaveProperty("calls");
+  });
+  it("can stake on an empty boat and leave boarding open", async () => {
+    const p = await planAction(fakeChain(0, { crewTotal: 0n, captainStake: 0n }), { action: "stake", boat: BOAT, amountUsd: 1, caller: CAPTAIN });
+    expect(p.ok).toBe(true);
+    if (p.ok) expect(p.calls).toHaveLength(2);
+  });
+  it("can sail using the existing stake after crew joins", async () => {
+    const p = await planAction(fakeChain(0), { action: "sail", boat: BOAT, caller: CAPTAIN });
+    expect(p.ok).toBe(true);
+    if (p.ok) expect(p.calls).toHaveLength(1);
+  });
+  it("won't sail without captain capital", async () => {
+    const p = await planAction(fakeChain(0, { captainStake: 0n }), { action: "sail", boat: BOAT, caller: CAPTAIN });
+    expect(p.ok).toBe(false);
+  });
+  it("keeps incomplete caller checks visible in unsigned plans", async () => {
+    const p = await planAction(fakeChain(0), { action: "board", boat: BOAT, amountUsd: 1 });
+    expect(p.ok).toBe(true);
+    if (p.ok) expect(p.warnings?.[0]).toMatch(/checks were skipped/);
+  });
   it("won't board a boat that is already Sailing", async () => {
     const p = await planAction(fakeChain(1), { action: "board", boat: BOAT, amountUsd: 5 });
     expect(p.ok).toBe(false);
@@ -111,5 +138,21 @@ describe("exactMaxAllowed", () => {
     const m = exactMaxAllowed(h, T.USDC, T.USDC, T.cirBTC, 10);
     expect(m).toBeGreaterThan(2_000_000n);
     expect(m % 10_000n).toBe(0n);
+  });
+});
+
+describe("transaction status after a partial failure", () => {
+  const hash = `0x${"a".repeat(64)}` as const;
+  it("does not turn an RPC outage into a false not-found response", async () => {
+    const pc = { getTransactionReceipt: async () => { throw new Error("RPC unavailable"); } } as unknown as PublicClient;
+    await expect(txStatusTool(pc, { hash })).rejects.toThrow("RPC unavailable");
+  });
+  it("reports a known transaction without a receipt as pending", async () => {
+    const pc = { getTransactionReceipt: async () => { throw new TransactionReceiptNotFoundError({ hash }); }, getTransaction: async () => ({ hash }) } as unknown as PublicClient;
+    expect(await txStatusTool(pc, { hash })).toMatchObject({ status: "pending" });
+  });
+  it("reports not found only when the RPC actually reports a missing transaction", async () => {
+    const pc = { getTransactionReceipt: async () => { throw new TransactionReceiptNotFoundError({ hash }); }, getTransaction: async () => { throw new TransactionNotFoundError({ hash }); } } as unknown as PublicClient;
+    expect(await txStatusTool(pc, { hash })).toMatchObject({ status: "not found" });
   });
 });

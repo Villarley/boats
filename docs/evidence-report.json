@@ -1,0 +1,60 @@
+{
+  "verifiedAt": "2026-11-20T14:36:20.406Z",
+  "chainId": 5042002,
+  "readOnly": true,
+  "passed": 5,
+  "total": 5,
+  "results": [
+    {
+      "name": "Gemini-driven swap with decision memo",
+      "ok": true,
+      "hash": "0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41",
+      "block": "73199767",
+      "status": "success",
+      "amountInUsdcBaseUnits": "552475",
+      "memo": {
+        "why": "Odds of \"Hike 25bps\" at 91% (above 70%). Moving $0.55 to Treasuries.",
+        "signal": {
+          "source": "gemini-prediction-markets",
+          "event": "FED261211",
+          "contract": "Hike 25bps",
+          "probability": 0.91,
+          "at": "2026-11-20T14:08:58.903Z"
+        }
+      },
+      "provenance": "The transaction proves what the captain recorded. Gemini does not cryptographically attest this memo."
+    },
+    {
+      "name": "Rogue swap rejected",
+      "ok": true,
+      "hash": "0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6",
+      "block": "73190923",
+      "status": "reverted",
+      "replayReason": "Blocked by the contract: max weight exceeded"
+    },
+    {
+      "name": "Take profit triggered",
+      "ok": true,
+      "hash": "0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8",
+      "block": "73190974",
+      "status": "success"
+    },
+    {
+      "name": "Returned to USDC",
+      "ok": true,
+      "hash": "0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2",
+      "block": "73190984",
+      "status": "success"
+    },
+    {
+      "name": "Crew payout",
+      "ok": true,
+      "hash": "0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e",
+      "block": "73190988",
+      "status": "success",
+      "principalUsdcBaseUnits": "2000000",
+      "payoutUsdcBaseUnits": "2197402",
+      "returnPct": 9.87
+    }
+  ]
+}

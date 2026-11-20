@@ -1,19 +1,6 @@
 # Boats: Devpost submission
 
-Listo para copiar y pegar. Cada bloque de abajo es un campo de Devpost. Vence el viernes 20 de nov a las 12:00 PM CST (meta: 11:00 AM).
-
-## Checklist (solo ustedes)
-
-- [ ] **Verificar el login.** Abran https://boats-liard.vercel.app en el teléfono. Si dice "Continue with Face ID", el texto queda como está. Si dice "Open my account", la Circle client key no está en Vercel: borren las dos frases marcadas con ⚠️ passkey.
-- [ ] **QuickNode.** Creen el stream con [docs/quicknode.md](quicknode.md) (unos 15 min) y prueben que `/api/keeper` responde. Si no llegan, borren las frases marcadas con ⚠️ QuickNode, quiten "QuickNode Streams" de Built with y no se inscriban en ese track.
-- [ ] **Grabar el video** (guion abajo, máximo 3 min). Subirlo a YouTube como no listado y pegar el link.
-- [ ] **Imágenes:** subir las 4 capturas de `docs/screenshots/` y una del diagrama del README.
-- [ ] **Equipo:** invitar a los compañeros desde "Manage team" y que cada uno acepte.
-- [ ] **Tracks:** DeFi & Onchain Applications, Best use of Arc, Gemini Prediction Markets, QuickNode (solo si el stream funciona).
-- [ ] **Links:** "Try it out" con la app y el repo. Confirmar que el repo es público.
-- [ ] **Submit antes de las 11 AM CST** y revisar la página publicada desde otra cuenta o en incógnito.
-
----
+Submission fields for November 20, 2026, 12:00 PM CST.
 
 ## Project name
 
@@ -21,96 +8,89 @@ Boats
 
 ## Elevator pitch (max 200 chars)
 
-A fund manager who can't take your money. A human or AI captain trades inside a contract mandate on Arc, puts up a stake that loses first, and can never withdraw.
+Non-custodial USDC voyages on Arc: human or AI captains trade within on-chain limits, stake first-loss capital, and leave an auditable decision trail.
 
 ## Try it out
 
-- https://boats-liard.vercel.app (Arc testnet; $5 of test USDC on first open)
+- https://boats-liard.vercel.app — Arc testnet prototype
 - https://github.com/Villarley/boats
+- Reproduce the transaction evidence without a wallet: `npm install && npm run verify:proof`
+
+## Track and prizes
+
+DeFi and Onchain Applications; Best use of Arc; Gemini Prediction Markets bounty. See [the judge evidence guide](judging.md) for the implemented integration and its limits.
 
 ## Built with
 
-arc, usdc, circle-modular-wallets, solidity, foundry, viem, typescript, next.js, gemini-prediction-markets, mcp, quicknode-streams ⚠️ QuickNode
+arc, usdc, solidity, foundry, viem, typescript, next.js, circle-modular-wallets, gemini-prediction-markets, model-context-protocol, github-actions
 
-## About the project (pegar todo este bloque)
+## About the project
 
 ```markdown
 ## Inspiration
-To let someone manage your money today, you hand over custody. A fund manager, the friend who "knows crypto", a trading bot, an AI agent: any of them can take it, take too much risk, or charge fees while they lose.
+Delegating money should not require delegating unrestricted control. We built a vault where the manager's trading permissions are enforced on chain and the manager contributes capital that absorbs losses first.
 
-The mechanism is already failing with AI. In a controlled experiment with real USDC ([I-HITL, Cornell Tech and Yale/IC3, Oct 2026](https://arxiv.org/pdf/2610.35835)), 9 of 10 AI models read the owner's approval code and raised their own spending cap. The damage from intermediaries is already huge: Americans lost $7.2B to crypto investment fraud in 2025 ([FBI IC3 2025 report](https://www.foxbusiness.com/lifestyle/crypto-fraud-tops-fbis-annual-crime-report-americans-lose-billions-scams)).
-
-But people don't say "never". Only 7% are comfortable with an AI buying without approval, yet 29% accept automatic actions within their own rules ([Riskified, 2026](https://www.riskified.com/press/agentic-commerce-pulse-consumer-survey-november-2026/)). Boats writes those rules into a contract.
+Three pieces of evidence informed the design:
+- In I-HITL's controlled payment experiment, 9 of 10 tested models raised their spending limit in at least one of 20 runs per model, without an adversarial prompt. That is a result about this experimental setup, not a 90% failure rate for all agents. [Research paper, October 2026](https://arxiv.org/html/2610.35835v1)
+- The FBI recorded $7.28 billion in reported cryptocurrency-related investment-fraud losses in 2025. This motivates reducing delegated authority; it does not imply Boats prevents every type of investment fraud. [FBI IC3 2025 report, p. 55](https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf)
+- In Riskified's September 2026 survey of 5,100 adult online shoppers in five countries, 7% were comfortable with AI purchases without approval, while 29% would allow automatic purchases within their own rules. This is shopping research, not a measure of demand for AI investing. [Riskified, published October 27, 2026](https://www.riskified.com/press/agentic-commerce-pulse-consumer-survey-november-2026/)
 
 ## What it does
-A boat is a fund with a fixed voyage. A captain, a person or an AI, trades the crew's money, but:
+A boat is a USDC vault with a fixed voyage. A captain, human or AI, trades pooled crew deposits subject to an immutable mandate:
 
-- **The captain can only swap.** One function, `swap()`, only through an allowlisted router, only into listed assets, only below each asset's max weight. There is no transfer, withdraw or approve. A trade outside the mandate reverts.
-- **The captain loses first.** Their stake absorbs losses before the crew's money. Their fee is a share of the crew's profit only.
-- **The worst case is known before boarding.** Every voyage ends at a stop loss, a take profit or a date. `checkVoyage()` is public, so anyone can end it when a limit is crossed.
+- **Restricted trading authority.** Swaps go through the boat's fixed adapter, use listed assets and respect each asset's maximum portfolio weight. The captain has no arbitrary transfer path for crew deposits.
+- **First-loss capital.** The captain's stake absorbs losses before crew principal. The performance fee applies only to crew profit. Captains can claim their remaining stake and vested fee; crew can withdraw their own share after settlement.
+- **Public settlement.** Anyone can call `checkVoyage()` when NAV crosses a stop loss or take profit, or the end date passes, then `returnToPort()` to settle in USDC. These functions require transactions; a threshold is not a guaranteed execution price or time.
 
-Example: crew $10,000, captain stake $1,000, stop loss at -10%. **The market falls 10%. Grandma loses 1%.**
-
-The crew signs in with Face ID, never sees a seed phrase or gas, and reads the worst case in dollars before boarding. ⚠️ passkey
+For $10,000 crew principal and $1,000 captain stake, an exit exactly 10% below starting NAV leaves $9,900 for the crew: a 1% crew loss before exit costs. Gaps, delays, oracle failure and liquidity can make losses larger.
 
 ## Proof on Arc testnet
-- The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat into Treasuries: https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea
-- The AI captain trades again and writes its reasoning and the Gemini odds (FED261211, Hike 25bps at 91%) into the swap transaction itself: https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41
-- A rogue captain tries to put everything into Bitcoin. The contract refuses: https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6
-- A full voyage (Trade Winds): Bitcoin rises, anyone calls `checkVoyage()` (https://testnet.arcscan.app/tx/0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8), the +10% goal is hit, the boat sells back to dollars (https://testnet.arcscan.app/tx/0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2), and the crew withdraws +9.9% after the captain's fee: https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e
+- **Gemini-driven decision:** the bundled captain recorded event `FED261211`, outcome “Hike 25bps”, probability 91%, its reason and fetch timestamp in a successful swap's calldata. The memo-bearing swap moved about $0.55; an earlier trade moved $5.50. [Swap + memo](https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41) · [Earlier swap](https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea)
+- **Rejected trade:** a swap attempting to exceed the Bitcoin weight cap reverted. The verification command replays it at the preceding block to check the specific rejection reason. [Reverted swap](https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6)
+- **Complete voyage:** in a controlled testnet scenario, we manually increased the mock Bitcoin oracle price. A public call triggered take profit, the vault returned to USDC, and the crew received 2.197402 test USDC for a 2 USDC deposit: +9.8701% after the captain fee. This demonstrates settlement, not real investment performance. [Take profit](https://testnet.arcscan.app/tx/0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8) · [Return](https://testnet.arcscan.app/tx/0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2) · [Crew withdrawal](https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e)
+
+`npm run verify:proof` checks transaction targets, methods, receipts, the decision memo, the historical rejected trade and crew payout. It requires neither a private key nor a new transaction.
 
 ## How we built it
-- **Contracts (Solidity, Foundry):** `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. 18 Foundry tests, including invariants (plus SDK, captain, MCP and end-to-end tests in CI): value is conserved, the captain can't siphon funds, weights hold, the crew is protected in a loss.
-- **@boats/sdk (TypeScript, viem):** reads, a mandate pre-check that mirrors the contract, first-loss math (tested to match `Boat.waterfall()`), the seaworthiness score, calldata builders and the keeper.
-- **PWA (Next.js):** crew and captain modes in one app. Invisible wallet: a Circle Modular Wallets passkey smart account plus paymaster, so boarding is one sponsored user operation. ⚠️ passkey
-- **AI captain:** reads Gemini Prediction Markets odds and acts on plain-words rules ("if Fed hike odds pass 70%, move half to Treasuries"). The odds inform the decision; the contract limits what can execute.
-- **Keeper:** a QuickNode Stream on oracle and trade logs calls our webhook, which runs `checkVoyage()` and `returnToPort()`. ⚠️ QuickNode A GitHub Actions cron calls the same webhook every 10 minutes as a backup.
-- **Agent-ready:** an MCP server with 14 tools (`packages/mcp`), AGENTS.md and llms.txt. Any AI agent (Claude, GPT) can score boats, compute the worst case before boarding, dry-run a trade against the mandate, read Gemini odds, launch a boat and act as captain or crew. Write tools check state, role and mandate first, so an agent never gets a call that would revert. The agent gets the same powers as our AI captain, and the contract still rejects anything outside the mandate.
-- **Auditable AI decisions:** the AI captain now writes its reasoning and the Gemini odds it used (event, contract, probability, timestamp) into the swap transaction's calldata, readable with `decodeSwapMemo()`. No contract change: Solidity ignores trailing calldata. Live: https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41
-- **Arc:** USDC is the gas token, so the crew only ever holds dollars. One factory and no custom code per boat, so code risk is equal for every boat and the score measures strategy risk only.
-- **CI:** contract, SDK and captain tests plus a full-voyage end-to-end test on an iPhone viewport on every push.
+- **Contracts:** Solidity and Foundry: `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. Unit and invariant tests cover mandate restrictions and first-loss settlement.
+- **SDK:** TypeScript and viem for reads, trade pre-checks, loss estimates, scores, calldata and keepers.
+- **Agent interface:** a stdio MCP server with 14 tools, structured JSON, read/write annotations, AGENTS.md and llms.txt. Agents can discover boats, inspect limits, plan trades, read Gemini odds and receive unsigned calls without supplying a key. With a signer, each step is simulated before sending; partial failures return transaction hashes so the agent can check before retrying.
+- **Captain lifecycle:** agents can create a boat, post a stake while boarding stays open, wait for crew, then sail. Requests to sail without crew or stake fail before any calls are returned.
+- **Gemini integration:** public Prediction Markets REST data drives an explicit threshold rule. Missing, ambiguous, inactive, invalid or stale fetched snapshots cause the captain to hold. Normal swaps carry a configurable slippage floor, 1% by default. The bundled captain is a deterministic rule-based agent, with no embedded LLM. External LLM agents can operate through MCP.
+- **Audit trail:** decision memos are appended to swap calldata and decoded with `decodeSwapMemo()`. They prove what the captain recorded; they are not cryptographically authenticated Gemini attestations.
+- **App:** Next.js PWA. Circle Modular Wallets passkey and paymaster integration is implemented, but production login returned HTTP 401 “Invalid credentials” during verification on November 20. We do not count passkey onboarding or sponsored boarding as demonstrated.
+- **Keeper:** GitHub Actions schedules the authenticated keeper webhook every 10 minutes. Runs can be delayed; settlement requires available prices, liquidity and gas.
+- **Arc:** contracts and evidence are on Arc testnet, chain 5042002. USDC is used for deposits and gas. EURC, USYC and cirBTC are testnet mocks.
+- **CI:** Foundry, SDK, captain, MCP, app and local-chain end-to-end checks. MCP protocol tests exercise discovery and unsigned planning through the real stdio transport.
 
 ## Challenges we ran into
-- **No liquidity on Arc testnet** for these pairs. We built an oracle-priced swap adapter behind an allowlist, so a real DEX router can replace it without changing the boat.
-- **Keeping the worst case honest.** Every new crew member dilutes the captain's cushion, so a static "max loss" would lie. The app computes it at review time.
-- **A stop loss can't guarantee the exit price.** It guarantees the boat stops taking risk and returns to USDC, with exit slippage capped at 1%. We say "target max loss", never "you can't lose".
+- The demo needs funded liquidity and prices. We use a team-funded, oracle-priced adapter and team-posted prices, with clearly labelled mock assets. This is not a production DEX or a live USYC yield strategy.
+- A stop threshold is not a guaranteed loss bound. Settlement depends on a caller, transaction inclusion, oracle availability, liquidity and exit costs.
+- Agent plans can become stale. We expose skipped checks, simulate signed steps and preserve hashes after partial execution instead of inviting blind retries.
+- First-loss protection changes as more crew joins. The SDK recalculates the threshold-loss estimate for each proposed deposit.
 
 ## Accomplishments that we're proud of
-- A captain, human or AI, who can't take your money, can't break the rules, and loses first, live on Arc.
-- A complete voyage on chain: stake, board, sail, trade, take profit, withdraw, captain claim.
-- An AI agent whose safety doesn't depend on the model behaving. The limit is in the contract.
+A deployed mandate-based vault, first-loss settlement, a Gemini-informed trading decision recorded on chain, a reverted out-of-mandate trade and a reproducible full voyage. The same SDK supports the app, captain, keeper and external AI agents.
 
 ## What we learned
-Non-custodial vaults already exist for perp traders (Hyperliquid, Drift). What's missing is the consumer version: safe assets, a worst case known up front, and a manager whose own money is on the line first.
+A useful agent interface needs clear permissions, actionable failures and inspectable results. Financial safety also requires honest limits: an on-chain trading mandate does not remove oracle, liquidity, contract or liveness risk.
 
-## What's next for Boats
-- Fee clawback when later voyages lose.
-- A captain leaderboard built from on-chain voyage history.
-- Decentralized price feeds and a real DEX router, then mainnet.
-- Real USYC and cirBTC instead of testnet mocks.
+## What's next
+Decentralized price feeds, production liquidity, independent security review, refunds for boats that never sail, fee clawbacks and a captain history derived from on-chain results. Production legal requirements would need assessment before handling real users' funds.
 
 ## Honest notes
-Testnet prototype. We post the oracle prices ourselves; EURC, USYC and cirBTC are labelled mocks; USDC is Circle's. The factory is permissionless, so the app, keeper and MCP server only list boats on our oracle and router; mainnet would enforce that on chain. Trust assumptions are in the README. In production, captains would need to be licensed or boats self-managed.
+Testnet prototype, unaudited. Prices and adapter liquidity are controlled by the team. The factory is permissionless; the app, keeper and MCP filter for the official oracle, adapter and USDC. Existing boats have immutable oracle/router addresses. Crew in a boat that never sails currently cannot withdraw; a refund path is future work. The seaworthiness score is a heuristic, not a safety certification.
 ```
 
----
+## Demo video script (2:45)
 
-## Video script (2:45)
-
-Una pantalla de teléfono (la app) y una pestaña con arcscan. Grabar en inglés, voz en off, sin música alta. Ensayar una vez antes.
-
-| Tiempo | Pantalla | Decir |
+| Time | Show | Narration |
 |---|---|---|
-| 0:00 | Título: "A fund manager who can't take your money." | "Last month, Cornell Tech and Yale gave ten AI models a wallet with real dollars and access to the owner's email. Nine of ten raised their own spending limit. Nobody, human or AI, should hold the keys to your money." |
-| 0:20 | App: Welcome → login | "This is Boats. Grandma has never touched crypto. One tap with Face ID. No seed phrase, no gas." |
-| 0:35 | Explore: tres boats | "Each boat is a voyage run by a captain. Every card shows a score and the worst case in plain dollars." |
-| 0:50 | Safe Harbor → keypad → review | "She boards with a few dollars. Before she confirms, the app tells her the worst that can happen." |
-| 1:10 | Westerly: log del capitán IA | "Westerly is run by an AI captain. It reads Gemini's prediction market on the Fed. Hike odds are above 70%, so it moves half the boat to Treasuries." |
-| 1:25 | arcscan: tx del swap | "That trade is on Arc. The captain can only call swap." |
-| 1:35 | arcscan: tx revertida | "Now a rogue captain tries to put everything into Bitcoin. The contract says no. Max weight exceeded." |
-| 1:50 | Trade Winds en la app (voyage terminado) | "This voyage ran start to finish on chain. Bitcoin rose, anyone could call checkVoyage, the goal was hit, and the crew withdrew 9.9% after the captain's fee." |
-| 2:10 | Tabla del ejemplo (diapositiva) | "And when it goes wrong, the captain's stake pays first. The market falls 10%. Grandma loses 1%." |
-| 2:25 | Diagrama del README | "Contracts plus an SDK on Arc. Our app, the AI captain and the keeper all use it, and anyone can build another captain on top." |
-| 2:40 | URL de la app | "Boats. Your money sails. Nobody can take it." |
-
-Si el login con Face ID no funciona en vivo (ver checklist), cambiar 0:20 por: "One tap. No seed phrase, no gas."
+| 0:00 | Mandate and first-loss example | “A trading agent should not get unrestricted control of your money. Boats puts its trading limits on chain and requires the manager to stake capital that loses first.” |
+| 0:20 | Live app and Arc deployment | “This is a working vault prototype on Arc testnet. We use USDC for deposits and gas; the other assets and price movements in this demonstration are controlled test data.” |
+| 0:40 | MCP `boats_list`, score and proposed deposit | “An AI agent can discover a boat, inspect permissions and estimate loss at the stop threshold before it builds a transaction.” |
+| 1:00 | Gemini event and memo-bearing transaction | “The bundled rule-based captain read Gemini's Fed market. At 91%, above a 70% trigger, it rebalanced toward mock Treasuries. This transaction records the signal and its reason.” |
+| 1:25 | Reverted swap and historical replay | “An attempt to exceed the Bitcoin allocation cap reverted. The contract enforces the limit independently of the agent.” |
+| 1:45 | Trade Winds settlement and payout | “We manually increased the mock Bitcoin price to test take profit. The voyage settled, and the crew withdrew 2.197402 test USDC for 2 in. This is a settlement test, not a yield claim.” |
+| 2:10 | Unsigned MCP action and partial-failure behavior | “Any MCP-capable agent can plan the same actions without sharing a key. Signed steps are simulated, and transaction hashes remain visible if a later step fails.” |
+| 2:30 | `npm run verify:proof` and repository | “You can verify these five pieces of evidence with one read-only command. Boats: delegated trading with on-chain limits and first-loss capital.” |
