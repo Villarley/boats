@@ -72,7 +72,7 @@ test("captain: Ana unlocks captain mode, sets sail, and the ticket catches a rul
 
 test("voyage ends: the market falls, the keeper brings the boat back, grandma loses less than 1%", async ({ browser, request }) => {
   await movePrice("USYC", -1500); // Treasuries -15% -> boat about -10%
-  const k = await request.post("/api/keeper", { headers: { referer: "e2e" } });
+  const k = await request.post("/api/keeper", { headers: { origin: "http://localhost:3000" } }) // same-origin, like the in-app button;
   const body = await k.json();
   const safe = body.results.find((r: { message: string; boat: string }) => r.message);
   expect(safe).toBeTruthy();

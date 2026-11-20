@@ -9,7 +9,7 @@ Two phones (or two browser windows at phone size): **Grandma** (crew) and **Ana*
 | 0:35 | Explore | "Three boats. The safest first. Each one says the worst case in dollars." | Open Safe Harbor: score breakdown, lock notice. |
 | 0:55 | Board | "She boards with $100. The review tells her: the worst that can happen is losing about $1." | Keypad → review → one Face ID. |
 | 1:15 | Ana: Bridge | "Her daughter Ana is the captain. Same app, captain mode." | Trade ticket: try 88% Treasuries → "Max 70%. Use $3,700." |
-| 1:35 | Westerly AI log | "The AI captain reads Gemini: Fed-cut odds above 70%, so it moves half to Treasuries." | Show log entry with arcscan link. |
+| 1:35 | Westerly AI log | "The AI captain reads Gemini: Fed hike odds above 70%, so it moves half to Treasuries." | Show log entry with arcscan link. |
 | 1:50 | Rogue AI | "Now the AI tries to put everything in bitcoin." | `npm run captain:rogue` → "The contract said no." Failed tx on arcscan. |
 | 2:05 | Market drop | "The market falls 10%." | MovePrices → QuickNode → keeper → back in port. |
 | 2:25 | Grandma: Back in port | "The market fell 10%. Grandma lost 1%. The captain's stake took the hit." | Withdraw. |

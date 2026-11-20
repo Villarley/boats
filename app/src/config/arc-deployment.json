@@ -56,5 +56,12 @@
   },
   "hidden": [
     "0xf27641544Ea56cd61c04499626ec948828ee36fD"
+  ],
+  "finished": [
+    {
+      "name": "Trade Winds",
+      "address": "0x7281C2b57894d9061B83A316426fC6149C729160",
+      "note": "Full voyage: take profit hit, crew withdrew +9.9%"
+    }
   ]
 }

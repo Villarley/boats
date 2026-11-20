@@ -4,6 +4,7 @@
  */
 import { encodeFunctionData, type Address, type Hex } from "viem";
 import { boatAbi, factoryAbi } from "./abi.js";
+import { withMemo, type DecisionMemo } from "./memo.js";
 
 export type Call = { to: Address; data: Hex; value?: bigint };
 
@@ -35,8 +36,11 @@ export function buildStakeCalls(boat: Address, usdc: Address, amount: bigint, sa
 
 export const buildSailCall = (boat: Address): Call => boatCall(boat, encodeFunctionData({ abi: boatAbi, functionName: "sail" }));
 
-export const buildSwapCall = (boat: Address, tokenIn: Address, tokenOut: Address, amountIn: bigint, minOut = 0n): Call =>
-  boatCall(boat, encodeFunctionData({ abi: boatAbi, functionName: "swap", args: [tokenIn, tokenOut, amountIn, minOut] }));
+/** Captain swap. Pass a memo to record the decision's reasoning in the transaction (see memo.ts). */
+export const buildSwapCall = (boat: Address, tokenIn: Address, tokenOut: Address, amountIn: bigint, minOut = 0n, memo?: DecisionMemo): Call => {
+  const data = encodeFunctionData({ abi: boatAbi, functionName: "swap", args: [tokenIn, tokenOut, amountIn, minOut] });
+  return boatCall(boat, memo ? withMemo(data, memo) : data);
+};
 
 export const buildClaimCaptainCall = (boat: Address): Call =>
   boatCall(boat, encodeFunctionData({ abi: boatAbi, functionName: "claimCaptain" }));
