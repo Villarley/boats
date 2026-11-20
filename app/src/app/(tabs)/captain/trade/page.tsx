@@ -89,7 +89,7 @@ function Ticket() {
       {check && !check.ok && check.maxAllowed !== undefined && check.maxAllowed > 0n ? (
         <Button onClick={() => setV(String(Number(check.maxAllowed) / 1e6))} testId="use-max">Use {usd(check.maxAllowed)}</Button>
       ) : (
-        <Button icon={ScanFace} onClick={() => send()} loading={busy} disabled={!check?.ok || amount === 0n} testId="send-trade">Trade with Face ID</Button>
+        <Button icon={ScanFace} onClick={() => send()} loading={busy} disabled={!check?.ok || amount === 0n} testId="send-trade">{wallet?.kind === "passkey" ? "Trade with Face ID" : "Trade"}</Button>
       )}
       {check && !check.ok && amount > 0n && <Button variant="ghost" onClick={() => send(true)} disabled={busy} testId="send-anyway">Send it anyway (the contract will check)</Button>}
     </Screen>

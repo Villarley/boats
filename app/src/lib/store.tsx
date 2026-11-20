@@ -12,7 +12,7 @@ import {
   type BoatsWallet,
   type Position,
 } from "@boats/sdk";
-import { deployment, isDeployed, symbolOf } from "./deployment";
+import { CHAIN_NAME, deployment, isDeployed, symbolOf } from "./deployment";
 import { publicClient } from "./client";
 import { LocalWallet } from "./wallet/local";
 import { PasskeyWallet, passkeyAvailable } from "./wallet/passkey";
@@ -27,6 +27,7 @@ type Store = {
   setMode: (m: Mode) => void;
   boats: BoatView[];
   cash: bigint;
+  gift: { state: "sending" | "sent" | "unavailable"; hash?: string; amount?: bigint } | null;
   captainOf: Address[];
   loading: boolean;
   error: string | null;
@@ -54,6 +55,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const inflight = useRef(false);
+  // Arc testnet: every new wallet gets a one-time drip of test dollars, so a visitor can board right away.
+  const [gift, setGift] = useState<{ state: "sending" | "sent" | "unavailable"; hash?: string; amount?: bigint } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -114,6 +117,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, [ready, refresh]);
 
+  useEffect(() => {
+    if (!wallet || CHAIN_NAME !== "arc") return;
+    const flag = `boats.gift.${wallet.address.toLowerCase()}`;
+    try {
+      if (localStorage.getItem(flag)) return;
+    } catch {}
+    let alive = true;
+    (async () => {
+      const info = await fetch("/api/faucet").then((r) => r.json()).catch(() => ({ enabled: false }));
+      if (!info.enabled) return alive && setGift({ state: "unavailable" });
+      const bal = (await publicClient().readContract({ address: deployment.tokens.USDC, abi: erc20Abi, functionName: "balanceOf", args: [wallet.address] })) as bigint;
+      if (bal >= 1_000_000n) return;
+      if (alive) setGift({ state: "sending" });
+      const r = await fetch("/api/faucet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address: wallet.address }) });
+      const body = await r.json().catch(() => ({}));
+      if (!alive) return;
+      if (r.ok) {
+        try {
+          localStorage.setItem(flag, body.hash);
+        } catch {}
+        setGift({ state: "sent", hash: body.hash, amount: BigInt(body.amount ?? 0) });
+        refresh();
+      } else setGift({ state: "unavailable" });
+    })().catch(() => alive && setGift({ state: "unavailable" }));
+    return () => {
+      alive = false;
+    };
+  }, [wallet, refresh]);
+
   // Captain mode only makes sense if you captain something.
   useEffect(() => {
     if (mode === "captain" && ready && !loading && captainOf.length === 0 && wallet) setMode("crew");
@@ -137,8 +169,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [setMode]);
 
   const value = useMemo(
-    () => ({ ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut }),
-    [ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut],
+    () => ({ ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut, gift }),
+    [ready, wallet, mode, setMode, boats, cash, captainOf, loading, error, refresh, signIn, signOut, gift],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -8,32 +8,54 @@ import { serverKey } from "@/lib/server/keys";
 const abi = [
   { type: "function", name: "mint", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [] },
   { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const;
 
-const MAX = CHAIN_NAME === "local" ? 10_000_000_000n : 200_000_000n; // $10k local, $200 testnet
+const MAX = 10_000_000_000n; // $10k on the local chain
+// Arc testnet: a fixed drip of real Circle testnet USDC (also the gas token), only to near-empty wallets.
+const DRIP = BigInt(Math.round(Number(process.env.FAUCET_DRIP_USD ?? "5") * 1e6));
 const last = new Map<string, number>();
 
-/** "Add dollars" for test networks: mints on the local chain, sends from the faucet wallet on testnet. */
+/** Whether this deployment can hand out test dollars (the UI falls back to Circle's faucet if not). */
+export async function GET() {
+  return NextResponse.json({ enabled: Boolean(serverKey("FAUCET_PRIVATE_KEY")), drip: CHAIN_NAME === "local" ? null : DRIP.toString() });
+}
+
+/** "Add dollars" for test networks: mints on the local chain, drips from the faucet wallet on testnet. */
 export async function POST(req: Request) {
   const { address, amount } = (await req.json().catch(() => ({}))) as { address?: string; amount?: string };
   if (!address || !isAddress(address)) return NextResponse.json({ error: "bad address" }, { status: 400 });
-  let amt: bigint;
-  try {
-    amt = BigInt(amount ?? "0");
-  } catch {
-    return NextResponse.json({ error: "bad amount" }, { status: 400 });
-  }
-  if (amt <= 0n || amt > MAX) return NextResponse.json({ error: "amount out of range" }, { status: 400 });
-  if (CHAIN_NAME !== "local" && Date.now() - (last.get(address) ?? 0) < 60_000) return NextResponse.json({ error: "slow down" }, { status: 429 });
   const key = serverKey("FAUCET_PRIVATE_KEY");
   if (!key) return NextResponse.json({ error: "faucet not configured" }, { status: 503 });
+  const pc = publicClient();
+  const usdc = deployment.tokens.USDC as Address;
+
+  let amt: bigint;
+  if (CHAIN_NAME === "local") {
+    try {
+      amt = BigInt(amount ?? "0");
+    } catch {
+      return NextResponse.json({ error: "bad amount" }, { status: 400 });
+    }
+    if (amt <= 0n || amt > MAX) return NextResponse.json({ error: "amount out of range" }, { status: 400 });
+  } else {
+    if (Date.now() - (last.get(address.toLowerCase()) ?? 0) < 60 * 60_000) return NextResponse.json({ error: "already sent" }, { status: 429 });
+    const bal = await pc.readContract({ address: usdc, abi, functionName: "balanceOf", args: [address] });
+    if (bal >= 1_000_000n) return NextResponse.json({ error: "you already have dollars" }, { status: 429 });
+    amt = DRIP;
+  }
 
   const wc = createWalletClient({ chain, transport: http(rpcUrl), account: privateKeyToAccount(key) });
-  const usdc = deployment.tokens.USDC as Address;
-  const hash = deployment.mocks.includes("USDC")
-    ? await wc.writeContract({ address: usdc, abi, functionName: "mint", args: [address, amt] })
-    : await wc.writeContract({ address: usdc, abi, functionName: "transfer", args: [address, amt] });
-  await publicClient().waitForTransactionReceipt({ hash });
-  last.set(address, Date.now());
-  return NextResponse.json({ hash });
+  last.set(address.toLowerCase(), Date.now());
+  try {
+    const hash = deployment.mocks.includes("USDC")
+      ? await wc.writeContract({ address: usdc, abi, functionName: "mint", args: [address, amt] })
+      : await wc.writeContract({ address: usdc, abi, functionName: "transfer", args: [address, amt] });
+    await pc.waitForTransactionReceipt({ hash });
+    return NextResponse.json({ hash, amount: amt.toString() });
+  } catch (e) {
+    last.delete(address.toLowerCase());
+    console.error("faucet", e);
+    return NextResponse.json({ error: "faucet empty" }, { status: 503 });
+  }
 }

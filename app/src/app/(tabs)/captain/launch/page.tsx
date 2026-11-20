@@ -88,7 +88,7 @@ export default function Launch() {
       {err && <Notice tone="danger">{err}</Notice>}
       <div className="flex gap-2">
         {step > 0 && <Button variant="secondary" onClick={() => setStep(step - 1)}>Back</Button>}
-        {step < 4 ? <Button onClick={() => setStep(step + 1)} disabled={step === 2 && floorTooWide}>Next</Button> : <Button icon={ScanFace} loading={busy} onClick={create} disabled={floorTooWide}>Launch with Face ID</Button>}
+        {step < 4 ? <Button onClick={() => setStep(step + 1)} disabled={step === 2 && floorTooWide}>Next</Button> : <Button icon={ScanFace} loading={busy} onClick={create} disabled={floorTooWide}>{wallet?.kind === "passkey" ? "Launch with Face ID" : "Launch"}</Button>}
       </div>
       <p className="text-[13px] text-ink-2 text-center flex items-center justify-center gap-1"><Rocket size={13} /> The boat comes from the same factory as every other boat. After launch, put in your stake from the Bridge.</p>
     </Screen>

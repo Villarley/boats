@@ -66,7 +66,7 @@ export default function Board({ params }: { params: Promise<{ address: string }>
           <div className="flex gap-2 py-2 mt-2 border-t border-hair"><Lock size={18} strokeWidth={1.5} className="flex-none mt-0.5" /><span>Locked until {dateShort(b.endTime)}, the floor or the goal. You can't take it out mid-voyage.</span></div>
         </Card>
         {err && <Notice tone="danger">{err}</Notice>}
-        <div className="bottom-cta"><Button icon={ScanFace} onClick={confirm} loading={busy} testId="confirm-board">Board with Face ID</Button></div>
+        <div className="bottom-cta"><Button icon={ScanFace} onClick={confirm} loading={busy} testId="confirm-board">{wallet?.kind === "passkey" ? "Board with Face ID" : "Board"}</Button></div>
       </Screen>
     );
 
