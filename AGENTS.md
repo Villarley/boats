@@ -34,6 +34,8 @@ Conventions: money is a number in dollars (`...Usd`), percentages are positive n
 
 Tools return readable text and matching `structuredContent`, with explicit read/write annotations. By default there is no signer: use unsigned calls or `dryRun: true`. If a key is configured, `caller` must match the signer for signed writes. Multi-step actions return every sent hash, including a pending transaction when receipt polling fails; call `boats_tx_status` before retrying. Never blindly repeat an action after partial execution.
 
+`boats_deployment` publishes the public Arc RPC and a `customRpcConfigured` flag. It never returns a configured private RPC URL, which could contain a provider credential.
+
 ## Typical flows
 
 - **Crew:** `boats_list` → `boats_score` + `boats_worst_case` → `boats_act board` → later `boats_my_positions` → `boats_act withdraw`.
@@ -43,6 +45,12 @@ Tools return readable text and matching `structuredContent`, with explicit read/
 See [packages/mcp/examples/session.md](packages/mcp/examples/session.md) for a real session against Arc testnet.
 
 For judges: `npm run verify:proof` checks five submitted on-chain proofs without a key or a new transaction. Use `NODE_USE_ENV_PROXY=1` if your environment requires its HTTP proxy. [Evidence and bounty guide](docs/judging.md).
+
+## Discover the operating context
+
+MCP clients can list and read three resources: `boats://playbook` (this file), `boats://evidence` (the public [agent.json](app/public/agent.json) with claim → evidence → verification command), and `boats://proof-report` (timestamped historical verification). These reads require neither RPC access nor a signer. The `review_voyage` prompt accepts `boat`, optional `who` and `amountUsd`; it guides a read-only review and does not authorize a transaction.
+
+`npm run verify:agent` runs eight offline synthetic scenarios through the same parser, captain decision engine and SDK mandate checker. It makes no network calls and sends no transactions. It demonstrates behavior rather than trading performance. For historical contract enforcement and payout evidence use `verify:proof`.
 
 ## Network
 
@@ -84,7 +92,7 @@ The factory is permissionless. A boat created with another oracle or router has 
 
 ## Write your own captain
 
-See "Captain quickstart" in `packages/sdk/README.md`, or copy `captain/src/index.ts` (Gemini odds → deterministic rule → `checkTrade` → swap with a 1% default slippage floor). The bundled captain has no LLM. External AI agents use MCP or the SDK. The fetched snapshot must have a valid probability and timestamp no older than two minutes; this measures fetch age, not the age of the exchange's last trade. Memos are self-reported decision records, not Gemini attestations.
+See "Captain quickstart" in `packages/sdk/README.md`, or copy `captain/src/index.ts` (Gemini odds → deterministic rule → `checkTrade` → swap with a 1% default slippage floor). The bundled captain has no LLM. External AI agents use MCP or the SDK. The fetched snapshot must have a valid probability and timestamp no older than two minutes; this measures fetch age, not the age of the exchange's last trade. The captain requires valid bid and ask prices, a matching mid and width at most 500 probability basis points (five percentage points). The SDK preserves raw quote strings; its display odds may fall back to a last trade or one side, which the bundled captain refuses for automated trading. A spread gate does not establish depth or calibration. Memos are self-reported decision records, not Gemini attestations.
 
 ## Repo map
 

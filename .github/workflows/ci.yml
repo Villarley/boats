@@ -35,6 +35,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - name: Replay agent decisions without network or signer
+        run: npm run verify:agent
       - name: Build the PWA against Arc testnet
         run: npm run build -w app
         env:

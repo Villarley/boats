@@ -10,6 +10,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { readFile } from "node:fs/promises";
 import { getAddress, type Hex } from "viem";
 import { clients, revertReason } from "@boats/sdk";
 import {
@@ -69,9 +70,34 @@ const server = new McpServer(
       "Typical flows. Crew: boats_list -> boats_score + boats_worst_case -> boats_act board -> later boats_my_positions -> boats_act withdraw.",
       "Captain: boats_create -> boats_act stake -> crew boards -> boats_act sail -> boats_odds -> boats_check_trade -> boats_act swap -> boats_act claim_captain.",
       "Money is in US dollars (fields ending in Usd); percentages are positive numbers (fields ending in Pct). Write tools check state, role and mandate before returning calls.",
+      "Start with boats://playbook for operating rules and boats://evidence for claims, verification commands and limitations. review_voyage prepares a read-only review before any unsigned plan.",
     ].join("\n"),
   },
 );
+
+// Fixed local resources only: no caller-provided filesystem paths or network fetches.
+for (const resource of [
+  { name: "playbook", path: "../../../AGENTS.md", mimeType: "text/markdown", description: "Roles, lifecycle, execution and recovery rules" },
+  { name: "evidence", path: "../../../app/public/agent.json", mimeType: "application/json", description: "Machine-readable submission claims, proof links, verification commands and limitations" },
+  { name: "proof-report", path: "../../../docs/evidence-report.json", mimeType: "application/json", description: "Recorded historical verification, with timestamp; rerun verify:proof for fresh verification" },
+]) {
+  server.registerResource(resource.name, `boats://${resource.name}`, { description: resource.description, mimeType: resource.mimeType }, async uri => ({
+    contents: [{ uri: uri.href, mimeType: resource.mimeType, text: await readFile(new URL(resource.path, import.meta.url), "utf8") }],
+  }));
+}
+
+server.registerPrompt("review_voyage", {
+  description: "Review a proposed deposit using live state and risk estimates; prepare an unsigned plan only when explicitly requested.",
+  argsSchema: { boat: boatArg, who: addr("Crew wallet to review").optional(), amountUsd: z.string().regex(/^\d+(\.\d{1,6})?$/).optional() },
+}, ({ boat, who, amountUsd }) => ({
+  messages: [{ role: "user", content: { type: "text", text: [
+    `Review boat ${boat}${who ? ` for crew wallet ${who}` : ""}${amountUsd ? ` and a proposed $${amountUsd} deposit` : ""}.`,
+    "Read boats://playbook and boats://evidence. Call boats_get and boats_score; if a deposit was supplied call boats_worst_case. If a wallet was supplied call boats_position.",
+    "Report current state, official deployment check, first-loss cushion, asset caps, ability to withdraw and oracle/liquidity/liveness risks. The score is a heuristic; threshold loss is not a guaranteed maximum.",
+    "Do not infer permission to deposit or sign from this review. Only if the user explicitly requests a transaction, prepare boats_act with dryRun:true and the intended caller. Explain every call and warning. Never ask for a private key in chat.",
+    "If a prior action returned a transaction hash, use boats_tx_status before proposing a retry. An RPC failure does not mean the transaction failed.",
+  ].join("\n") } }],
+}));
 
 server.registerTool(
   "boats_deployment",
@@ -84,7 +110,9 @@ server.registerTool(
     tokens: Object.fromEntries(Object.entries(deployment.tokens).map(([k, v]) => [k, getAddress(v)])),
     testnetMocks: deployment.mocks,
     boats: "Call boats_list for the current official boats.",
-    rpcUrl,
+    // Custom RPC URLs can contain credentials in their path or query. Never echo them to a model.
+    rpcUrl: "https://rpc.testnet.arc.io",
+    customRpcConfigured: rpcUrl !== "https://rpc.testnet.arc.io",
     explorer: "https://testnet.arcscan.app",
     faucet: "https://faucet.circle.com",
     signer: account?.address ?? null,

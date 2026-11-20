@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Boats",
+  "updatedAt": "2026-11-20",
+  "description": "Delegated USDC trading on Arc: on-chain mandates, first-loss captain capital, inspectable decisions and public settlement.",
+  "environment": "arc-testnet-prototype",
+  "chainId": 5042002,
+  "explorer": "https://testnet.arcscan.app",
+  "repository": "https://github.com/Villarley/boats",
+  "application": "https://boats-liard.vercel.app",
+  "discovery": {
+    "instructions": "https://github.com/Villarley/boats/blob/main/AGENTS.md",
+    "llms": "https://boats-liard.vercel.app/llms.txt",
+    "deployment": "https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json",
+    "judgeGuide": "https://github.com/Villarley/boats/blob/main/docs/judging.md",
+    "partnerResearch": "https://github.com/Villarley/boats/blob/main/docs/partner-research.md",
+    "evidenceReport": "https://github.com/Villarley/boats/blob/main/docs/evidence-report.json"
+  },
+  "mcp": {
+    "transport": "stdio",
+    "command": "node",
+    "args": ["--import", "tsx", "packages/mcp/src/server.ts"],
+    "cwd": "repository root after npm install",
+    "tools": 14,
+    "resources": ["boats://playbook", "boats://evidence", "boats://proof-report"],
+    "prompts": ["review_voyage"],
+    "defaultMode": "unsigned",
+    "moneyUnit": "US dollars in tool arguments; USDC base units in calldata and raw reports",
+    "privateKeyRequiredForReads": false,
+    "writePolicy": "Explicit user intent, correct role, official boat, read current state, dry-run, then simulate. Track every returned transaction hash before retrying."
+  },
+  "verification": [
+    { "command": "npm run verify:agent", "network": false, "signer": false, "sendsTransactions": false, "checks": "8 synthetic cases using the production parser, decision engine and SDK mandate check; not an investment backtest" },
+    { "command": "npm run verify:proof", "network": true, "signer": false, "sendsTransactions": false, "checks": "5 historical Arc receipts, calldata, events, historical mandate rejection and crew payout" }
+  ],
+  "claims": [
+    { "id": "mandate", "status": "verified-onchain", "claim": "A swap exceeding the Bitcoin weight limit reverted", "transaction": "0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6", "verify": "npm run verify:proof", "scope": "Specific historical testnet transaction; not a security audit" },
+    { "id": "gemini-decision", "status": "verified-onchain-memo", "claim": "Captain recorded a 91% Gemini signal and reason in a successful swap", "transaction": "0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41", "verify": "npm run verify:proof", "scope": "Self-reported signal, not a Gemini-signed attestation; no Gemini exchange orders" },
+    { "id": "settlement", "status": "verified-onchain", "claim": "A completed voyage paid 2.197402 test USDC for 2 USDC crew principal", "transaction": "0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e", "verify": "npm run verify:proof", "scope": "Controlled mock-price settlement test, not realized investment performance" },
+    { "id": "signal-quality", "status": "verified-offline", "claim": "Bundled captain holds on missing, stale, closed, one-sided or wide-spread signal data", "source": "captain/src/rules.ts", "verify": "npm run verify:agent", "scope": "Two-sided spread at most 500 probability bps; fetch age at most 120 seconds does not establish last-trade freshness" }
+  ],
+  "prizeTargets": [
+    { "name": "DeFi and Onchain Applications", "role": "main-track", "integration": "First-loss vault and full settlement lifecycle" },
+    { "name": "Best use of Arc", "role": "chain-award", "integration": "Contracts, USDC deposits, gas and settlement on Arc testnet" },
+    { "name": "Gemini Prediction Markets", "role": "optional-bounty", "integration": "Public market data drives an allocation rule with an on-chain decision memo" }
+  ],
+  "submission": {
+    "deadline": "2026-11-20T12:00:00-06:00",
+    "state": "not-verified-submitted",
+    "externalRequirements": ["2–3 minute accessible demo video", "Correct public repository URL", "Team acceptance", "Main track, Arc and Gemini opt-ins", "Confirm in-person eligibility and submit"]
+  },
+  "limitations": [
+    "Unaudited testnet code; EURC, USYC and cirBTC are mocks; team controls prices and adapter liquidity",
+    "Threshold settlement needs a caller, gas, transaction inclusion, oracle and liquidity; it is not a guaranteed loss bound",
+    "Crew cannot currently withdraw from a boat that never sails",
+    "The bundled captain uses deterministic rules with no embedded LLM; external LLM agents connect through MCP",
+    "Circle client-domain correction removed HTTP 401; passkey relying-party domain and interactive production login still need verification",
+    "Pre-checks and synthetic replay do not establish profitable trading, production safety or legal readiness"
+  ]
+}

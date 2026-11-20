@@ -5,6 +5,7 @@
   "type": "module",
   "description": "AI captain for Boats: reads Gemini prediction-market odds and trades only through Boat.swap(), inside the mandate.",
   "scripts": {
+    "verify:agent": "node --import tsx src/replay.ts",
     "captain": "tsx src/cli.ts",
     "captain:once": "tsx src/cli.ts --once",
     "captain:rogue": "tsx src/cli.ts --once --rogue",
