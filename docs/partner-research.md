@@ -31,9 +31,9 @@ flowchart LR
 
 Use the existing memo-bearing swap, failed overweight trade and completed voyage as three demonstrations. They belong to **two boats** and different transactions; do not splice them into a fictional single voyage. The historical memo predates the new quote-quality gate. The gate is verified by current tests and synthetic replay, not retroactively proven by that memo.
 
-## The 10/10 bar: concrete acceptance criteria
+## Evidence by area
 
-| Part | What a strong submission must let a judge verify | Boats evidence / next action |
+| Part | What a judge can verify | Boats evidence |
 |---|---|---|
 | Problem | Name the delegated authority and who bears loss | Fixed mandate + captain first-loss example; focus on small groups, not every financial use case |
 | DeFi mechanism | Explain deposits, trading permission, loss waterfall, fee and exit | Contract tests, [economic design](../README.md#economic-design), completed payout |
@@ -42,11 +42,11 @@ Use the existing memo-bearing swap, failed overweight trade and completed voyage
 | Agent readiness | A new agent can discover, review, plan and recover without a private key | 14 tools, 3 resources, `review_voyage`, structured results and returned hashes |
 | Reliability | Demonstrate refusal as well as success | Eight offline cases plus historical on-chain max-weight rejection |
 | Evidence | Every material claim points to source, command or transaction | [agent.json](../app/public/agent.json), [recorded report](evidence-report.json), read-only verifier |
-| Presentation | One story in 2–3 minutes, with actual sponsor use visible | [Devpost script](devpost.md#demo-video-script-245); attach video, confirm Gemini opt-in and correct repo URL |
+| Presentation | One story in 2–3 minutes, with actual sponsor use visible | [2:45 demo script](devpost.md#demo-video-script-245), connecting the mandate, decision memo, rejected trade and settlement proofs |
 
-This bar is an acceptance checklist, not a claim that unresolved items already score 10. UI work stays with Mati. Production passkey onboarding is now verified; before the deadline, prioritize the accessible video, correct prize selections and submission. Production oracle/liquidity, security review and an unsailed-boat refund require future protocol work; they must remain disclosed.
+Production passkey onboarding is verified. The prototype's technical boundaries remain explicit: team-controlled oracle and liquidity, unaudited contracts, and no refund path for a boat that never sails.
 
-## Demo answers to prepare
+## Design rationale
 
 - **Why an on-chain mandate?** Agent instructions and off-chain checks can fail. A transaction that violates the contract's asset cap reverts independently of the proposer.
 - **Why first loss?** The captain contributes capital before sailing; losses consume that stake before crew principal. It is a cushion, not insurance.

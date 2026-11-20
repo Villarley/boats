@@ -44,11 +44,6 @@
     { "name": "Best use of Arc", "role": "chain-award", "integration": "Contracts, USDC deposits, gas and settlement on Arc testnet" },
     { "name": "Gemini Prediction Markets", "role": "optional-bounty", "integration": "Public market data drives an allocation rule with an on-chain decision memo" }
   ],
-  "submission": {
-    "deadline": "2026-11-20T12:00:00-06:00",
-    "state": "not-verified-submitted",
-    "externalRequirements": ["2–3 minute accessible demo video", "Correct public repository URL", "Team acceptance", "Main track, Arc and Gemini opt-ins", "Confirm in-person eligibility and submit"]
-  },
   "limitations": [
     "Unaudited testnet code; EURC, USYC and cirBTC are mocks; team controls prices and adapter liquidity",
     "Threshold settlement needs a caller, gas, transaction inclusion, oracle and liquidity; it is not a guaranteed loss bound",
