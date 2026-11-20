@@ -14,6 +14,7 @@ import { deployment } from "@/lib/deployment";
 import { worstCaseCrewLossBps } from "@boats/sdk";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { useUnlock } from "@/lib/unlock";
 
 const ASSETS = ["USYC", "EURC", "cirBTC"] as const;
 type Asset = (typeof ASSETS)[number];
@@ -64,6 +65,7 @@ function Create() {
   const { wallet, refresh, setMode } = useStore();
   const router = useRouter();
   const type = useSearchParams().get("type") === "private" ? "private" : "public";
+  const unlock = useUnlock();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [who, setWho] = useState<"private" | "public">(type);
@@ -114,7 +116,7 @@ function Create() {
   const visible = ALL.filter((a) => (filter === "All" || appCopy.create.filterKind[filter]?.includes(a)) && (!q || `${a} ${ASSET_NAMES[a]}`.toLowerCase().includes(q.toLowerCase())));
   const canNext = step !== 1 || name.trim().length > 0;
   const next = () => (step < 4 ? setStep(step + 1) : create());
-  const cta = step < 4 ? appCopy.manager.choosePathCta : wallet?.kind === "passkey" ? appCopy.create.cta : appCopy.create.ctaPlain;
+  const cta = step < 4 ? appCopy.manager.choosePathCta : unlock.cta(appCopy.create.cta);
 
   return (
     <Page testId="create">

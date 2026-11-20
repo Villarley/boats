@@ -9,6 +9,7 @@ import { managerOf } from "@/lib/fund";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { pct, usd } from "@/lib/format";
+import { useUnlock } from "@/lib/unlock";
 
 /** Worst-case gauge + Apple Pay style rows for an amount about to go in. */
 export function InvestFacts({ b, amount, worst, compact }: { b: BoatView; amount: bigint; worst: bigint; compact?: boolean }) {
@@ -35,8 +36,9 @@ export function InvestFacts({ b, amount, worst, compact }: { b: BoatView; amount
 }
 
 /** F4: review before the money moves. Lives in a Sheet on mobile. */
-export function InvestReview({ b, amount, worst, busy, err, passkey, onConfirm }: { b: BoatView; amount: bigint; worst: bigint; busy: boolean; err: string | null; passkey: boolean; onConfirm: () => void }) {
+export function InvestReview({ b, amount, worst, busy, err, onConfirm }: { b: BoatView; amount: bigint; worst: bigint; busy: boolean; err: string | null; passkey?: boolean; onConfirm: () => void }) {
   const m = managerOf(b);
+  const unlock = useUnlock();
   return (
     <>
       <div className="mt-3.5 flex items-center gap-3 text-left">
@@ -50,7 +52,7 @@ export function InvestReview({ b, amount, worst, busy, err, passkey, onConfirm }
       <p className="mt-3.5 text-center text-[13px] text-muted">{copy.invest.disclaimer.replace("−10%", pct(-b.stopLossBps))}</p>
       {err && <p role="alert" className="mt-3 rounded-input bg-card px-3.5 py-2.5 text-[14px] text-loss">{err}</p>}
       <Button className="mt-4" icon={<ScanSmiley weight="bold" />} loading={busy} onClick={onConfirm} testId="confirm-board">
-        {passkey ? copy.invest.cta : appCopy.invest.cta}
+        {unlock.cta(appCopy.invest.cta)}
       </Button>
     </>
   );

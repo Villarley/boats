@@ -19,6 +19,7 @@ import { managerOf } from "@/lib/fund";
 import { assetName, parseUsd, pct, usd } from "@/lib/format";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { useUnlock } from "@/lib/unlock";
 
 const priceAbi = [{ type: "function", name: "getPrice", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] }] as const;
 const num = (v: bigint) => (Number(v) / 1e6).toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -49,6 +50,7 @@ function TradeScreen() {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<{ ok: boolean; text: string; hash?: string } | null>(null);
   const [why, setWhy] = useState("");
+  const unlock = useUnlock();
 
   useEffect(() => {
     if (b && !from) { setFrom(b.usdc); setTo(b.assets[0]!); }
@@ -193,7 +195,7 @@ function TradeScreen() {
               className="mt-1 block w-full resize-none bg-transparent text-[15px] leading-[1.4] outline-none placeholder:text-faint" />
           </label>
         )}
-        <Button className="mt-4" icon={<ScanSmiley weight="bold" />} loading={busy} disabled={broken} onClick={() => send()} testId="send-trade">{appCopy.manager.tradeCta}</Button>
+        <Button className="mt-4" icon={<ScanSmiley weight="bold" />} loading={busy} disabled={broken} onClick={() => send()} testId="send-trade">{unlock.cta(appCopy.manager.tradeCta)}</Button>
         {broken && <Button className="mt-2.5" variant="outline" disabled={busy} onClick={() => send(true)} testId="send-anyway">{appCopy.manager.sendAnyway}</Button>}
       </Sheet>
     </Page>

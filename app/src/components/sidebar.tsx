@@ -12,6 +12,7 @@ import { useStore } from "@/lib/store";
 import { useDisplayName } from "@/lib/names";
 import { terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { useUnlock } from "@/lib/unlock";
 
 /** Investor / Manager segmented switch. Only for managers with an active path. */
 export function ModeSwitch({ className = "" }: { className?: string }) {
@@ -46,6 +47,7 @@ export function Sidebar() {
   const { mode, captainOf, wallet } = useStore();
   const items = mode === "captain" ? MANAGER_NAV : INVESTOR_NAV;
   const [open, setOpen] = useState(false);
+  const unlock = useUnlock();
   const name = useDisplayName(wallet?.address);
   return (
     <aside className="sticky top-0 hidden h-dvh flex-col gap-1 px-4 py-6 lg:flex">
@@ -76,7 +78,7 @@ export function Sidebar() {
         <UserAvatar name={name} href={null} manager={mode === "captain"} />
         <div className="min-w-0">
           {name}
-          <small className="block truncate text-[12px] font-normal text-muted">{appCopy.nav.signedIn}</small>
+          <small className="block truncate text-[12px] font-normal text-muted">{unlock.signedIn}</small>
         </div>
       </Link>
     </aside>

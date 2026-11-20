@@ -15,6 +15,7 @@ import { managerOf } from "@/lib/fund";
 import { usd } from "@/lib/format";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { useUnlock } from "@/lib/unlock";
 
 const chev = <CaretRight weight="bold" className="size-4 text-faint" />;
 
@@ -30,6 +31,7 @@ export default function Profile() {
   const managed = boats.filter((b) => captainOf.some((a) => a.toLowerCase() === b.address.toLowerCase()));
   const verified = managed.some((b) => managerOf(b).verified);
   const passkey = wallet?.kind === "passkey";
+  const unlock = useUnlock();
   const addr = wallet?.address ?? "";
 
   return (
@@ -42,7 +44,7 @@ export default function Profile() {
         {isManager && verified ? (
           <span className="flex items-center gap-1 text-[13px] font-semibold"><ShieldCheck weight="fill" className="size-4 text-signal" />{copy.profile.verified}</span>
         ) : (
-          <span className="text-[13px] text-muted">{appCopy.profile.signedInWith(passkey ? appCopy.profile.faceId : appCopy.profile.thisDevice)}</span>
+          <span className="text-[13px] text-muted">{unlock.signedIn}</span>
         )}
         {isManager && <ModeSwitch className="mt-3.5" />}
       </div>
@@ -65,7 +67,7 @@ export default function Profile() {
             <ListRow dense leading={<IconTile color="sky"><UserPlus weight="fill" /></IconTile>} title={appCopy.profile.privateFunds} sub={appCopy.profile.privateFundsSub} trailing={<><b className="text-[15px] font-semibold">0</b>{chev}</>} />
           </>
         )}
-        <ListRow dense leading={<IconTile color="gain"><ScanSmiley weight="fill" /></IconTile>} title={copy.profile.rows[0]} trailing={<><span className="text-[15px] font-medium text-muted">{passkey ? appCopy.profile.on : appCopy.profile.off}</span>{chev}</>} />
+        <ListRow dense leading={<IconTile color="gain"><ScanSmiley weight="fill" /></IconTile>} title={passkey ? `${unlock.how[0]!.toUpperCase()}${unlock.how.slice(1)} · ${appCopy.unlock.row}` : appCopy.unlock.row} trailing={<><span className="text-[15px] font-medium text-muted">{passkey ? appCopy.profile.on : appCopy.profile.off}</span>{chev}</>} />
         {!isManager && (
           <>
             <ListRow dense href="/add" leading={<IconTile color="teal"><Bank weight="fill" /></IconTile>} title={copy.profile.rows[1]} sub={appCopy.profile.demoBalance(usd(cash, { cents: true }))} trailing={chev} />

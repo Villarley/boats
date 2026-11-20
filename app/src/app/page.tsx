@@ -13,6 +13,7 @@ import { useStore } from "@/lib/store";
 import { CHAIN_NAME } from "@/lib/deployment";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
+import { useUnlockName } from "@/lib/unlock";
 
 // Face ID only when a Circle client key is configured; otherwise the account is a key kept on this device.
 const PASSKEY = Boolean(process.env.NEXT_PUBLIC_CIRCLE_CLIENT_KEY);
@@ -23,6 +24,7 @@ export default function Welcome() {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const how = useUnlockName();
   // First time on this device (no Face ID account saved here): ask the name before opening the account.
   const [isNew, setIsNew] = useState(false);
   const [name, setName] = useState("");
@@ -40,7 +42,7 @@ export default function Welcome() {
       await signIn(demo ? { demo } : undefined);
       router.replace("/home");
     } catch (e) {
-      setErr(/NotAllowed|cancel/i.test(String(e)) ? W.faceIdFailed : friendlyError(e));
+      setErr(/NotAllowed|cancel/i.test(String(e)) ? appCopy.unlock.failed(how) : friendlyError(e));
     } finally {
       setBusy(null);
     }
@@ -62,7 +64,7 @@ export default function Welcome() {
         {err && <p role="alert" className="rounded-input bg-card px-4 py-3 text-[15px] text-loss">{err}</p>}
         {isNew && <NameField value={name} onChange={setName} />}
         <Button icon={<ScanSmiley weight="bold" />} onClick={() => go()} loading={busy === "me"} disabled={!!busy || (isNew && !name.trim())} testId="signin">
-          {busy === "me" ? W.opening : PASSKEY ? W.faceId : W.open}
+          {busy === "me" ? W.opening : PASSKEY ? appCopy.unlock.with(W.continue, how) : W.open}
         </Button>
         <p className="text-center text-[13px] text-muted">{W.fine}{CHAIN_NAME === "arc" && W.fineArc}</p>
         {CHAIN_NAME === "local" && (

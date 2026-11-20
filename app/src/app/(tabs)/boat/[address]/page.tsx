@@ -26,6 +26,7 @@ import { assetName, pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { NotificationBell } from "@/components/notification-bell";
+import { useUnlock } from "@/lib/unlock";
 
 const dollars = (v: bigint) => Number(v) / 1e6;
 
@@ -73,6 +74,7 @@ function Chart({ b }: { b: BoatView }) {
 /** W2 right panel: amount, quick pills, worst case and rows, then Face ID — no separate review. */
 function InvestPanel({ b }: { b: BoatView }) {
   const inv = useInvest(b);
+  const unlock = useUnlock();
   const [done, setDone] = useState(false);
   const router = useRouter();
   if (b.state !== "Open" && !done) {
@@ -129,7 +131,7 @@ function InvestPanel({ b }: { b: BoatView }) {
       {inv.short && inv.amount > 0n && <p className="text-[13px] text-loss">{appCopy.invest.youHave(usd(inv.cash, { cents: true }))}</p>}
       {inv.err && <p role="alert" className="text-[14px] text-loss">{inv.err}</p>}
       <Button icon={<ScanSmiley weight="bold" />} loading={inv.busy} disabled={!inv.amount || inv.short} onClick={async () => { if (await inv.confirm()) setDone(true); }} testId="web-confirm">
-        {inv.passkey ? copy.invest.cta : appCopy.invest.cta}
+        {unlock.cta(appCopy.invest.cta)}
       </Button>
     </div>
   );
