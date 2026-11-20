@@ -12,9 +12,9 @@ const DOTS = "[&+&]:bg-[linear-gradient(90deg,var(--bt-divider)_50%,transparent_
  * One row: leading (avatar or icon tile), title + sub, trailing value. `dense` = web side lists.
  */
 export function ListRow({
-  leading, title, sub, trailing, href, dense, testId, dividerInset = 52,
+  leading, title, sub, trailing, href, onClick, dense, testId, dividerInset = 52,
 }: {
-  leading?: ReactNode; title: ReactNode; sub?: ReactNode; trailing?: ReactNode; href?: string; dense?: boolean; testId?: string; dividerInset?: number;
+  leading?: ReactNode; title: ReactNode; sub?: ReactNode; trailing?: ReactNode; href?: string; onClick?: () => void; dense?: boolean; testId?: string; dividerInset?: number;
 }) {
   const cls = `grid grid-cols-[auto_1fr_auto] items-center gap-3 ${dense ? "py-[11px]" : "py-[13px]"} ${DOTS}`;
   const style = { backgroundPosition: `${dividerInset}px 0` };
@@ -23,12 +23,13 @@ export function ListRow({
       {leading ?? <span />}
       <div className="min-w-0">
         <b className={`block truncate ${dense ? "text-[15px] font-medium" : "text-[16px] font-semibold"}`}>{title}</b>
-        {sub && <span className="mt-px block truncate text-[13px] text-muted">{sub}</span>}
+        {sub && <span className="mt-px line-clamp-2 block text-[13px] text-muted">{sub}</span>}
       </div>
       <div className="flex items-center gap-2 text-right">{trailing}</div>
     </>
   );
   if (href) return <Link href={href} className={cls} style={style} data-testid={testId}>{inner}</Link>;
+  if (onClick) return <button type="button" onClick={onClick} className={`${cls} w-full text-left`} style={style} data-testid={testId}>{inner}</button>;
   return <div className={cls} style={style} data-testid={testId}>{inner}</div>;
 }
 

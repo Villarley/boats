@@ -11,11 +11,14 @@ export type ManagerKind = "person" | "ai";
 export type Manager = { name: string; first: string; initials: string; kind: ManagerKind; verified: boolean };
 
 // Demo data (README "Demo data"): who manages each example fund.
-const DEMO_MANAGERS: Record<string, Omit<Manager, "first" | "initials">> = {
+const DEMO_MANAGERS: Record<string, Omit<Manager, "first" | "initials"> & { example?: boolean }> = {
   "Safe Harbor": { name: "Laura Méndez", kind: "person", verified: true },
-  Westerly: { name: "AI manager", kind: "ai", verified: true },
-  "Open Sea": { name: "Diego Ruiz", kind: "person", verified: false },
+  Westerly: { name: "AI manager", kind: "ai", verified: true, example: true },
+  "Open Sea": { name: "Diego Ruiz", kind: "person", verified: false, example: true },
 };
+
+/** Seeded funds the brandbook labels as examples. */
+export const isExample = (b: Pick<BoatView, "name">) => Boolean(DEMO_MANAGERS[b.name]?.example);
 
 const initialsOf = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
@@ -59,3 +62,17 @@ export function worstCaseBps(b: BoatView) {
 }
 
 export const myFunds = (boats: BoatView[]) => boats.filter((b) => b.position.deposit > 0n && !b.position.withdrawn);
+
+/**
+ * Messages written by the manager agent and the contracts still use contract words ("Boat is Open").
+ * Show them in plain language.
+ */
+export function plainWords(text: string) {
+  return text
+    .replace(/\bboats\b/gi, (m) => (m[0] === "B" ? "Funds" : "funds"))
+    .replace(/\bboat\b/gi, (m) => (m[0] === "B" ? "Fund" : "fund"))
+    .replace(/\bcaptains?\b/gi, (m) => (m[0] === "C" ? "Manager" : "manager"))
+    .replace(/\bcrew\b/gi, (m) => (m[0] === "C" ? "Investors" : "investors"))
+    .replace(/\bboard(ed|ing)?\b/gi, (m) => (m[0] === "B" ? "Invest" : "invest") + (/ed$/i.test(m) ? "ed" : /ing$/i.test(m) ? "ing" : ""))
+    .replace(/\bUSDC\b/g, "dollars");
+}

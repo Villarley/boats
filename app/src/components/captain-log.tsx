@@ -1,7 +1,11 @@
 "use client";
+// The manager's decision log (file name kept: it reads /api/captain-log).
 import { useEffect, useState } from "react";
-import { Ban, Clock, PauseCircle, ArrowLeftRight } from "lucide-react";
-import { Proof } from "./ui";
+import { ArrowsLeftRight, Clock, PauseCircle, X } from "@phosphor-icons/react";
+import { IconTile, ListGroup, ListRow } from "./list-group";
+import { Proof } from "./proof";
+import { appCopy } from "@/lib/copy.app";
+import { plainWords } from "@/lib/fund";
 
 export type LogEntry = { at: string; boat: string; kind: "hold" | "trade" | "blocked" | "error" | "keeper"; message: string; txHash?: string };
 
@@ -17,27 +21,26 @@ export function useCaptainLog(boat?: string) {
   return log;
 }
 
-const ICON = { hold: PauseCircle, trade: ArrowLeftRight, blocked: Ban, error: Ban, keeper: Clock } as const;
-const TITLE = { hold: "Held position", trade: "Traded inside the rules", blocked: "The contract said no.", error: "Didn't go through", keeper: "Keeper" } as const;
+const TILE = {
+  hold: <IconTile color="muted"><PauseCircle weight="fill" /></IconTile>,
+  trade: <IconTile color="indigo"><ArrowsLeftRight weight="bold" /></IconTile>,
+  blocked: <IconTile color="loss"><X weight="bold" /></IconTile>,
+  error: <IconTile color="loss"><X weight="bold" /></IconTile>,
+  keeper: <IconTile color="muted"><Clock weight="fill" /></IconTile>,
+} as const;
 
+const time = (at: string) => new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+/** The manager's latest decisions with the number that drove each one. */
 export function CaptainLog({ boat, limit = 5 }: { boat?: string; limit?: number }) {
   const log = useCaptainLog(boat);
-  if (!log.length) return <p className="text-ink-2 text-[15px] mt-2">No decisions yet. Every decision will show here with the number that drove it.</p>;
+  if (!log.length) return <p className="rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{appCopy.fund.noLog}</p>;
   return (
-    <div className="mt-2" data-testid="captain-log">
-      {log.slice(0, limit).map((e, i) => {
-        const Icon = ICON[e.kind];
-        return (
-          <div key={i} className={`row ${e.kind === "blocked" ? "text-captain" : ""}`}>
-            <span className={`tile ${e.kind === "blocked" ? "!bg-tint-red" : ""}`}><Icon size={18} strokeWidth={1.5} /></span>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold">{TITLE[e.kind]}</div>
-              <div className="text-ink-2 text-[13px]">{e.message}</div>
-              <div className="flex gap-3 text-[13px] text-ink-2 mt-0.5"><span className="inline-flex items-center gap-1"><Clock size={13} strokeWidth={1.5} />{new Date(e.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span><Proof hash={e.txHash} /></div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <ListGroup testId="captain-log">
+      {log.slice(0, limit).map((e, i) => (
+        <ListRow key={i} dense leading={TILE[e.kind]} title={appCopy.manager.logTitles[e.kind]}
+          sub={<span className="block whitespace-normal">{plainWords(e.message)}<span className="mt-0.5 flex flex-wrap gap-x-3">{time(e.at)}<Proof hash={e.txHash} /></span></span>} />
+      ))}
+    </ListGroup>
   );
 }

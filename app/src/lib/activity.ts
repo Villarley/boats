@@ -28,3 +28,24 @@ export function useActivityFeed() {
   }, []);
   return acts;
 }
+
+/** When a fund closed itself (its "ended" event), as a unix timestamp, once the feed and block are loaded. */
+export function useEndedAt(fund?: string) {
+  const acts = useActivityFeed();
+  const [at, setAt] = useState<number | null>(null);
+  const ended = fund ? acts.find((a) => a.kind === "ended" && a.boat.toLowerCase() === fund.toLowerCase()) : undefined;
+  const block = ended?.blockNumber;
+  useEffect(() => {
+    if (block === undefined) return;
+    let alive = true;
+    import("./client").then(({ publicClient }) => publicClient().getBlock({ blockNumber: block })).then((b) => alive && setAt(Number(b.timestamp))).catch(() => {});
+    return () => { alive = false; };
+  }, [block]);
+  return at;
+}
+
+/** "NOV 18 · 2:14 PM" */
+export function stamp(unix: number) {
+  const d = new Date(unix * 1000);
+  return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+}
