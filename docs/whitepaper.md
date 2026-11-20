@@ -50,6 +50,36 @@ That weight check is specifically on `tokenOut`; it does not continuously rebala
 
 The bundled captain and normal MCP swaps default to a 1% oracle-value slippage floor. The contract's ordinary `swap()` accepts the caller's `minOut`, including zero; the default is an off-chain execution policy, not an immutable universal contract constraint. `returnToPort()` separately computes a 1% floor from oracle value for each exit sale. A stale oracle or insufficient router liquidity can prevent settlement; there is no implemented alternate-router or emergency-exit path.
 
+## Minimal execution interface
+
+The following interface matches the implemented `Boat` entry points. The implementation enforces caller permissions, lifecycle states, allowed assets and the purchased asset's maximum weight. Swap proceeds remain in the boat. Amounts use token base units; USDC uses six decimals.
+
+```solidity
+interface IBoatExecution {
+    // Funding: crew deposits; captain stakes and starts the voyage.
+    function board(uint256 amount) external;
+    function stakeCaptain(uint256 amount) external;
+    function sail() external;
+
+    // Active voyage: only the captain may request swaps.
+    function swap(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint256 minOut
+    ) external returns (uint256 amountOut);
+
+    // Permissionless trigger detection and settlement.
+    function checkVoyage() external returns (bool ended);
+    function returnToPort() external;
+
+    // Closed voyage: claim the caller's entitlement.
+    function withdraw() external returns (uint256 amount);
+    function claimCaptain()
+        external returns (uint256 base, uint256 fee);
+}
+```
+
 ## Two-tranche payoff
 
 For realized settlement proceeds `0 <= P <= A0`, crew is paid first:
