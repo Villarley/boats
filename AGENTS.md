@@ -46,6 +46,8 @@ See [packages/mcp/examples/session.md](packages/mcp/examples/session.md) for a r
 
 For judges: `npm run verify:proof` checks five submitted on-chain proofs without a key or a new transaction. Use `NODE_USE_ENV_PROXY=1` if your environment requires its HTTP proxy. [Evidence and bounty guide](docs/judging.md).
 
+For economic reasoning, read the [whitepaper implementation companion](docs/whitepaper.md): first-loss payoff equations, stake-ratio conventions, fee vesting, rounding and the limits of the implemented mandate. Its source/evidence map distinguishes tested behavior from research proposals; do not treat proposed controls as available actions.
+
 ## Discover the operating context
 
 MCP clients can list and read three resources: `boats://playbook` (this file), `boats://evidence` (the public [agent.json](app/public/agent.json) with claim → evidence → verification command), and `boats://proof-report` (timestamped historical verification). These reads require neither RPC access nor a signer. The `review_voyage` prompt accepts `boat`, optional `who` and `amountUsd`; it guides a read-only review and does not authorize a transaction.

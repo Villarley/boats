@@ -20,6 +20,8 @@ Non-custodial USDC voyages on Arc: human or AI captains trade within on-chain li
 
 DeFi and Onchain Applications; Best use of Arc; Gemini Prediction Markets bounty. See [the judge evidence guide](judging.md) for the implemented integration and its limits.
 
+[Technical whitepaper](whitepaper.md): the economic model, exact payout examples and implementation boundaries, with source and reproducible tests.
+
 ## Built with
 
 arc, usdc, solidity, foundry, viem, typescript, next.js, circle-modular-wallets, gemini-prediction-markets, model-context-protocol, github-actions
