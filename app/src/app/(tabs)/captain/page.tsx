@@ -10,7 +10,7 @@ import { FLAG_OF, statusLabel } from "@/lib/boat";
 import { pct, usd } from "@/lib/format";
 
 function BoatBridge({ b }: { b: BoatView }) {
-  const { wallet, refresh } = useStore();
+  const { wallet, refresh, cash } = useStore();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: "danger" | "ok"; text: string; hash?: string } | null>(null);
   const run = async (label: string, fn: () => Promise<{ hash: string; status: string }>) => {
@@ -27,7 +27,10 @@ function BoatBridge({ b }: { b: BoatView }) {
       setBusy(null);
     }
   };
-  const stake = b.crewTotal > 0n ? b.crewTotal / 9n : 1_000_000_000n; // ~10% of the boat
+  // ~10% of the boat, capped by what the captain holds (keep a little for gas: USDC is Arc's gas token).
+  const want = b.crewTotal > 0n ? b.crewTotal / 9n : 1_000_000_000n;
+  const spendable = cash > 200_000n ? cash - 200_000n : 0n;
+  const stake = want < spendable ? want : spendable;
   const checkNow = async () => {
     setBusy("Check limits");
     try {
@@ -54,7 +57,7 @@ function BoatBridge({ b }: { b: BoatView }) {
       {b.state === "Sailing" && <Gauge value={b.gauge} floorLabel={pct(-b.stopLossBps)} goalLabel={`+${pct(b.takeProfitBps)}`} nowLabel={pct(b.changeBps, { sign: true, digits: 1 })} />}
       {msg && <div className="mt-2"><Notice tone={msg.tone === "ok" ? "ok" : "danger"}>{msg.text} <Proof hash={msg.hash} /></Notice></div>}
       <div className="flex flex-col gap-2 mt-3">
-        {b.state === "Open" && b.captainStake === 0n && <Button icon={Coins} loading={busy === "Stake"} onClick={() => run("Stake", () => wallet!.send(buildStakeCalls(b.address, b.usdc, stake)))} testId="stake">Put in my stake ({usd(stake)})</Button>}
+        {b.state === "Open" && b.captainStake === 0n && <Button icon={Coins} disabled={stake === 0n} loading={busy === "Stake"} onClick={() => run("Stake", () => wallet!.send(buildStakeCalls(b.address, b.usdc, stake)))} testId="stake">Put in my stake ({usd(stake)})</Button>}
         {b.state === "Open" && b.captainStake > 0n && (
           <Button icon={Anchor} loading={busy === "Set sail"} disabled={b.crewTotal === 0n} onClick={() => run("Set sail", () => wallet!.send([buildSailCall(b.address)]))} testId="sail">Close boarding and set sail</Button>
         )}
