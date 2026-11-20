@@ -78,7 +78,8 @@ export async function getBoat(pc: PublicClient, boat: Address, symbols: (a: Addr
   });
 
   const sv = startValue as bigint;
-  const n = nav as bigint;
+  // After port the boat is empty (nav 0): measure the voyage by its settled final value.
+  const n = Number(state) === 3 ? (finalValue as bigint) : (nav as bigint);
   const changeBps = sv === 0n ? 0 : Number(((n - sv) * 10_000n) / sv);
   const band = Number(sl) + Number(tp);
   const gauge = band === 0 ? 0.5 : Math.max(0, Math.min(1, (changeBps + Number(sl)) / band));

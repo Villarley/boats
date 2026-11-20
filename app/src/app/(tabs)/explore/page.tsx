@@ -19,7 +19,8 @@ export default function Explore() {
     if (on.includes("Family captains")) l = l.filter((x) => !isAiCaptain(x.b));
     if (on.includes("AI captains")) l = l.filter((x) => isAiCaptain(x.b));
     if (on.includes("Boarding now")) l = l.filter((x) => x.b.state === "Open");
-    return l.sort((a, b) => a.w.bps - b.w.bps); // safest first
+    // Safest first; finished voyages go last.
+    return l.sort((a, b) => Number(a.b.state === "Closed") - Number(b.b.state === "Closed") || a.w.bps - b.w.bps);
   }, [boats, on]);
   const toggle = (f: string) => setOn((o) => (o.includes(f) ? o.filter((x) => x !== f) : [...o, f]));
 
@@ -48,14 +49,24 @@ export default function Explore() {
               <ScoreBadge value={s.total} />
             </div>
             <div className="grid grid-cols-3 gap-2 mt-4">
-              <div><div className="label">Worst case</div><div className="font-semibold text-down" data-testid="worst">{pct(-w.bps)}</div></div>
-              <div><div className="label">Goal</div><div className="font-semibold">+{pct(b.takeProfitBps)}</div></div>
-              <div><div className="label">Ends in</div><div className="font-semibold">{daysLeft(b.endTime)} days</div></div>
+              {b.state === "Closed" ? (
+                <>
+                  <div><div className="label">Crew got</div><div className={`font-semibold ${b.crewPayout >= b.crewTotal ? "text-up" : "text-down"}`}>{b.crewTotal ? pct(Number(((b.crewPayout - b.crewTotal) * 10_000n) / b.crewTotal), { sign: true, digits: 1 }) : "–"}</div></div>
+                  <div><div className="label">Goal</div><div className="font-semibold">+{pct(b.takeProfitBps)}</div></div>
+                  <div><div className="label">Ended</div><div className="font-semibold">{b.endReason === "TakeProfit" ? "At goal" : b.endReason === "StopLoss" ? "At floor" : "On date"}</div></div>
+                </>
+              ) : (
+                <>
+                  <div><div className="label">Worst case</div><div className="font-semibold text-down" data-testid="worst">{pct(-w.bps)}</div></div>
+                  <div><div className="label">Goal</div><div className="font-semibold">+{pct(b.takeProfitBps)}</div></div>
+                  <div><div className="label">Ends in</div><div className="font-semibold">{daysLeft(b.endTime)} days</div></div>
+                </>
+              )}
             </div>
             <div className="flex gap-3 flex-wrap mt-3">
               <Meta icon={ShieldCheck}>Captain puts in {usd(b.captainStake)} and loses it first</Meta>
             </div>
-            {isAiCaptain(b) && <div className="mt-3"><OddsChip /></div>}
+            {isAiCaptain(b) && b.state !== "Closed" && <div className="mt-3"><OddsChip /></div>}
           </Card>
         ))}
       </div>

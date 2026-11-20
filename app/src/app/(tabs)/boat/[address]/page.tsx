@@ -35,19 +35,24 @@ export default function BoatPage({ params }: { params: Promise<{ address: string
 
       {b.state !== "Open" && (
         <Card>
-          <div className="flex justify-between items-baseline"><div className="label">The boat</div><div className="font-semibold">{usd(b.nav)}</div></div>
+          <div className="flex justify-between items-baseline"><div className="label">{b.state === "Closed" ? "Final value" : "The boat"}</div><div className="font-semibold">{usd(b.state === "Closed" ? b.finalValue : b.nav)}</div></div>
           <Gauge value={b.state === "Closed" ? (b.endReason === "TakeProfit" ? 1 : b.endReason === "StopLoss" ? 0 : b.gauge) : b.gauge} floorLabel={pct(-b.stopLossBps)} goalLabel={`+${pct(b.takeProfitBps)}`} nowLabel={pct(b.changeBps, { sign: true, digits: 1 })} />
         </Card>
       )}
 
+      {b.state === "Closed" && b.crewTotal > 0n && (
+        <Notice tone={b.crewPayout >= b.crewTotal ? "ok" : "caution"} title={b.endReason === "TakeProfit" ? "Goal reached. Back in port." : b.endReason === "StopLoss" ? "Floor hit. Back in port." : "Voyage over. Back in port."}>
+          The crew put in {usd(b.crewTotal)} and gets back {usd(b.crewPayout)} ({pct(Number(((b.crewPayout - b.crewTotal) * 10_000n) / b.crewTotal), { sign: true, digits: 1 })}), after the captain's fee.
+        </Notice>
+      )}
       {b.state === "Closed" && onBoard && <Button href={`/boat/${b.address}/port`} testId="go-port">Back in port: see what you get</Button>}
       {b.state === "Returning" && <Notice tone="caution" title="Returning to port">The voyage hit a limit. The boat is going back to dollars.</Notice>}
 
-      <Card>
+      {b.state !== "Closed" && <Card>
         <div className="flex items-center gap-2"><ShieldCheck size={20} strokeWidth={1.5} /><span className="font-semibold">Worst case: you lose about {pct(w.bps)}</span></div>
         <p className="text-ink-2 text-[15px] mt-1">If the boat falls {pct(b.stopLossBps)}, the voyage ends on its own. The captain's {usd(b.captainStake)} takes the loss first.</p>
         <div className="flex items-center gap-2 mt-3"><Lock size={20} strokeWidth={1.5} /><span>Locked until {dateShort(b.endTime)}, the {pct(-b.stopLossBps)} floor or the +{pct(b.takeProfitBps)} goal. Whichever comes first.</span></div>
-      </Card>
+      </Card>}
 
       <Card>
         <div className="flex justify-between items-center"><span className="font-semibold">Seaworthiness</span><span className="text-ink-2">{scoreWord(s.total)}</span></div>
