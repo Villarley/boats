@@ -7,6 +7,7 @@ import { ArtBanner } from "@/components/art-banner";
 import { BalanceCard } from "@/components/balance-card";
 import { Button } from "@/components/button";
 import { FolderCard } from "@/components/folder-card";
+import { investedSeries } from "@/lib/history";
 import { FundsTable } from "@/components/funds-table";
 import { IconTile, ListGroup, ListRow, TitleRow } from "@/components/list-group";
 import { ManagerAvatar } from "@/components/manager-avatar";
@@ -86,7 +87,9 @@ export default function Home() {
   const recent = useRecent(boats, wallet?.address.toLowerCase());
   const toDollars = (v: bigint) => Number(v) / 1e6;
   const week = exampleSeries(toDollars(total - delta), toDollars(total), "week");
-  const seriesFor = (r: string) => exampleSeries(toDollars(invested - delta), toDollars(invested), "zigzag", r === "1D" ? 6 : r === "1W" ? 10 : undefined);
+  // Real history: what this account put in (and took out) over time, ending at today's value.
+  const feed = useActivityFeed();
+  const seriesFor = (r: string) => investedSeries(feed, wallet?.address, toDollars(invested), r);
   const deltaPct = deposits > 0n ? Number((delta * 10_000n) / deposits) : 0;
   const invitations = useInvitations();
   const blocked = useBlockedAlert();
