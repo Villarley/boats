@@ -28,7 +28,7 @@ export function ListRow({
       <div className="flex items-center gap-2 text-right">{trailing}</div>
     </>
   );
-  if (href) return <Link href={href} className={cls} style={style} data-testid={testId}>{inner}</Link>;
+  if (href) return <Link href={href} onClick={onClick} className={cls} style={style} data-testid={testId}>{inner}</Link>;
   if (onClick) return <button type="button" onClick={onClick} className={`${cls} w-full text-left`} style={style} data-testid={testId}>{inner}</button>;
   return <div className={cls} style={style} data-testid={testId}>{inner}</div>;
 }

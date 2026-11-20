@@ -24,7 +24,8 @@ import { PasskeyWallet } from "@/lib/wallet/passkey";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { assetName, pct, usd } from "@/lib/format";
-import { useDisplayName } from "@/lib/names";
+import { useDisplayName, useSavedName } from "@/lib/names";
+import { openWithdraw } from "@/lib/ui-state";
 import { fundHref, managerOf, myFunds, riskOf, statusOf, worstCaseBps } from "@/lib/fund";
 
 type ActivityItem = { key: string; leading: ReactNode; title: string; sub: string; amount?: string };
@@ -71,6 +72,7 @@ export default function Home() {
   const { boats, cash, loading, gift, wallet } = useStore();
   const main = useMainAction();
   const name = useDisplayName(wallet?.address);
+  const saved = useSavedName(wallet?.address);
   const mine = myFunds(boats).sort((a, b) => (b.position.valueNow > a.position.valueNow ? 1 : -1));
   const invested = mine.reduce((s, b) => s + b.position.valueNow, 0n);
   const deposits = mine.reduce((s, b) => s + b.position.deposit, 0n);
@@ -80,7 +82,6 @@ export default function Home() {
   const topManager = top ? managerOf(top) : undefined;
   const protection = top && top.captainStake > 0n ? { manager: topManager!.first, amount: usd(top.captainStake, { cents: false }), href: fundHref(top) } : undefined;
   const recent = useRecent(boats, wallet?.address.toLowerCase());
-  const withdrawHref = top ? fundHref(top) : "/explore";
   const toDollars = (v: bigint) => Number(v) / 1e6;
   const week = exampleSeries(toDollars(total - delta), toDollars(total), "week");
   const seriesFor = (r: string) => exampleSeries(toDollars(invested - delta), toDollars(invested), "zigzag", r === "1D" ? 6 : r === "1W" ? 10 : undefined);
@@ -157,7 +158,7 @@ export default function Home() {
         </div>
 
         <FolderCard
-          name={name}
+          name={saved}
           total={total}
           delta={delta}
           series={week}
@@ -168,7 +169,7 @@ export default function Home() {
 
         <div className="mt-4 grid grid-cols-2 gap-2.5">
           <Button href={main.href} size="dense" icon={<Plus weight="bold" />} testId="invest">{terms.invest}</Button>
-          <Button href={withdrawHref} size="dense" variant="secondary" icon={<ArrowDown weight="bold" />} testId="withdraw-home">{terms.withdraw}</Button>
+          <Button onClick={openWithdraw} size="dense" variant="secondary" icon={<ArrowDown weight="bold" />} testId="withdraw-home">{terms.withdraw}</Button>
         </div>
 
         {giftCard}
@@ -206,7 +207,7 @@ export default function Home() {
 
       {/* ---------- web ≥1024: W1 ---------- */}
       <main className="hidden flex-col pl-4 pr-8 pt-6 lg:flex" data-testid="home-web">
-        <WebTopBar title={copy.home.welcome(name)} />
+        <WebTopBar title={saved ? copy.home.welcome(saved) : appCopy.home.welcomeNoName} />
         <div className="mt-[22px] grid max-w-[1280px] grid-cols-[1fr_360px] gap-6">
           <div className="flex min-w-0 flex-col gap-4">
             <BalanceCard
@@ -220,7 +221,7 @@ export default function Home() {
               actions={
                 <>
                   <Button href={main.href} size="sm" block={false} icon={<Plus weight="bold" />}>{terms.invest}</Button>
-                  <Button href={withdrawHref} size="sm" variant="white" block={false} icon={<ArrowDown weight="bold" />}>{terms.withdraw}</Button>
+                  <Button onClick={openWithdraw} size="sm" variant="white" block={false} icon={<ArrowDown weight="bold" />} testId="withdraw-web">{terms.withdraw}</Button>
                   <Button href={familyHref} size="sm" variant="white" block={false} icon={<UserPlus weight="fill" />}>{copy.home.invite}</Button>
                 </>
               }

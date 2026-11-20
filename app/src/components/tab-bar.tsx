@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowsDownUp, ClockCounterClockwise, Compass, House, Plus, RocketLaunch } from "@phosphor-icons/react";
+import { ArrowsDownUp, ClockCounterClockwise, Compass, House, Plus, RocketLaunch, X } from "@phosphor-icons/react";
+import { ActionMenu } from "./action-menu";
 import { HelmIcon } from "./brand";
 import type { Icon, IconWeight } from "@phosphor-icons/react";
 import { useStore } from "@/lib/store";
@@ -27,7 +29,7 @@ export const MANAGER_NAV: NavItem[] = [
 
 export const isActive = (path: string, item: NavItem) => (item.exact ? path === item.href : path === item.href || path.startsWith(item.href + "/"));
 
-/** Where the round FAB / sidebar button goes: Invest (investor) or Create (manager). */
+/** Where Home's Invest button goes: more into a fund you're already in, else Explore. */
 export function useMainAction() {
   const { mode, boats } = useStore();
   if (mode === "captain") return { href: "/captain/launch", label: appCopy.nav.create, manager: true };
@@ -36,16 +38,20 @@ export function useMainAction() {
 }
 
 /**
- * Floating pill tab bar (no border, blur) with 3 tabs, plus a separate round FAB:
- * signal Invest for investors, navy Create for managers. Mobile and tablet only.
+ * Floating pill tab bar (no border, blur) with 3 tabs, plus a separate round FAB that unfolds
+ * the quick actions upward: signal for investors, navy for managers. Mobile and tablet only.
  */
 export function TabBar() {
   const path = usePathname();
   const { mode } = useStore();
   const items = mode === "captain" ? MANAGER_NAV : INVESTOR_NAV;
-  const main = useMainAction();
+  const manager = mode === "captain";
+  const [open, setOpen] = useState(false);
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[420px] gap-3 px-4 lg:hidden">
+    <>
+    <ActionMenu open={open} onClose={() => setOpen(false)}
+      className="fixed bottom-[calc(max(16px,env(safe-area-inset-bottom))+76px)] right-4 w-[min(320px,calc(100vw-32px))] lg:hidden" />
+    <div className={`pointer-events-none fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] mx-auto flex max-w-[420px] gap-3 px-4 lg:hidden ${open ? "z-40" : "z-20"}`}>
       <nav
         aria-label={mode === "captain" ? copy.managerTabs.dashboard : copy.tabs.home}
         className="pointer-events-auto grid h-16 flex-1 grid-cols-3 items-center rounded-full bg-white/[.86] px-1.5 shadow-tabbar backdrop-blur-[24px] backdrop-saturate-[1.6]"
@@ -66,14 +72,18 @@ export function TabBar() {
           );
         })}
       </nav>
-      <Link
-        href={main.href}
-        aria-label={main.label}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={open ? appCopy.nav.closeActions : appCopy.nav.actions}
+        aria-expanded={open}
+        aria-haspopup="menu"
         data-testid="fab"
-        className={`pointer-events-auto grid size-16 flex-none place-items-center rounded-full text-white ${main.manager ? "bg-navy shadow-fab-navy" : "bg-signal shadow-fab"}`}
+        className={`pointer-events-auto grid size-16 flex-none place-items-center rounded-full text-white ${manager ? "bg-navy shadow-fab-navy" : "bg-signal shadow-fab"}`}
       >
-        {main.manager ? <RocketLaunch weight="fill" className="size-6" /> : <Plus weight="bold" className="size-6" />}
-      </Link>
+        {open ? <X weight="bold" className="size-6" /> : manager ? <RocketLaunch weight="fill" className="size-6" /> : <Plus weight="bold" className="size-6" />}
+      </button>
     </div>
+    </>
   );
 }

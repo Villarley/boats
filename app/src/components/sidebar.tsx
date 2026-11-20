@@ -1,11 +1,13 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Plus, User } from "@phosphor-icons/react";
+import { Plus, User, X } from "@phosphor-icons/react";
+import { ActionMenu } from "./action-menu";
 import { HelmIcon, Wordmark } from "./brand";
 import { Button } from "./button";
 import { UserAvatar } from "./user-avatar";
-import { INVESTOR_NAV, MANAGER_NAV, isActive, useMainAction } from "./tab-bar";
+import { INVESTOR_NAV, MANAGER_NAV, isActive } from "./tab-bar";
 import { useStore } from "@/lib/store";
 import { useDisplayName } from "@/lib/names";
 import { terms } from "@/lib/copy";
@@ -43,7 +45,7 @@ export function Sidebar() {
   const path = usePathname();
   const { mode, captainOf, wallet } = useStore();
   const items = mode === "captain" ? MANAGER_NAV : INVESTOR_NAV;
-  const main = useMainAction();
+  const [open, setOpen] = useState(false);
   const name = useDisplayName(wallet?.address);
   return (
     <aside className="sticky top-0 hidden h-dvh flex-col gap-1 px-4 py-6 lg:flex">
@@ -65,7 +67,11 @@ export function Sidebar() {
         );
       })}
       <span className="flex-1" />
-      <Button href={main.href} icon={<Plus weight="bold" />} className={`mb-3 ${main.manager ? "!bg-navy" : ""}`}>{main.label}</Button>
+      <div className="relative mb-3">
+        <ActionMenu open={open} onClose={() => setOpen(false)} className="absolute bottom-[calc(100%+10px)] left-0 w-[300px]" />
+        <Button onClick={() => setOpen((o) => !o)} icon={open ? <X weight="bold" /> : <Plus weight="bold" />} testId="sidebar-actions"
+          className={`relative z-40 ${mode === "captain" ? "!bg-navy" : ""}`}>{appCopy.nav.actions}</Button>
+      </div>
       <Link href="/me" className="flex items-center gap-2.5 rounded-2xl bg-card p-2.5 text-[14px] font-semibold" data-testid="sidebar-profile">
         <UserAvatar name={name} href={null} manager={mode === "captain"} />
         <div className="min-w-0">

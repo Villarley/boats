@@ -28,7 +28,7 @@ export function SplitAmount({ value, centsClass = "text-[22px] font-semibold opa
 export function FolderCard({
   name, total, delta, series, baseline, protection, funds,
 }: {
-  name: string; total: bigint; delta: bigint; series: number[]; baseline?: number;
+  name: string | null; total: bigint; delta: bigint; series: number[]; baseline?: number;
   protection?: { manager: string; amount: string; href: string };
   funds: FolderFund[];
 }) {
@@ -52,7 +52,7 @@ export function FolderCard({
       <div className={`relative overflow-hidden bg-signal px-[18px] pt-4 text-white ${tab === 0 ? "rounded-[0_22px_22px_22px]" : "rounded-[22px]"}`}>
         {tab === 0 ? (
           <div className="relative min-h-[92px]">
-            <p className="text-[13.5px] text-white/75">{copy.home.youHave(name)}</p>
+            <p className="text-[13.5px] text-white/75">{name ? copy.home.youHave(name) : appCopy.home.youHaveNoName}</p>
             <p className="bt-num mt-0.5 text-[38px] font-bold leading-[1.1] tracking-[-0.02em]" data-testid="total">
               <SplitAmount value={total} />
             </p>

@@ -32,7 +32,7 @@ export function Button({
       <span>{children}</span>
     </>
   );
-  if (href && !disabled) return <Link href={href} className={cls} data-testid={testId} aria-label={ariaLabel}>{inner}</Link>;
+  if (href && !disabled) return <Link href={href} onClick={onClick} className={cls} data-testid={testId} aria-label={ariaLabel}>{inner}</Link>;
   return (
     <button type={type} className={cls} onClick={onClick} disabled={disabled || loading} data-testid={testId} aria-label={ariaLabel} aria-busy={loading}>
       {inner}

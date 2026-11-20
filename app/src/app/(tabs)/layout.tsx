@@ -6,6 +6,7 @@ import { TabBar } from "@/components/tab-bar";
 import { Sidebar } from "@/components/sidebar";
 import { useTrackScreens } from "@/components/top-bar";
 import { NameSheet } from "@/components/name-sheet";
+import { WithdrawSheet } from "@/components/withdraw-sheet";
 import { claimPendingName, saveName, useSavedName } from "@/lib/names";
 import { useStore } from "@/lib/store";
 import { isDeployed } from "@/lib/deployment";
@@ -64,6 +65,7 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
         {children}
       </div>
       <TabBar />
+      <WithdrawSheet />
       <NameSheet
         open={askName}
         onSave={(n) => { saveName(wallet.address, n); setAskName(false); }}
