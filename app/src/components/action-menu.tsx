@@ -1,29 +1,42 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowDown, ArrowsDownUp, ChartLineUp, Plus, RocketLaunch, UserPlus } from "@phosphor-icons/react";
+import { HelmIcon } from "./brand";
+import { copy } from "@/lib/copy";
 import { useStore } from "@/lib/store";
 import { openWithdraw } from "@/lib/ui-state";
 import { appCopy } from "@/lib/copy.app";
 
-type Action = { key: string; title: string; sub: string; icon: ReactNode; href?: string; run?: () => void };
+// `hide`: screens that already show this action as a button, so the menu doesn't repeat it.
+type Action = { key: string; title: string; sub: string; icon: ReactNode; href?: string; run?: () => void; hide?: (path: string) => boolean };
 const A = appCopy.actions;
+const on = (...paths: string[]) => (path: string) => paths.includes(path);
+const isFund = (path: string) => /^\/boat\/[^/]+$/.test(path);
 
-/** What the quick actions offer: every way to move money (investor) or run a fund (manager). */
+const MANAGER: Action[] = [
+  { key: "create", ...A.create, href: "/captain/launch", icon: <RocketLaunch weight="fill" />, hide: on("/captain", "/captain/launch") },
+  { key: "trade", ...A.trade, href: "/captain/trade", icon: <ArrowsDownUp weight="bold" />, hide: on("/captain", "/captain/trade") },
+  { key: "invite", ...A.inviteInvestors, href: "/invite", icon: <UserPlus weight="fill" />, hide: on("/invite") },
+  { key: "add", ...A.add, href: "/add", icon: <Plus weight="bold" />, hide: on("/add") },
+];
+const INVESTOR: Action[] = [
+  { key: "invest", ...A.invest, href: "/explore", icon: <ChartLineUp weight="bold" />, hide: (p) => p === "/home" || p === "/explore" || isFund(p) },
+  { key: "add", ...A.add, href: "/add", icon: <Plus weight="bold" />, hide: on("/add") },
+  { key: "withdraw", ...A.withdraw, run: openWithdraw, icon: <ArrowDown weight="bold" />, hide: on("/home") },
+  { key: "invite", ...A.invite, href: "/invite", icon: <UserPlus weight="fill" />, hide: on("/home", "/invite") },
+  // Only where the others are hidden (Home), so the menu still has something to offer.
+  { key: "manage", title: copy.profile.manageOthers, sub: copy.profile.manageOthersSub, href: "/manager", icon: <HelmIcon size={20} />, hide: (p) => p !== "/home" },
+];
+
+/** Quick actions for this screen: ways to move money (investor) or run a fund (manager), minus what's already on screen. */
 export function useActions(): Action[] {
-  const { mode } = useStore();
-  if (mode === "captain")
-    return [
-      { key: "create", ...A.create, href: "/captain/launch", icon: <RocketLaunch weight="fill" /> },
-      { key: "trade", ...A.trade, href: "/captain/trade", icon: <ArrowsDownUp weight="bold" /> },
-      { key: "invite", ...A.inviteInvestors, href: "/invite", icon: <UserPlus weight="fill" /> },
-    ];
-  return [
-    { key: "invest", ...A.invest, href: "/explore", icon: <ChartLineUp weight="bold" /> },
-    { key: "add", ...A.add, href: "/add", icon: <Plus weight="bold" /> },
-    { key: "withdraw", ...A.withdraw, run: openWithdraw, icon: <ArrowDown weight="bold" /> },
-    { key: "invite", ...A.invite, href: "/invite", icon: <UserPlus weight="fill" /> },
-  ];
+  const { mode, captainOf } = useStore();
+  const path = usePathname();
+  // Someone who already manages a fund gets their dashboard instead of "Manage money for others".
+  const investor = captainOf.length ? INVESTOR.map((a) => (a.key === "manage" ? { ...a, ...A.dashboard, href: "/captain" } : a)) : INVESTOR;
+  return (mode === "captain" ? MANAGER : investor).filter((a) => !a.hide?.(path));
 }
 
 /**

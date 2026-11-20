@@ -22,6 +22,7 @@ export const appCopy = {
     create: { title: "Create a fund", sub: "Your rules, your money in first" },
     trade: { title: "Trade", sub: "Inside your fund's rules" },
     inviteInvestors: { title: "Invite investors", sub: "Send a fund that's open to join" },
+    dashboard: { title: "Your funds as manager", sub: "Your money at risk and your rules" },
   },
   withdraw: {
     title: "Withdraw",
