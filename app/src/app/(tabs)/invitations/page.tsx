@@ -99,7 +99,7 @@ export default function Invitations() {
       {b.state !== "Open" && <p className="mt-2 text-center text-[13px] text-loss">{I.closed}</p>}
       <div className="mt-5 grid grid-cols-2 gap-2.5">
         <Button variant="secondary" onClick={() => { dismissInvitation(inv.fund); setActiveId(null); }} testId="invite-dismiss">{I.notNow}</Button>
-        <Button href={`/boat/${b.address}`} testId="invite-open">{I.seeFund}</Button>
+        <Button href={`/invitations/${b.address}`} testId="invite-open">{I.seeFund}</Button>
       </div>
     </Page>
   );

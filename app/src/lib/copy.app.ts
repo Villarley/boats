@@ -333,6 +333,22 @@ export const appCopy = {
     emptyBody: "When a manager invites you to their fund, it shows up here. Opening their link is enough.",
     explore: "Explore funds",
   },
+  // P2–P4: the fund you were invited to, and after you join.
+  privateFund: {
+    badge: (first: string) => `Invite only · from ${first}`,
+    joined: (n: number, max: number) => `${n} of ${max}`,
+    joinedTail: "people joined",
+    amountIn: (v: string) => `${v} in`,
+    coversFirst: (n: string) => `${n} covers first losses`,
+    holds: "What it holds",
+    invest: "Invest",
+    successBody: (n: string) => `${n} gets a notification. Your money starts working when the fund starts.`,
+    youInvested: "You invested",
+    status: "Status",
+    statusSub: "Open to join · starts when joining closes",
+    tellYou: "We'll tell you",
+    tellYouSub: "When it starts and if anything changes",
+  },
   invite: {
     title: "Invite investors",
     noFunds: "Create a fund to invite investors. Your invite link only works for funds that are open to join.",

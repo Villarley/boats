@@ -160,7 +160,19 @@ test("invitations: a manager's link shows up as a ticket in the investor's Invit
   await maria.goto(new URL(link).pathname + new URL(link).search);
   await expect(maria.getByTestId("ticket")).toBeVisible();
   await expect(maria.getByTestId("ticket")).toContainText("Laura invited you");
-  await maria.getByTestId("invite-dismiss").click();
+  // P2: the fund behind the invite, then the real invest flow with "I know Laura personally" (P3).
+  await maria.getByTestId("invite-open").click();
+  await expect(maria.getByTestId("invited-fund")).toContainText("Laura covers first losses");
+  await maria.locator('[data-testid="invited-invest"]:visible').click();
+  for (const k of ["1", "0"]) await maria.getByTestId(`key-${k}`).click();
+  await maria.getByTestId("review").click();
+  const confirm = maria.getByTestId("review-sheet").getByTestId("confirm-board");
+  await expect(confirm).toBeDisabled();
+  await maria.getByTestId("know-check").click();
+  await confirm.click();
+  // P4: you're in, and the invitation is done.
+  await expect(maria.getByTestId("boarded")).toContainText("You're in the");
+  await maria.goto("/invitations");
   await expect(maria.getByTestId("invitations-empty")).toBeVisible();
 });
 

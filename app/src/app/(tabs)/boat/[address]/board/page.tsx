@@ -1,16 +1,18 @@
 "use client";
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CaretDown, CheckCircle } from "@phosphor-icons/react";
+import { Bell, CaretDown, CheckCircle, UsersThree } from "@phosphor-icons/react";
 import { BackButton, CloseButton, Page, TopBar } from "@/components/top-bar";
 import { AmountDisplay, Keypad } from "@/components/amount-input";
 import { Button } from "@/components/button";
-import { ListGroup, ListRow } from "@/components/list-group";
+import { IconTile, ListGroup, ListRow } from "@/components/list-group";
 import { Sheet } from "@/components/sheet";
 import { InvestReview } from "@/components/invest-review";
 import { TokenIcon } from "@/components/token-icon";
 import { Proof } from "@/components/proof";
 import { useBoat } from "@/lib/store";
+import { dismissInvitation, useInvitations, type Invitation } from "@/lib/invitations";
+import { managerOf } from "@/lib/fund";
 import { useInvest } from "@/lib/invest";
 import { usd } from "@/lib/format";
 import { copy } from "@/lib/copy";
@@ -23,9 +25,38 @@ export default function Invest({ params }: { params: Promise<{ address: string }
   const router = useRouter();
   const [review, setReview] = useState(false);
   const [done, setDone] = useState(false);
-  const back = `/boat/${address}`;
+  // Came from an invitation (P2 → ?invite=1): review asks "I know …", done is P4, back goes to the invite.
+  const [invite, setInvite] = useState<Invitation | null>(null);
+  const invites = useInvitations();
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("invite") === "1") setInvite(invites.find((i) => i.fund.toLowerCase() === address.toLowerCase()) ?? { fund: address, from: "", code: "", at: 0 });
+    // read once on arrival: the invite list can change after joining
+  }, [address]);
+  const back = invite ? `/invitations/${address}` : `/boat/${address}`;
 
   if (!b) return <Page><TopBar left={<BackButton fallback={back} />} /><div className="mt-10 h-64 animate-pulse rounded-card bg-card" /></Page>;
+
+  const inviterFirst = b && invite ? (invite.from.trim() || managerOf(b).name).split(" ")[0]! : undefined;
+  if (done && invite && b)
+    return (
+      <Page testId="boarded">
+        <TopBar right={<CloseButton to="/home" />} />
+        <CheckCircle weight="fill" className="mt-[18px] size-12 text-gain" aria-hidden />
+        <h1 className="mt-4 text-[28px] font-bold leading-[1.15] tracking-[-0.01em]">{copy.privateJoin.success(b.name)}</h1>
+        <p className="mt-2.5 text-[16px] leading-[1.45] text-muted">{appCopy.privateFund.successBody(inviterFirst!)}</p>
+        <ListGroup className="mt-[22px]">
+          <ListRow dense leading={<IconTile color="teal"><UsersThree weight="fill" /></IconTile>} title={appCopy.privateFund.youInvested}
+            trailing={<b className="bt-num text-[16px] font-semibold">{usd(inv.amount, { cents: true })}</b>} />
+          <ListRow dense leading={<span className="grid size-[30px] place-items-center" aria-hidden><i className="size-2.5 rounded-full bg-[var(--bt-status-open)]" /></span>}
+            title={appCopy.privateFund.status} sub={appCopy.privateFund.statusSub} />
+          <ListRow dense leading={<IconTile color="loss"><Bell weight="fill" /></IconTile>} title={appCopy.privateFund.tellYou} sub={appCopy.privateFund.tellYouSub} />
+        </ListGroup>
+        <div className="mt-8 grid grid-cols-2 gap-2.5">
+          <Button variant="secondary" onClick={() => router.push(`/boat/${address}`)}>{appCopy.invest.seeFund}</Button>
+          <Button onClick={() => router.push("/home")}>{appCopy.invest.goHome}</Button>
+        </div>
+      </Page>
+    );
 
   if (done)
     return (
@@ -88,8 +119,8 @@ export default function Invest({ params }: { params: Promise<{ address: string }
       <Button className="mb-6 mt-[22px]" onClick={() => setReview(true)} disabled={!inv.amount || inv.short} testId="review">{copy.invest.review}</Button>
 
       <Sheet open={review} onClose={() => setReview(false)} title={copy.invest.sheetTitle} testId="review-sheet">
-        <InvestReview b={b} amount={inv.amount} worst={inv.worst} busy={inv.busy} err={inv.err} passkey={inv.passkey}
-          onConfirm={async () => { if (await inv.confirm()) { setReview(false); setDone(true); } }} />
+        <InvestReview b={b} amount={inv.amount} worst={inv.worst} busy={inv.busy} err={inv.err} passkey={inv.passkey} knowManager={inviterFirst}
+          onConfirm={async () => { if (await inv.confirm()) { setReview(false); setDone(true); if (invite) dismissInvitation(address); } }} />
       </Sheet>
     </Page>
   );
