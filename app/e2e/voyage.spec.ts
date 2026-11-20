@@ -71,6 +71,10 @@ test("manager: Laura switches to manager mode, starts the fund, and the rules ca
   await expect(page.getByTestId("fab")).toBeVisible();
   await page.locator('[data-testid="fund-Safe Harbor"]:visible').click();
   const sheet = page.getByTestId("bridge-Safe Harbor");
+  // The sheet shows the fund's numbers and what it holds, asset by asset.
+  await expect(sheet.getByTestId("fund-inside")).toContainText("From investors");
+  await expect(sheet.getByTestId("inside-USYC")).toContainText("US Treasuries");
+  await sheet.screenshot({ path: "test-results/manage-sheet.png" });
   await sheet.getByTestId("sail").click();
   await expect(sheet.getByTestId("trade")).toBeVisible();
   await sheet.getByTestId("trade").click();

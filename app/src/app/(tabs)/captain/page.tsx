@@ -23,6 +23,7 @@ import { parseUsd, pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { NotificationBell } from "@/components/notification-bell";
+import { FundInside } from "@/components/fund-inside";
 
 const amt = (v: bigint) => usd(v, { cents: false });
 
@@ -73,7 +74,8 @@ function ManageSheet({ b, onClose }: { b: BoatView; onClose: () => void }) {
   return (
     <Sheet open onClose={onClose} title={b.name} testId={`bridge-${b.name}`}>
       <div className="mt-2"><StatusDot status={status} className="text-muted" /></div>
-      <div className="mt-4 flex flex-col gap-2.5">
+      <FundInside b={b} />
+      <div className="mt-5 flex flex-col gap-2.5">
         {b.state === "Open" && b.captainStake > 0n && (
           <>
             <p className="text-[14px] text-muted">{b.crewTotal === 0n ? appCopy.manager.startNeedsInvestors : appCopy.manager.startHint}</p>
