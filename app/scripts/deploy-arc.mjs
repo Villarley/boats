@@ -3,7 +3,7 @@
 //
 //   node app/scripts/deploy-arc.mjs            # deploy + seed Westerly, writes src/config/arc-deployment.json
 //   node app/scripts/deploy-arc.mjs --balances # only print wallet balances
-//   node app/scripts/deploy-arc.mjs --refresh  # re-post oracle prices (they go stale after 1 day)
+//   node app/scripts/deploy-arc.mjs --refresh  # re-post oracle prices (stale after maxAge: 30 days on testnet)
 //   node app/scripts/deploy-arc.mjs --seed-open # captain stakes on Safe Harbor + Open Sea, crew boards Safe Harbor (both stay open)
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -106,7 +106,8 @@ async function main() {
   const eurc = await deploy(A.Token, ["Euro Coin (mock)", "EURC", 6]);
   const usyc = await deploy(A.Token, ["US Yield Coin (mock)", "USYC", 6]);
   const cirbtc = await deploy(A.Token, ["Circle BTC (mock)", "cirBTC", 8]);
-  const oracle = await deploy(A.Oracle, [USDC, 86_400n, 3_000]);
+  // Testnet demo: prices stay valid 30 days (we post them ourselves). Max move per update 30%.
+  const oracle = await deploy(A.Oracle, [USDC, 30n * 86_400n, 3_000]);
   await send(deployer, oracle, A.Oracle.abi, "setPrices", [[usyc, eurc, cirbtc], [1_050_000_000_000_000_000n, 1_080_000_000_000_000_000n, (90_000n * 10n ** 6n * 10n ** 18n) / 10n ** 8n]]);
   const adapter = await deploy(A.Adapter, [oracle, 10]);
   const factory = await deploy(A.Factory, []);

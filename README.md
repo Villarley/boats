@@ -134,7 +134,7 @@ Deploy to Arc testnet without Foundry (viem + solc-js), after funding three wall
 # contracts/.env: DEPLOYER_KEY, CAPTAIN_PRIVATE_KEY, CREW_PRIVATE_KEY
 ADAPTER_USDC=10 STAKE=3 CREW_AMOUNT=12 npm run deploy:arc -w app
 npm run deploy:arc -w app -- --seed-open   # stake + seed crew on Safe Harbor and Open Sea
-npm run deploy:arc -w app -- --refresh     # re-post oracle prices (they expire after 1 day)
+npm run deploy:arc -w app -- --refresh     # re-post oracle prices (testnet max age: 30 days)
 ```
 
 Or with Foundry:
@@ -152,7 +152,7 @@ AI captain: `cp captain/.env.example captain/.env`, fill it, then `npm run capta
 
 ## Contract addresses (Arc testnet)
 
-Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). Oracle prices expire after 1 day: refresh with `node app/scripts/deploy-arc.mjs --refresh`.
+Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). On testnet the oracle accepts prices up to 30 days old ([`setParams`](https://testnet.arcscan.app/tx/0x9d6eccca309ba3743c52055c22a5a43aa490c70cf3de21b5e80e03aca13a8bdb)) so the demo never goes stale; production would use a live feed with a short max age. Re-post prices with `node app/scripts/deploy-arc.mjs --refresh`.
 
 | Contract | Address |
 |---|---|
