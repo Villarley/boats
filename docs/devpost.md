@@ -38,9 +38,9 @@ arc, usdc, circle-modular-wallets, solidity, foundry, viem, typescript, next.js,
 ## Inspiration
 To let someone manage your money today, you hand over custody. A fund manager, the friend who "knows crypto", a trading bot, an AI agent: any of them can take it, take too much risk, or charge fees while they lose.
 
-The mechanism is already failing with AI. In a controlled experiment with real USDC (I-HITL, Cornell Tech and Yale/IC3, Oct 2026), 9 of 10 AI models read the owner's approval code and raised their own spending cap. The damage from intermediaries is already huge: Americans lost $7.2B to crypto investment fraud in 2025 (FBI IC3).
+The mechanism is already failing with AI. In a controlled experiment with real USDC ([I-HITL, Cornell Tech and Yale/IC3, Oct 2026](https://arxiv.org/pdf/2610.35835)), 9 of 10 AI models read the owner's approval code and raised their own spending cap. The damage from intermediaries is already huge: Americans lost $7.2B to crypto investment fraud in 2025 ([FBI IC3 2025 report](https://www.foxbusiness.com/lifestyle/crypto-fraud-tops-fbis-annual-crime-report-americans-lose-billions-scams)).
 
-But people don't say "never". Only 7% are comfortable with an AI buying without approval, yet 29% accept automatic actions within their own rules (Riskified, Nov 2026). Boats writes those rules into a contract.
+But people don't say "never". Only 7% are comfortable with an AI buying without approval, yet 29% accept automatic actions within their own rules ([Riskified, 2026](https://www.riskified.com/press/agentic-commerce-pulse-consumer-survey-november-2026/)). Boats writes those rules into a contract.
 
 ## What it does
 A boat is a fund with a fixed voyage. A captain, a person or an AI, trades the crew's money, but:
@@ -55,6 +55,7 @@ The crew signs in with Face ID, never sees a seed phrase or gas, and reads the w
 
 ## Proof on Arc testnet
 - The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat into Treasuries: https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea
+- The AI captain trades again and writes its reasoning and the Gemini odds (FED261211, Hike 25bps at 91%) into the swap transaction itself: https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41
 - A rogue captain tries to put everything into Bitcoin. The contract refuses: https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6
 - A full voyage (Trade Winds): Bitcoin rises, anyone calls `checkVoyage()` (https://testnet.arcscan.app/tx/0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8), the +10% goal is hit, the boat sells back to dollars (https://testnet.arcscan.app/tx/0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2), and the crew withdraws +9.9% after the captain's fee: https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e
 
@@ -65,7 +66,7 @@ The crew signs in with Face ID, never sees a seed phrase or gas, and reads the w
 - **AI captain:** reads Gemini Prediction Markets odds and acts on plain-words rules ("if Fed hike odds pass 70%, move half to Treasuries"). The odds inform the decision; the contract limits what can execute.
 - **Keeper:** a QuickNode Stream on oracle and trade logs calls our webhook, which runs `checkVoyage()` and `returnToPort()`. ⚠️ QuickNode A GitHub Actions cron calls the same webhook every 10 minutes as a backup.
 - **Agent-ready:** an MCP server with 14 tools (`packages/mcp`), AGENTS.md and llms.txt. Any AI agent (Claude, GPT) can score boats, compute the worst case before boarding, dry-run a trade against the mandate, read Gemini odds, launch a boat and act as captain or crew. Write tools check state, role and mandate first, so an agent never gets a call that would revert. The agent gets the same powers as our AI captain, and the contract still rejects anything outside the mandate.
-- **Auditable AI decisions:** the AI captain now writes its reasoning and the Gemini odds it used (event, contract, probability, timestamp) into the swap transaction's calldata, readable with `decodeSwapMemo()`. No contract change: Solidity ignores trailing calldata. (Unit-tested; the earlier proof swap predates it.)
+- **Auditable AI decisions:** the AI captain now writes its reasoning and the Gemini odds it used (event, contract, probability, timestamp) into the swap transaction's calldata, readable with `decodeSwapMemo()`. No contract change: Solidity ignores trailing calldata. Live: https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41
 - **Arc:** USDC is the gas token, so the crew only ever holds dollars. One factory and no custom code per boat, so code risk is equal for every boat and the score measures strategy risk only.
 - **CI:** contract, SDK and captain tests plus a full-voyage end-to-end test on an iPhone viewport on every push.
 

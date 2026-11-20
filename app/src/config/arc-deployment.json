@@ -39,6 +39,13 @@
     ],
     "log": [
       {
+        "at": "2026-11-20T14:08:58.903Z",
+        "boat": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
+        "kind": "trade",
+        "message": "Odds of \"Hike 25bps\" at 91% (above 70%). Moving $0.55 to Treasuries. Reasoning recorded in the transaction.",
+        "txHash": "0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41"
+      },
+      {
         "at": "2026-11-20T12:54:07.998Z",
         "boat": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
         "kind": "blocked",
