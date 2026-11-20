@@ -12,7 +12,7 @@ import {
   type BoatsWallet,
   type Position,
 } from "@boats/sdk";
-import { CHAIN_NAME, deployment, isDeployed, symbolOf } from "./deployment";
+import { CHAIN_NAME, deployment, isDeployed, isListed, symbolOf } from "./deployment";
 import { publicClient } from "./client";
 import { LocalWallet } from "./wallet/local";
 import { PasskeyWallet, passkeyAvailable } from "./wallet/passkey";
@@ -89,7 +89,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     inflight.current = true;
     try {
       const pc = publicClient();
-      const addrs = await listBoats(pc, deployment.factory);
+      const addrs = (await listBoats(pc, deployment.factory)).filter(isListed);
       const who = wallet?.address ?? "0x0000000000000000000000000000000000000001";
       const infos = await Promise.all(addrs.map((a) => getBoat(pc, a, (t) => symbolOf(t))));
       const views = await Promise.all(infos.map(async (b) => ({ ...b, position: await getPosition(pc, b, who, waterfall) })));

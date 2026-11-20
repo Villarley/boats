@@ -6,11 +6,15 @@ import arc from "@/config/arc-deployment.json";
 
 export type AppDeployment = Deployment & {
   startBlock: number;
+  /** Boats on the factory the app doesn't list (e.g. a duplicate demo run). */
+  hidden?: string[];
   demo: { ana?: Address; grandma?: Address; aiCaptain?: Address; blocked?: { message: string; txHash: string }[]; log?: { at: string; boat: string; kind: "trade" | "blocked" | "hold"; message: string; txHash?: string }[] };
 };
 
 export const CHAIN_NAME = (process.env.NEXT_PUBLIC_CHAIN ?? "local") as "local" | "arc";
 export const deployment = (CHAIN_NAME === "arc" ? arc : local) as unknown as AppDeployment;
+const HIDDEN = new Set((deployment.hidden ?? []).map((a) => a.toLowerCase()));
+export const isListed = (a: string) => !HIDDEN.has(a.toLowerCase());
 export const isDeployed = deployment.factory !== "0x0000000000000000000000000000000000000000";
 
 export const localChain = defineChain({
