@@ -16,6 +16,7 @@ const solc = require("solc");
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
 const RPC = process.env.LOCAL_RPC ?? "http://127.0.0.1:8545";
+const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11";
 const once = process.argv.includes("--once");
 
 // Hardhat's well-known dev accounts (public test keys, local chain only).
@@ -40,7 +41,9 @@ function compile() {
   const errs = (out.errors ?? []).filter((e) => e.severity === "error");
   if (errs.length) throw new Error(errs.map((e) => e.formattedMessage).join("\n"));
   const get = (file, name) => ({ abi: out.contracts[`src/${file}`][name].abi, bytecode: `0x${out.contracts[`src/${file}`][name].evm.bytecode.object}` });
-  return { Boat: get("Boat.sol", "Boat"), Factory: get("BoatFactory.sol", "BoatFactory"), Oracle: get("PriceOracle.sol", "PriceOracle"), Adapter: get("SwapAdapter.sol", "SwapAdapter"), Token: get("MockToken.sol", "MockToken") };
+  const mc = JSON.parse(solc.compile(JSON.stringify({ language: "Solidity", sources: { "Multicall3.sol": { content: readFileSync(join(here, "sol", "Multicall3.sol"), "utf8") } }, settings: { optimizer: { enabled: true, runs: 200 }, outputSelection: { "*": { "*": ["evm.deployedBytecode.object"] } } } })));
+  const multicall = `0x${mc.contracts["Multicall3.sol"].Multicall3.evm.deployedBytecode.object}`;
+  return { multicall, Boat: get("Boat.sol", "Boat"), Factory: get("BoatFactory.sol", "BoatFactory"), Oracle: get("PriceOracle.sol", "PriceOracle"), Adapter: get("SwapAdapter.sol", "SwapAdapter"), Token: get("MockToken.sol", "MockToken") };
 }
 
 async function waitForNode() {
@@ -76,6 +79,8 @@ async function main() {
   }
   await waitForNode();
   const A = compile();
+  // Hardhat has no Multicall3; viem's multicall needs it at the canonical address.
+  await pc.request({ method: "hardhat_setCode", params: [MULTICALL3, A.multicall] });
   const U = (n) => parseUnits(String(n), 6);
 
   const usdc = await deploy(A.Token, ["USD Coin (local)", "USDC", 6]);

@@ -9,3 +9,4 @@ contracts/lib/
 app/.next/
 app/test-results/
 app/playwright-report/
+*.tsbuildinfo

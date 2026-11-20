@@ -19,6 +19,8 @@ export const arcTestnet = defineChain({
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   rpcUrls: { default: { http: ["https://rpc.testnet.arc.io"] } },
   blockExplorers: { default: { name: "Arcscan", url: "https://explorer.testnet.arc.io" } },
+  // Arc testnet ships the canonical Multicall3 (docs.arc.io, contract addresses).
+  contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
   testnet: true,
 });
 

@@ -18,6 +18,7 @@ export const localChain = defineChain({
   name: "Local",
   nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
   rpcUrls: { default: { http: ["http://127.0.0.1:8545"] } },
+  contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
 });
 
 export const chain = CHAIN_NAME === "arc" ? arcTestnet : localChain;

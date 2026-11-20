@@ -28,7 +28,7 @@ function Ticket() {
   }, [b, from]);
 
   const amount = parseUsd(v);
-  const check = useMemo(() => (b && from && to ? checkTrade(b.holdings, b.usdc, from as `0x${string}`, to as `0x${string}`, amount, 10) : null), [b, from, to, amount]);
+  const check = useMemo(() => (b && from && to ? checkTrade(b.holdings.map((h) => ({ ...h, symbol: assetName(h.token) })), b.usdc, from as `0x${string}`, to as `0x${string}`, amount, 10) : null), [b, from, to, amount]);
 
   if (!b) return <Screen title="Trade"><Card><p className="text-ink-2">No boat is sailing yet. Set sail from the Bridge first.</p></Card></Screen>;
   const tokens = [b.usdc, ...b.assets];
