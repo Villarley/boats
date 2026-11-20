@@ -54,9 +54,9 @@ Example: crew $10,000, captain stake $1,000, stop loss at -10%. **The market fal
 The crew signs in with Face ID, never sees a seed phrase or gas, and reads the worst case in dollars before boarding. ⚠️ passkey
 
 ## Proof on Arc testnet
-- The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat into Treasuries: https://testnet.arcscan.app/tx/0xfc9335b11c63399060b7708db5aeb18705b51b8c1ac578d7091bc6913cbfda51
-- A rogue captain tries to put everything into Bitcoin. The contract refuses: https://testnet.arcscan.app/tx/0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630
-- A full voyage (Trade Winds): Bitcoin rises, anyone calls `checkVoyage()`, the +10% goal is hit, the boat sells back to dollars, and the crew withdraws +9.9% after the captain's fee: https://testnet.arcscan.app/tx/0xcf45df3eb237b834d77f1956bb4b98601962d2961d3c41d120fb440973f02c68
+- The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat into Treasuries: https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea
+- A rogue captain tries to put everything into Bitcoin. The contract refuses: https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6
+- A full voyage (Trade Winds): Bitcoin rises, anyone calls `checkVoyage()`, the +10% goal is hit, the boat sells back to dollars, and the crew withdraws +9.9% after the captain's fee: https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e
 
 ## How we built it
 - **Contracts (Solidity, Foundry):** `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. 18 tests, including invariants: value is conserved, the captain can't siphon funds, weights hold, the crew is protected in a loss.
