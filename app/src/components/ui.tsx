@@ -5,14 +5,14 @@ import { ChevronLeft, Delete, ExternalLink, Loader2, type LucideIcon } from "luc
 import type { ReactNode } from "react";
 import { explorer } from "@/lib/deployment";
 
-export function Screen({ title, back, children, actions, tone = "paper" }: { title?: ReactNode; back?: string | true; children: ReactNode; actions?: ReactNode; tone?: "paper" | "navy" }) {
+export function Screen({ title, back, children, actions, tone = "paper" }: { title?: ReactNode; back?: string | true | (() => void); children: ReactNode; actions?: ReactNode; tone?: "paper" | "navy" }) {
   const router = useRouter();
   return (
     <main className={`screen ${tone === "navy" ? "screen-navy" : ""}`}>
       {(title || back) && (
         <header className="flex items-center gap-2 min-h-[52px]">
           {back && (
-            <button aria-label="Back" className="icon-btn -ml-2" onClick={() => (back === true ? router.back() : router.push(back))}>
+            <button aria-label="Back" className="icon-btn -ml-2" onClick={() => (typeof back === "function" ? back() : back === true ? router.back() : router.push(back))}>
               <ChevronLeft size={24} strokeWidth={1.5} />
             </button>
           )}

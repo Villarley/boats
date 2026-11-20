@@ -84,7 +84,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     inflight.current = true;
     try {
       const pc = publicClient();
-      const addrs = deployment.boats.length ? deployment.boats.map((b) => b.address) : await listBoats(pc, deployment.factory);
+      const addrs = await listBoats(pc, deployment.factory);
       const who = wallet?.address ?? "0x0000000000000000000000000000000000000001";
       const infos = await Promise.all(addrs.map((a) => getBoat(pc, a, (t) => symbolOf(t))));
       const views = await Promise.all(infos.map(async (b) => ({ ...b, position: await getPosition(pc, b, who, waterfall) })));
