@@ -8,7 +8,7 @@ export async function GET() {
   if (cache && Date.now() - cache.at < 60_000) return NextResponse.json(cache.body);
   // Default: Gemini's live "Fed decision in December?" market, the signal the AI captain reads.
   const event = process.env.NEXT_PUBLIC_GEMINI_EVENT || "FED261211";
-  const match = process.env.NEXT_PUBLIC_GEMINI_MATCH || "Cut 25bps";
+  const match = process.env.NEXT_PUBLIC_GEMINI_MATCH || "Hike 25bps";
   let body: unknown;
   if (event) {
     try {

@@ -26,20 +26,22 @@ export function configFromEnv(env = process.env): CaptainConfig {
   const usyc = need("USYC") as Address;
   const trigger = Number(env.ODDS_TRIGGER ?? "0.7");
   const fraction = Number(env.MOVE_FRACTION ?? "0.5");
+  // Gemini's live "Fed decision in December?" market. Rising rates: park part of the boat in Treasuries.
+  const match = env.GEMINI_CONTRACT_MATCH || "Hike 25bps";
   return {
     rpcUrl: env.RPC_URL ?? "https://rpc.testnet.arc.io",
     privateKey: need("CAPTAIN_PRIVATE_KEY") as Hex,
     boat: need("BOAT") as Address,
     oracle: need("ORACLE") as Address,
     tokens: { usdc: need("USDC") as Address, usyc, eurc: env.EURC as Address, cirbtc: env.CIRBTC as Address },
-    gemini: { event: env.GEMINI_EVENT ?? "", match: env.GEMINI_CONTRACT_MATCH ?? "cut" },
+    gemini: { event: env.GEMINI_EVENT || "FED261211", match },
     rules: [
       {
         kind: "odds-above",
         threshold: trigger,
         to: usyc,
         targetFraction: fraction,
-        text: `If the odds of a Fed cut go above ${Math.round(trigger * 100)}%, move ${Math.round(fraction * 100)}% to Treasuries.`,
+        text: `If the odds of a Fed ${match.toLowerCase()} go above ${Math.round(trigger * 100)}%, move ${Math.round(fraction * 100)}% to Treasuries.`,
       },
     ],
     spreadBps: Number(env.SPREAD_BPS ?? "10"),

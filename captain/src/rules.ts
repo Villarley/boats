@@ -37,11 +37,12 @@ export function decide(args: {
   odds: Odds | null;
   oddsError?: string;
   spreadBps?: number;
-  /** ignore trades smaller than this (USDC base units) to avoid dust churn */
+  /** ignore trades smaller than this (USDC base units) to avoid dust churn. Default: $10 or 2% of NAV, whichever is smaller. */
   minTrade?: bigint;
 }): Decision {
-  const { rules, holdings, usdc, odds, oddsError, spreadBps = 0, minTrade = 10_000_000n } = args;
+  const { rules, holdings, usdc, odds, oddsError, spreadBps = 0 } = args;
   const n = nav(holdings);
+  const minTrade = args.minTrade ?? (n / 50n < 10_000_000n ? n / 50n : 10_000_000n);
   const eq = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
   for (const r of rules) {
