@@ -48,7 +48,7 @@ export default function AddDollars() {
 
   return (
     <Page testId="add">
-      <TopBar left={<BackButton to="/home" />} title={A.title} />
+      <TopBar left={<BackButton fallback="/home" />} title={A.title} />
       {CHAIN_NAME === "arc" ? (
         <div className="mt-6 flex flex-col gap-3">
           <p className="rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{A.noteArc}</p>

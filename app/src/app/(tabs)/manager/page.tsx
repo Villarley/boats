@@ -23,7 +23,7 @@ export default function ChoosePath() {
   const bm = copy.becomeManager;
   return (
     <Page testId="choose-path">
-      <TopBar left={<BackButton to="/me" />} right={<CloseButton to="/me" />} />
+      <TopBar left={<BackButton fallback="/me" />} right={<CloseButton back to="/me" />} />
       <h1 className="mt-4 text-[28px] font-bold leading-[1.15] tracking-[-0.01em]">{bm.title}</h1>
       <p className="mt-2 text-[15px] leading-[1.45] text-muted">{bm.sub}</p>
       <div role="radiogroup" aria-label={bm.title}>

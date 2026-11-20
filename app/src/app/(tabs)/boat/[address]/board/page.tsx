@@ -25,7 +25,7 @@ export default function Invest({ params }: { params: Promise<{ address: string }
   const [done, setDone] = useState(false);
   const back = `/boat/${address}`;
 
-  if (!b) return <Page><TopBar left={<BackButton to={back} />} /><div className="mt-10 h-64 animate-pulse rounded-card bg-card" /></Page>;
+  if (!b) return <Page><TopBar left={<BackButton fallback={back} />} /><div className="mt-10 h-64 animate-pulse rounded-card bg-card" /></Page>;
 
   if (done)
     return (
@@ -45,7 +45,7 @@ export default function Invest({ params }: { params: Promise<{ address: string }
   if (b.state !== "Open")
     return (
       <Page>
-        <TopBar left={<BackButton to={back} />} title={copy.invest.title(b.name)} />
+        <TopBar left={<BackButton fallback={back} />} title={copy.invest.title(b.name)} />
         <div className="mt-6 rounded-card bg-card p-4">
           <b className="block text-[16px] font-semibold">{appCopy.invest.notOpenTitle}</b>
           <p className="mt-1 text-[14px] text-muted">{appCopy.invest.notOpenBody}</p>
@@ -59,7 +59,7 @@ export default function Invest({ params }: { params: Promise<{ address: string }
 
   return (
     <Page testId="invest">
-      <TopBar left={<BackButton to={back} />} title={copy.invest.title(b.name)} right={<CloseButton to={back} />} />
+      <TopBar left={<BackButton fallback={back} />} title={copy.invest.title(b.name)} right={<CloseButton back to={back} />} />
       <AmountDisplay value={inv.value} caption={caption} className="mt-[46px]" />
       <ListGroup className="mt-10">
         <ListRow

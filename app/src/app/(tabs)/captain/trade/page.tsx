@@ -59,7 +59,7 @@ function TradeScreen() {
   if (!b)
     return (
       <Page>
-        <TopBar left={<BackButton to="/captain" />} title={copy.manager.trade} />
+        <TopBar left={<BackButton fallback="/captain" />} title={copy.manager.trade} />
         <p className="mt-6 rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{appCopy.manager.tradeNone}</p>
       </Page>
     );
@@ -104,7 +104,7 @@ function TradeScreen() {
 
   return (
     <Page testId="trade-screen">
-      <TopBar left={<BackButton to="/captain" />} title={<><ManagerAvatar manager={managerOf(b)} size="sm" />{copy.manager.tradeTitle(b.name)}</>} right={<CloseButton to="/captain" />} />
+      <TopBar left={<BackButton fallback="/captain" />} title={<><ManagerAvatar manager={managerOf(b)} size="sm" />{copy.manager.tradeTitle(b.name)}</>} right={<CloseButton back to="/captain" />} />
       {running.length > 1 && <Chips options={running.map((r) => r.name)} value={b.name} onChange={(n) => { setFundAddr(running.find((r) => r.name === n)!.address); setFrom(""); }} label={copy.manager.trade} />}
 
       <div className="relative mt-[18px] flex flex-col gap-1.5">

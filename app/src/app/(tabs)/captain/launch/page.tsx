@@ -118,7 +118,7 @@ function Create() {
 
   return (
     <Page testId="create">
-      <TopBar left={<BackButton to={step > 1 ? () => setStep(step - 1) : "/captain"} />} title={copy.createFund.title} right={<CloseButton to="/captain" />} />
+      <TopBar left={<BackButton to={step > 1 ? () => setStep(step - 1) : true} fallback="/captain" />} title={copy.createFund.title} right={<CloseButton back to="/captain" />} />
       <div className="mt-1.5 grid grid-cols-4 gap-1.5" aria-hidden>
         {[1, 2, 3, 4].map((i) => <i key={i} className={`h-1 rounded-sm ${i <= step ? "bg-signal" : "bg-card-3"}`} />)}
       </div>
