@@ -79,7 +79,7 @@ function InvestPanel({ b }: { b: BoatView }) {
     return (
       <div className="flex flex-col gap-3.5 rounded-[24px] bg-card p-[22px]">
         <b className="text-[20px] font-semibold">{appCopy.invest.notOpenTitle}</b>
-        <p className="text-[14px] text-muted">{appCopy.invest.notOpenBody}</p>
+        <p className="text-[14px] text-muted">{b.state === "Closed" ? appCopy.invest.endedBody : appCopy.invest.notOpenBody}</p>
         {p.deposit > 0n && !p.withdrawn && (
           <div className="rounded-2xl bg-white p-4">
             <span className="text-[13px] text-muted">{appCopy.fund.yourShare}</span>
@@ -144,7 +144,7 @@ export default function FundPage({ params }: { params: Promise<{ address: string
   if (!b && !loading && !error)
     return (
       <Page>
-        <TopBar left={<BackButton to="/explore" />} />
+        <TopBar left={<BackButton fallback="/explore" />} />
         <div className="mt-6 rounded-card bg-card p-4">
           <b className="block text-[16px] font-semibold">{appCopy.fund.notFoundTitle}</b>
           <p className="mt-1 text-[14px] text-muted">{appCopy.fund.notFoundBody}</p>
@@ -152,7 +152,7 @@ export default function FundPage({ params }: { params: Promise<{ address: string
         </div>
       </Page>
     );
-  if (!b) return <Page><TopBar left={<BackButton to="/explore" />} /><div className="mt-6 h-64 animate-pulse rounded-card bg-card" /></Page>;
+  if (!b) return <Page><TopBar left={<BackButton fallback="/explore" />} /><div className="mt-6 h-64 animate-pulse rounded-card bg-card" /></Page>;
 
   const m = managerOf(b);
   const s = boatScore(b).total;
@@ -173,7 +173,7 @@ export default function FundPage({ params }: { params: Promise<{ address: string
       {/* ---------- mobile: F1 ---------- */}
       <Page className="lg:hidden" testId="fund">
         <TopBar
-          left={<BackButton to="/explore" />}
+          left={<BackButton fallback="/explore" />}
           title={<><ManagerAvatar manager={m} size="sm" />{b.name}</>}
           right={<IconButton href="/activity" label={appCopy.nav.notifications}><Bell weight="fill" /></IconButton>}
         />
@@ -201,7 +201,7 @@ export default function FundPage({ params }: { params: Promise<{ address: string
       {/* ---------- web ≥1024: W2 ---------- */}
       <main className="hidden flex-col pl-4 pr-8 pt-6 lg:flex">
         <div className="flex h-11 items-center gap-3">
-          <BackButton to="/explore" />
+          <BackButton fallback="/explore" />
           <ManagerAvatar manager={m} size="sm" />
           <h1 className="text-[22px] font-semibold">{b.name}</h1>
           <SafetyMeter score={s} />

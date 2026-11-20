@@ -54,7 +54,9 @@ export function statusOf(b: Pick<BoatView, "state">): Status {
 /** Short status word for tables and dots ("Open", not "Open to join"). */
 export const statusWord = (s: Status) => (s === "open" ? "Open" : terms.status[s]);
 
-export const fundHref = (b: Pick<BoatView, "address" | "state">) => (b.state === "Closed" ? `/boat/${b.address}/port` : `/boat/${b.address}`);
+/** Closed funds open the payout screen only for people who had money in them; everyone else sees the fund. */
+export const fundHref = (b: Pick<BoatView, "address" | "state" | "position">) =>
+  b.state === "Closed" && b.position.deposit > 0n ? `/boat/${b.address}/port` : `/boat/${b.address}`;
 
 /** What an investor already in the fund loses at the loss limit, in bps of what they put in. */
 export function worstCaseBps(b: BoatView) {

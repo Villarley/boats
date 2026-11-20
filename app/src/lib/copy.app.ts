@@ -89,6 +89,7 @@ export const appCopy = {
     receipt: "Receipt",
     notOpenTitle: "Joining is closed",
     notOpenBody: "This fund already started. We'll let you know when the next one opens.",
+    endedBody: "This fund already ended. Look in Explore for one that's open.",
   },
   blocked: {
     body: (fund: string, asset?: string) =>

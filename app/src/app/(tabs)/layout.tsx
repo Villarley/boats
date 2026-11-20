@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { WifiSlash, Info } from "@phosphor-icons/react";
 import { TabBar } from "@/components/tab-bar";
 import { Sidebar } from "@/components/sidebar";
+import { useTrackScreens } from "@/components/top-bar";
 import { useStore } from "@/lib/store";
 import { isDeployed } from "@/lib/deployment";
 import { appCopy } from "@/lib/copy.app";
@@ -25,6 +26,7 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
   const { ready, wallet, error, mode, setMode, captainOf } = useStore();
   const router = useRouter();
   const path = usePathname();
+  useTrackScreens();
   useEffect(() => {
     if (ready && !wallet) router.replace("/");
   }, [ready, wallet, router]);

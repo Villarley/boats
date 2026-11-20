@@ -1,5 +1,6 @@
 "use client";
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle } from "@phosphor-icons/react";
 import { buildWithdrawCall, friendlyError, portSummary } from "@boats/sdk";
 import { BackButton, CloseButton, Page, TopBar } from "@/components/top-bar";
@@ -23,8 +24,12 @@ export default function FundClosed({ params }: { params: Promise<{ address: stri
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [hash, setHash] = useState<string>();
+  const router = useRouter();
+  // Nothing to pay out if you never had money here: show the fund instead.
+  const outsider = Boolean(b && b.state === "Closed" && b.position.deposit === 0n);
+  useEffect(() => { if (outsider) router.replace(`/boat/${address}`); }, [outsider, router, address]);
 
-  if (!b) return <Page><TopBar right={<CloseButton />} /><div className="mt-6 h-64 animate-pulse rounded-hero bg-card" /></Page>;
+  if (!b || outsider) return <Page><TopBar right={<CloseButton back />} /><div className="mt-6 h-64 animate-pulse rounded-hero bg-card" /></Page>;
   if (b.state !== "Closed")
     return (
       <Page>
@@ -80,7 +85,7 @@ export default function FundClosed({ params }: { params: Promise<{ address: stri
 
   return (
     <Page testId="port">
-      <TopBar right={<CloseButton to="/home" />} />
+      <TopBar right={<CloseButton back />} />
       <ArtBanner minHeight={200} className="mt-1.5 !rounded-[24px]">
         <div className="text-center">
           <span className="mx-auto mb-2 grid size-[30px] place-items-center rounded-full bg-gain text-white"><CheckCircle weight="fill" className="size-[18px]" /></span>

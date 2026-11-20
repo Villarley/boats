@@ -1,5 +1,6 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { CaretLeft, X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { IconButton } from "./button";
@@ -7,14 +8,31 @@ import { IconButton } from "./button";
 const BACK = "Back";
 const CLOSE = "Close";
 
-/** Round back button: a route, router.back() (true) or a handler. */
-export function BackButton({ to = true }: { to?: string | true | (() => void) }) {
-  const router = useRouter();
-  if (typeof to === "string") return <IconButton href={to} label={BACK}><CaretLeft weight="bold" /></IconButton>;
-  return <IconButton label={BACK} onClick={() => (to === true ? router.back() : to())}><CaretLeft weight="bold" /></IconButton>;
+// Screens seen in this tab. Going "back" is only safe once the app has shown an earlier screen;
+// on a deep link (shared fund, reload) there is nothing of ours to go back to.
+let screens = 0;
+export function useTrackScreens() {
+  const path = usePathname();
+  useEffect(() => { screens += 1; }, [path]);
 }
 
-export function CloseButton({ to = "/home" }: { to?: string | (() => void) }) {
+/** Go to the previous screen, or to `fallback` when this is the first screen of the visit. */
+export function useBackOr(fallback: string) {
+  const router = useRouter();
+  return () => (screens > 1 ? router.back() : router.push(fallback));
+}
+
+/** Round back button: a route, the previous screen (true, with `fallback`) or a handler. */
+export function BackButton({ to = true, fallback = "/home" }: { to?: string | true | (() => void); fallback?: string }) {
+  const back = useBackOr(fallback);
+  if (typeof to === "string") return <IconButton href={to} label={BACK}><CaretLeft weight="bold" /></IconButton>;
+  return <IconButton label={BACK} onClick={to === true ? back : to}><CaretLeft weight="bold" /></IconButton>;
+}
+
+/** Round close button: a route or a handler; `back` returns to the previous screen and uses `to` as the fallback. */
+export function CloseButton({ to = "/home", back }: { to?: string | (() => void); back?: boolean }) {
+  const goBack = useBackOr(typeof to === "string" ? to : "/home");
+  if (back) return <IconButton label={CLOSE} onClick={goBack}><X weight="bold" /></IconButton>;
   if (typeof to === "string") return <IconButton href={to} label={CLOSE}><X weight="bold" /></IconButton>;
   return <IconButton label={CLOSE} onClick={to}><X weight="bold" /></IconButton>;
 }
