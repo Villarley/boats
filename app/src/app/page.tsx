@@ -6,6 +6,9 @@ import { Flag } from "@/components/flags";
 import { Button } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import { CHAIN_NAME } from "@/lib/deployment";
+
+// Face ID only when a Circle client key is configured; otherwise the wallet is a key kept on this device.
+const PASSKEY = Boolean(process.env.NEXT_PUBLIC_CIRCLE_CLIENT_KEY);
 import { friendlyError } from "@boats/sdk";
 
 export default function Welcome() {
@@ -43,9 +46,9 @@ export default function Welcome() {
       <div className="flex flex-col gap-3 pb-[max(16px,env(safe-area-inset-bottom))]">
         {err && <p role="alert" className="text-[15px] text-white/90 bg-white/10 rounded-2xl px-4 py-3">{err}</p>}
         <button className="btn bg-white text-[#0B1A30]" onClick={() => go()} disabled={!!busy} data-testid="signin">
-          <ScanFace size={22} strokeWidth={1.5} /> {busy === "me" ? "Opening…" : "Continue with Face ID"}
+          <ScanFace size={22} strokeWidth={1.5} /> {busy === "me" ? "Opening…" : PASSKEY ? "Continue with Face ID" : "Open my account"}
         </button>
-        <p className="text-center text-[13px] text-white/60">No passwords. No seed phrases.</p>
+        <p className="text-center text-[13px] text-white/60">No passwords. No seed phrases.{CHAIN_NAME === "arc" && " $5 of test dollars to start, on Arc."}</p>
         {CHAIN_NAME === "local" && (
           <div className="flex gap-2 pt-2">
             <button className="btn bg-white/10 text-white min-h-[44px] text-[15px]" onClick={() => go("grandma")} data-testid="demo-grandma">Demo: Grandma</button>
