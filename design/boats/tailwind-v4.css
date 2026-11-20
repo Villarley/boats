@@ -1,0 +1,11 @@
+/* Tailwind v4: @import "tailwindcss"; @import "./tokens.css"; @import "./tailwind-v4.css"; */
+@theme inline {
+  --color-paper: var(--bt-paper); --color-surface: var(--bt-surface); --color-ink: var(--bt-ink); --color-ink-2: var(--bt-ink-2); --color-hair: var(--bt-hair);
+  --color-primary: var(--bt-primary); --color-on-primary: var(--bt-on-primary);
+  --color-crew: var(--bt-crew); --color-captain: var(--bt-captain); --color-up: var(--bt-up); --color-down: var(--bt-down); --color-caution: var(--bt-caution);
+  --color-tint-blue: var(--bt-tint-blue); --color-tint-red: var(--bt-tint-red); --color-tint-yellow: var(--bt-tint-yellow);
+  --color-flag-red: var(--bt-flag-red); --color-flag-yellow: var(--bt-flag-yellow); --color-flag-blue: var(--bt-flag-blue); --color-flag-ink: var(--bt-flag-ink);
+  --font-sans: var(--bt-font); --font-mono: var(--bt-font-mono);
+  --radius-DEFAULT: var(--bt-radius); --radius-sm: var(--bt-radius-sm); --radius-md: var(--bt-radius); --radius-lg: var(--bt-radius);
+  --spacing-tap: var(--bt-tap);
+}
