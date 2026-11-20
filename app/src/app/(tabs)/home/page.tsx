@@ -112,7 +112,7 @@ export default function Home() {
       )}
       {gift?.state === "sent" && mine.length === 0 && (
         <ListGroup className="mt-4" testId="gift">
-          <ListRow leading={<IconTile color="gain"><Gift weight="fill" /></IconTile>} title={G.sent(usd(gift.amount ?? 0n))} sub={G.sentSub} />
+          <ListRow leading={<IconTile color="gain"><Gift weight="fill" /></IconTile>} title={gift.amount ? G.sent(usd(gift.amount)) : G.sentAny} sub={G.sentSub} />
         </ListGroup>
       )}
       {gift?.state === "failed" && (

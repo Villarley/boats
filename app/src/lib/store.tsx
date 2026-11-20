@@ -144,8 +144,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const r = await fetch("/api/faucet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address: wallet.address }) });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(body.error ?? "faucet");
-      try { localStorage.setItem(`boats.gift.${wallet.address.toLowerCase()}`, body.hash); } catch {}
-      setGift({ state: "sent", hash: body.hash, amount: BigInt(body.amount ?? 0) });
+      try { localStorage.setItem(`boats.gift.${wallet.address.toLowerCase()}`, body.hash ?? body.via ?? "sent"); } catch {}
+      setGift({ state: "sent", hash: body.hash ?? undefined, amount: body.amount ? BigInt(body.amount) : undefined });
       refresh();
     } catch (e) {
       const m = String((e as Error).message);

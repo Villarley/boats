@@ -66,6 +66,7 @@ export const appCopy = {
       failedSent: "We already sent you some. Circle's faucet has more.",
       retry: "Try again",
       sent: (amount: string) => `You got ${amount} of test dollars`,
+      sentAny: "Your test dollars are on the way",
       sentSub: "Now pick a fund and invest.",
       faucetTitle: "Get free test dollars",
       faucetBody: "Circle gives test dollars on Arc. We copy your account address; pick Arc Testnet and paste it.",

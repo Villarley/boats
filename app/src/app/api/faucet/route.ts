@@ -16,9 +16,29 @@ const MAX = 10_000_000_000n; // $10k on the local chain
 const DRIP = BigInt(Math.round(Number(process.env.FAUCET_DRIP_USD ?? "5") * 1e6));
 const last = new Map<string, number>();
 
+// Circle's own testnet faucet API (server-side key). Circle sends its fixed drip straight to the
+// person's address, so our faucet wallet never runs dry. Needs a Circle account upgraded to
+// mainnet; until then Circle answers 403 and we fall back to our faucet wallet.
+const CIRCLE_API_KEY = process.env.CIRCLE_API_KEY;
+async function circleDrip(address: string): Promise<boolean> {
+  if (!CIRCLE_API_KEY || CHAIN_NAME !== "arc") return false;
+  try {
+    const r = await fetch("https://api.circle.com/v1/faucet/drips", {
+      method: "POST",
+      headers: { authorization: `Bearer ${CIRCLE_API_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ address, blockchain: "ARC-TESTNET", usdc: true }),
+    });
+    if (!r.ok) console.warn("circle faucet", r.status, await r.text().catch(() => ""));
+    return r.ok;
+  } catch (e) {
+    console.warn("circle faucet", e);
+    return false;
+  }
+}
+
 /** Whether this deployment can hand out test dollars (the UI falls back to Circle's faucet if not). */
 export async function GET() {
-  return NextResponse.json({ enabled: Boolean(serverKey("FAUCET_PRIVATE_KEY")), drip: CHAIN_NAME === "local" ? null : DRIP.toString() });
+  return NextResponse.json({ enabled: Boolean(serverKey("FAUCET_PRIVATE_KEY") || (CIRCLE_API_KEY && CHAIN_NAME === "arc")), drip: CHAIN_NAME === "local" ? null : DRIP.toString() });
 }
 
 /** "Add dollars" for test networks: mints on the local chain, drips from the faucet wallet on testnet. */
@@ -26,7 +46,7 @@ export async function POST(req: Request) {
   const { address, amount } = (await req.json().catch(() => ({}))) as { address?: string; amount?: string };
   if (!address || !isAddress(address)) return NextResponse.json({ error: "bad address" }, { status: 400 });
   const key = serverKey("FAUCET_PRIVATE_KEY");
-  if (!key) return NextResponse.json({ error: "faucet not configured" }, { status: 503 });
+  if (!key && !(CIRCLE_API_KEY && CHAIN_NAME === "arc")) return NextResponse.json({ error: "faucet not configured" }, { status: 503 });
   const pc = publicClient();
   const usdc = deployment.tokens.USDC as Address;
 
@@ -51,7 +71,14 @@ export async function POST(req: Request) {
     const bal = await pc.readContract({ address: usdc, abi, functionName: "balanceOf", args: [address] });
     if (bal >= DRIP) return NextResponse.json({ error: "you already have dollars" }, { status: 429 });
     amt = want > DRIP ? DRIP : want;
+    // Circle first: its drip (fixed amount, no tx hash returned) lands in a few seconds.
+    if (await circleDrip(address)) {
+      last.set(address.toLowerCase(), Date.now());
+      return NextResponse.json({ hash: null, amount: null, via: "circle" });
+    }
+    if (!key) return NextResponse.json({ error: "faucet empty" }, { status: 503 });
   }
+  if (!key) return NextResponse.json({ error: "faucet not configured" }, { status: 503 });
 
   const wc = createWalletClient({ chain, transport: http(rpcUrl), account: privateKeyToAccount(key) });
   last.set(address.toLowerCase(), Date.now());
