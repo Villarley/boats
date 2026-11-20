@@ -5,6 +5,7 @@ import { ScanSmiley } from "@phosphor-icons/react";
 import { friendlyError } from "@boats/sdk";
 import { Button } from "@/components/button";
 import { ArtBanner } from "@/components/art-banner";
+import { WelcomeHero } from "@/components/welcome-hero";
 import { Wordmark } from "@/components/brand";
 import { NameField } from "@/components/name-field";
 import { PasskeyWallet } from "@/lib/wallet/passkey";
@@ -48,8 +49,8 @@ export default function Welcome() {
     }
   };
 
-  const art = (min: number, className = "", chip = false) => (
-    <ArtBanner minHeight={min} className={className} chip={chip ? <>{W.chip}</> : undefined}>
+  const art = (min: number) => (
+    <ArtBanner minHeight={min}>
       <span className="block text-[13px] text-muted">{copy.home.promoRow("Safe Harbor")}</span>
       <b className="bt-num block text-[30px] font-bold tracking-[-0.02em] text-loss">−$1</b>
       <span className="block text-[12.5px] text-muted">{copy.home.promoTag("Laura", "$1,000")}</span>
@@ -82,7 +83,7 @@ export default function Welcome() {
           {busy && busy !== "me" && <p className="text-center text-[14px] text-muted lg:text-left">{W.settingUp}</p>}
         </div>
       </div>
-      <div className="hidden h-full lg:block">{art(560, "h-full !rounded-[32px] [&>div:last-of-type]:w-[300px]", true)}</div>
+      <div className="hidden h-full lg:block"><WelcomeHero /></div>
     </main>
   );
 }

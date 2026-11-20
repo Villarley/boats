@@ -347,6 +347,16 @@ export const appCopy = {
     row: "Passkey",
     noFees: (how: string) => `${how[0]!.toUpperCase()}${how.slice(1)} · no fees`,
   },
+  // Web Welcome art: example numbers only.
+  welcomeHero: {
+    verified: "Verified manager",
+    youHave: "You have",
+    keep: "You keep about $99",
+    falls: "If the fund falls",
+    cushionA: "Laura loses",
+    cushionB: "before you lose",
+    lauraMoney: "Laura's money",
+  },
   welcome: {
     headline: "A fund manager who can't take your money.",
     sub: "Someone you trust invests it. Only you can take it out.",
