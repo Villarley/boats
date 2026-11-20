@@ -44,7 +44,7 @@ Use the existing memo-bearing swap, failed overweight trade and completed voyage
 | Evidence | Every material claim points to source, command or transaction | [agent.json](../app/public/agent.json), [recorded report](evidence-report.json), read-only verifier |
 | Presentation | One story in 2–3 minutes, with actual sponsor use visible | [Devpost script](devpost.md#demo-video-script-245); attach video, confirm Gemini opt-in and correct repo URL |
 
-This bar is an acceptance checklist, not a claim that unresolved items already score 10. UI work stays with Mati. Before the deadline, prioritize Circle verification, the accessible video, correct prize selections and submission. Production oracle/liquidity, security review and an unsailed-boat refund require future protocol work; they must remain disclosed.
+This bar is an acceptance checklist, not a claim that unresolved items already score 10. UI work stays with Mati. Production passkey onboarding is now verified; before the deadline, prioritize the accessible video, correct prize selections and submission. Production oracle/liquidity, security review and an unsailed-boat refund require future protocol work; they must remain disclosed.
 
 ## Demo answers to prepare
 

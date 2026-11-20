@@ -25,7 +25,7 @@ The recorded report passed **5/5** on November 20, 2026. The crew deposited **2 
 | Target | Prize | Evidence to show | Material limitation |
 |---|---:|---|---|
 | DeFi and Onchain Applications | $2,000 track winner | Non-custodial vault, first-loss waterfall, fixed voyage, full settlement proof | Unaudited; oracle, liquidity and liveness trust remain |
-| Best use of Arc | $1,000 within the track | Contracts, USDC deposits and settlement on chain 5042002; explorer links and verifier | Testnet; other assets are mocks; production passkey flow is unverified |
+| Best use of Arc | $1,000 within the track | Contracts, USDC deposits and settlement on chain 5042002; explorer links and verifier; production passkey onboarding | Testnet; other assets are mocks; sponsored boarding is unverified |
 | Gemini Prediction Markets | $2,500 / $1,000 / $500 | Public event API → threshold decision → on-chain swap memo; data validation and hold-on-failure tests | Uses market data to allocate a vault; no Gemini orders. The guide explicitly permits market data and/or trading endpoints; award merit is judged by Gemini and UBC |
 | Official UBC winner | $2,500 / $1,000 / $500 | Same project; clear reproducible demo and honest risk disclosures | Judged across all tracks |
 
@@ -47,6 +47,6 @@ The bundled captain is a deterministic rule-based agent, not an LLM. External LL
 
 ## Production passkey status
 
-November 20 verification found two configuration errors: both the client key's allowed web domain and the passkey domain were `localhost`. Both are now `boats-liard.vercel.app`, as required by [Circle's modular wallet guide](https://developers.circle.com/wallets/modular/create-a-modular-wallet). A diagnostic using only the deployed public configuration now returns Circle HTTP **200**, a login challenge and `rpId: boats-liard.vercel.app`, replacing the previous **401**. No app key changed and no private production variables were downloaded. Interactive production login and sponsored boarding remain unverified; creating the passkey requires the user's device interaction.
+November 20 verification found two configuration errors: both the client key's allowed web domain and the passkey domain were `localhost`. Both are now `boats-liard.vercel.app`, as required by [Circle's modular wallet guide](https://developers.circle.com/wallets/modular/create-a-modular-wallet). A diagnostic using only the deployed public configuration now returns Circle HTTP **200**, a login challenge and `rpId: boats-liard.vercel.app`, replacing the previous **401**. The user then completed the production passkey flow in Brave; the `/me` page displayed “SIGNED IN WITH Face ID passkey” and a wallet address. No app key changed and no private production variables were downloaded. This verifies onboarding, not a sponsored `board()` operation, which remains untested.
 
 Remaining submission work: record and attach an accessible 2–3 minute video, confirm team acceptance and prize opt-ins, and submit before 12:00 PM CST. These external submission steps have not been performed by this verification command.
