@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Zap } from "lucide-react";
+import { BadgeCheck, ExternalLink, Zap } from "lucide-react";
 import { Amount, Button, Keypad, Meta, Notice, Screen } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import { CHAIN_NAME } from "@/lib/deployment";
@@ -25,10 +25,18 @@ export default function AddDollars() {
       await refresh();
       router.push("/home");
     } catch {
-      setErr("We couldn't add dollars right now. Nothing was charged. Try again.");
+      setErr(CHAIN_NAME === "arc" ? "Our test faucet is empty right now. Use Circle's faucet below." : "We couldn't add dollars right now. Nothing was charged. Try again.");
     } finally {
       setBusy(false);
     }
+  };
+
+  // On Arc testnet anyone can get free USDC from Circle's faucet: copy the address, open the faucet.
+  const circleFaucet = async () => {
+    try {
+      await navigator.clipboard.writeText(wallet!.address);
+    } catch {}
+    window.open("https://faucet.circle.com", "_blank", "noopener");
   };
 
   return (
@@ -39,6 +47,12 @@ export default function AddDollars() {
       <Notice tone="caution">Test dollars on {CHAIN_NAME === "arc" ? "Arc testnet" : "the local chain"}. Card and bank deposits come later.</Notice>
       {err && <Notice tone="danger">{err}</Notice>}
       <Button onClick={add} disabled={amount === 0n} loading={busy} testId="confirm-add">Add ${v || "0"}</Button>
+      {CHAIN_NAME === "arc" && wallet && (
+        <>
+          <Button variant="secondary" icon={ExternalLink} onClick={circleFaucet} testId="circle-faucet">Get free test USDC from Circle</Button>
+          <p className="text-center text-ink-2 text-[13px]">We copy your address. Pick Arc Testnet and paste it.</p>
+        </>
+      )}
     </Screen>
   );
 }

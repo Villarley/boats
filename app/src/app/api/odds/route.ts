@@ -6,8 +6,9 @@ let cache: { at: number; body: unknown } | null = null;
 /** Gemini Prediction Markets odds for the configured event, cached 60 s. Falls back to a labelled sample. */
 export async function GET() {
   if (cache && Date.now() - cache.at < 60_000) return NextResponse.json(cache.body);
-  const event = process.env.NEXT_PUBLIC_GEMINI_EVENT;
-  const match = process.env.NEXT_PUBLIC_GEMINI_MATCH ?? "cut";
+  // Default: Gemini's live "Fed decision in December?" market, the signal the AI captain reads.
+  const event = process.env.NEXT_PUBLIC_GEMINI_EVENT || "FED261211";
+  const match = process.env.NEXT_PUBLIC_GEMINI_MATCH || "Hike 25bps";
   let body: unknown;
   if (event) {
     try {

@@ -30,6 +30,10 @@ describe("AI captain decisions", () => {
     const d = decide({ rules: [{ ...rules[0]!, targetFraction: 0.9 } as Rule], holdings: holdings(10_000n * U), usdc: USDC, odds: odds(0.9) });
     expect(d).toMatchObject({ action: "swap", amountValue: 6_000n * U });
   });
+  it("still trades on a small testnet boat ($15)", () => {
+    const d = decide({ rules, holdings: holdings(15n * U), usdc: USDC, odds: odds(0.91) });
+    expect(d).toMatchObject({ action: "swap", amountValue: 7_500_000n });
+  });
   it("holds when market data is down", () => {
     const d = decide({ rules, holdings: holdings(10_000n * U), usdc: USDC, odds: null, oddsError: "Gemini 503" });
     expect(d).toMatchObject({ action: "hold", reason: "Market data unavailable (Gemini 503). Holding position." });

@@ -10,7 +10,7 @@ export function OddsChip() {
   return (
     <div className="flex items-center gap-2 text-[13px]" data-testid="odds">
       <ChartNoAxesColumn size={13} strokeWidth={1.5} />
-      <span className="text-ink-2">Market odds of a Fed cut</span>
+      <span className="text-ink-2">Market odds: Fed {o.label.toLowerCase()}</span>
       <span className="relative inline-block w-16 h-1.5 rounded-full bg-hair overflow-hidden"><span className="absolute inset-y-0 left-0 bg-caution" style={{ width: `${p}%` }} /></span>
       <b>{p}%</b>
       {o.sample && <Sample />}
