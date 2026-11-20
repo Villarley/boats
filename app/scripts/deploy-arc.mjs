@@ -4,6 +4,7 @@
 //   node app/scripts/deploy-arc.mjs            # deploy + seed Westerly, writes src/config/arc-deployment.json
 //   node app/scripts/deploy-arc.mjs --balances # only print wallet balances
 //   node app/scripts/deploy-arc.mjs --refresh  # re-post oracle prices (they go stale after 1 day)
+//   node app/scripts/deploy-arc.mjs --seed-open # captain stakes on Safe Harbor + Open Sea, crew boards Safe Harbor (both stay open)
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,8 +75,27 @@ async function refresh() {
   await send(deployer, d.oracle, abi, "setPrices", [toks, ps]);
 }
 
+// Captain stakes on the human-captained boats so they never show a $0 stake; crew boards Safe Harbor.
+// Boats stay open so visitors can board in the app. Needs CAPTAIN_HUMAN unset (captain wallet captains them).
+async function seedOpen() {
+  const d = JSON.parse(readFileSync(OUT, "utf8"));
+  const boat = parseAbi(["function stakeCaptain(uint256)", "function board(uint256)", "function captain() view returns (address)"]);
+  const [safe, , open] = d.boats.map((b) => b.address);
+  for (const [b, amt] of [[safe, U(Number(process.env.SAFE_STAKE ?? 3))], [open, U(Number(process.env.OPEN_STAKE ?? 2))]]) {
+    const cap = await pc.readContract({ address: b, abi: boat, functionName: "captain" });
+    if (cap.toLowerCase() !== captain.address.toLowerCase()) throw new Error(`captain wallet does not captain ${b}`);
+    await send(captain, USDC, erc20, "approve", [b, amt]);
+    await send(captain, b, boat, "stakeCaptain", [amt]);
+  }
+  const crewAmt = U(Number(process.env.SAFE_CREW ?? 5));
+  await send(crew, USDC, erc20, "approve", [safe, crewAmt]);
+  await send(crew, safe, boat, "board", [crewAmt]);
+  await balances();
+}
+
 async function main() {
   if (process.argv.includes("--balances")) return balances();
+  if (process.argv.includes("--seed-open")) return seedOpen();
   if (process.argv.includes("--refresh")) return refresh();
   if ((await pc.getChainId()) !== 5042002) throw new Error("not Arc testnet");
   await balances();
