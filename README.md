@@ -24,13 +24,13 @@ Everything below happened on chain and can be checked on the explorer.
 
 | What | Proof |
 |---|---|
-| Westerly opens: the AI captain stakes $3, the crew boards $12, the voyage sails | [`sail()`](https://testnet.arcscan.app/tx/0xdcc4124f38d1680d50765e4d86932de043c3215fd1d6a525f8a45ad0340d391b) |
-| The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat to Treasuries | [`swap()`](https://testnet.arcscan.app/tx/0xfc9335b11c63399060b7708db5aeb18705b51b8c1ac578d7091bc6913cbfda51) |
-| A rogue captain tries to put all $15 into Bitcoin. The contract refuses: max weight exceeded | [reverted `swap()`](https://testnet.arcscan.app/tx/0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630) |
-| Safe Harbor: captain stakes $3, crew boards $5, still boarding (visitors can join) | [`board()`](https://testnet.arcscan.app/tx/0x8b10f5a30547f4a8c1cb5d0ce975eb061d9b7342f328ea8e22ae1b166381de57) |
-| A full voyage, start to finish (Trade Winds): captain stakes $1, crew boards $2, captain buys Bitcoin | [`sail()`](https://testnet.arcscan.app/tx/0x580951bfbaf3b72e691117b12e40c071c99294fa3a1876b4e5882f3421fe7d3d) · [`swap()`](https://testnet.arcscan.app/tx/0xf64350b88352f09443b81b702f532f306dce499f8944462371a715c9de542a9d) |
-| Bitcoin +25%: anyone calls `checkVoyage()`, the +10% goal is hit, the boat sells everything back to dollars | [`checkVoyage()`](https://testnet.arcscan.app/tx/0x9c0de83a2fcce85797733c37fd2bba910c8541f6b8ec59065ba2d0a519395c67) · [`returnToPort()`](https://testnet.arcscan.app/tx/0x8f22980e560604b58a23eaf48a8b1435125cbeef717df36d3e2deb940fd5e3fb) |
-| The crew withdraws $2.20 for $2 in (+9.8% after the captain's 20% fee); the captain claims stake + fee | [`withdraw()`](https://testnet.arcscan.app/tx/0xcf45df3eb237b834d77f1956bb4b98601962d2961d3c41d120fb440973f02c68) · [`claimCaptain()`](https://testnet.arcscan.app/tx/0x81aa1f4b4a698583d6305c53b76f54b4d58c4857ca1922521c3c91906bf53589) |
+| Westerly opens: the AI captain stakes $3, the crew boards $8, the voyage sails | [`sail()`](https://testnet.arcscan.app/tx/0x62fc5ac78b956aa1748c080ee949ecb815d65d59d4c19bfc093365ca2d0e42d5) |
+| The AI captain reads Gemini's "Fed decision in December?" market (hike 25bps at 91%) and moves half the boat to Treasuries | [`swap()`](https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea) |
+| A rogue captain tries to put everything into Bitcoin. The contract refuses: max weight exceeded | [reverted `swap()`](https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6) |
+| Safe Harbor: captain stakes $2, crew boards $3, still boarding (visitors can join) | [`board()`](https://testnet.arcscan.app/tx/0x18c30a88281fc3e69f8b37a9bd1a5e5c2d85202d1ca10965fcc6ba6913f6695b) |
+| A full voyage, start to finish (Trade Winds): captain stakes $1, crew boards $2, captain buys Bitcoin | [`sail()`](https://testnet.arcscan.app/tx/0x2ca00d42b47ef5e51531a5332a98d3b87621f715f854c49f7c2459a60078b7c2) · [`swap()`](https://testnet.arcscan.app/tx/0xe54fc288be4c993b3d9ce4f680a1248d85d4c53f8d5aaac57f5724e30ffd6d5a) |
+| Bitcoin +25%: anyone calls `checkVoyage()`, the +10% goal is hit, the boat sells everything back to dollars | [`checkVoyage()`](https://testnet.arcscan.app/tx/0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8) · [`returnToPort()`](https://testnet.arcscan.app/tx/0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2) |
+| The crew withdraws $2.20 for $2 in (+9.9% after the captain's 20% fee); the captain claims stake + fee | [`withdraw()`](https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e) · [`claimCaptain()`](https://testnet.arcscan.app/tx/0x3d22e2391ea12f34d6dae50172b44a6f7325f31e12ebb65175e0a1ca81682087) |
 
 Addresses are in [Contract addresses](#contract-addresses-arc-testnet).
 
@@ -155,22 +155,22 @@ AI captain: `cp captain/.env.example captain/.env`, fill it, then `npm run capta
 
 ## Contract addresses (Arc testnet)
 
-Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). On testnet the oracle accepts prices up to 30 days old ([`setParams`](https://testnet.arcscan.app/tx/0x9d6eccca309ba3743c52055c22a5a43aa490c70cf3de21b5e80e03aca13a8bdb)) so the demo never goes stale; production would use a live feed with a short max age. Re-post prices with `node app/scripts/deploy-arc.mjs --refresh`.
+Deployed Nov 20, 2026 with `npm run deploy:arc -w app` (viem + solc-js; `contracts/deploy-testnet.sh` does the same with Foundry). On testnet the oracle accepts prices up to 30 days old so the demo never goes stale; production would use a live feed with a short max age. Re-post prices with `node app/scripts/deploy-arc.mjs --refresh`.
 
 | Contract | Address |
 |---|---|
-| BoatFactory | [`0x154c6f6019e8deca1bea388ecb1d81993a528936`](https://testnet.arcscan.app/address/0x154c6f6019e8deca1bea388ecb1d81993a528936) |
-| PriceOracle | [`0x9d32649fafd0e13aeb57770f764a4986a4046f5c`](https://testnet.arcscan.app/address/0x9d32649fafd0e13aeb57770f764a4986a4046f5c) |
-| SwapAdapter | [`0xf94f024cde1e4efcd0e3e29f0bbd8d993e0d2f57`](https://testnet.arcscan.app/address/0xf94f024cde1e4efcd0e3e29f0bbd8d993e0d2f57) |
-| Safe Harbor | [`0x2A923331aA7f452fD3A566DE1a85D1Dc16673092`](https://testnet.arcscan.app/address/0x2A923331aA7f452fD3A566DE1a85D1Dc16673092) |
-| Westerly (AI captain, sailing) | [`0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b`](https://testnet.arcscan.app/address/0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b) |
-| Open Sea | [`0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392`](https://testnet.arcscan.app/address/0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392) |
-| Trade Winds (finished voyage) | [`0xe0b4c04A1A17d032F140F89BF64d7AF8A358e153`](https://testnet.arcscan.app/address/0xe0b4c04A1A17d032F140F89BF64d7AF8A358e153) |
+| BoatFactory | [`0x90acf1bb09a7b71c276187a7791e0593dfc68e74`](https://testnet.arcscan.app/address/0x90acf1bb09a7b71c276187a7791e0593dfc68e74) |
+| PriceOracle | [`0xec5c4538335dc7712ae98660574b071232272093`](https://testnet.arcscan.app/address/0xec5c4538335dc7712ae98660574b071232272093) |
+| SwapAdapter | [`0x0cca2f532467984014445bef61b592a1eaec9cf0`](https://testnet.arcscan.app/address/0x0cca2f532467984014445bef61b592a1eaec9cf0) |
+| Safe Harbor | [`0x89376Bb6bE0824A4bCD832C86C8Fac483B6Eb978`](https://testnet.arcscan.app/address/0x89376Bb6bE0824A4bCD832C86C8Fac483B6Eb978) |
+| Westerly (AI captain, sailing) | [`0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359`](https://testnet.arcscan.app/address/0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359) |
+| Open Sea | [`0xC2FFFAAA021f4214E6e685e883Cc06E0601e5c29`](https://testnet.arcscan.app/address/0xC2FFFAAA021f4214E6e685e883Cc06E0601e5c29) |
+| Trade Winds (finished voyage) | [`0x7281C2b57894d9061B83A316426fC6149C729160`](https://testnet.arcscan.app/address/0x7281C2b57894d9061B83A316426fC6149C729160) |
 | USDC (Circle) | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000) |
-| EURC (mock) | [`0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e`](https://testnet.arcscan.app/address/0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e) |
-| USYC (mock; Circle's USYC needs an allowlist) | [`0x95e88570e02d6071ec88874fa18e64c45a123431`](https://testnet.arcscan.app/address/0x95e88570e02d6071ec88874fa18e64c45a123431) |
-| cirBTC (mock) | [`0x3318e4b95316dd91c3ab1c1afc4df977073d1126`](https://testnet.arcscan.app/address/0x3318e4b95316dd91c3ab1c1afc4df977073d1126) |
-| AI captain wallet | [`0xFbC12A29C476bcAD3945e7471a893624b33EB040`](https://testnet.arcscan.app/address/0xFbC12A29C476bcAD3945e7471a893624b33EB040) |
+| EURC (mock) | [`0x1a5dc3284fc658472fe2a7eaef3c87f0c7575000`](https://testnet.arcscan.app/address/0x1a5dc3284fc658472fe2a7eaef3c87f0c7575000) |
+| USYC (mock; Circle's USYC needs an allowlist) | [`0xc1401fecd029e1f3a528cc02535e98f95873fac1`](https://testnet.arcscan.app/address/0xc1401fecd029e1f3a528cc02535e98f95873fac1) |
+| cirBTC (mock) | [`0x1f99f14b0704bd2551129385867a7f477d2b1e5e`](https://testnet.arcscan.app/address/0x1f99f14b0704bd2551129385867a7f477d2b1e5e) |
+| AI captain wallet | [`0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF`](https://testnet.arcscan.app/address/0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF) |
 
 ## License
 
