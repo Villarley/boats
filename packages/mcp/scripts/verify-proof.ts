@@ -1,10 +1,17 @@
 /** Read-only judge verification. No env file is loaded and no signer is constructed. */
 import assert from "node:assert/strict";
 import { createPublicClient, decodeFunctionData, http, parseEventLogs, type Hex } from "viem";
-import { arcTestnet, arcTestnetDeployment as d, boatAbi, decodeSwapMemo, revertReason } from "@boats/sdk";
+import { arcTestnet, boatAbi, decodeSwapMemo, revertReason } from "@boats/sdk";
 
 const pc = createPublicClient({ chain: arcTestnet, transport: http(process.env.BOATS_RPC_URL || arcTestnet.rpcUrls.default.http[0], { retryCount: 4, timeout: 20_000 }) });
-const westerly = d.boats.find(b => b.name === "Westerly")!.address;
+// These receipts belong to the earlier deployment. Never retarget historical
+// evidence when the live app moves to a new factory, boat or mock token.
+const historical = {
+  westerly: "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
+  usdc: "0x3600000000000000000000000000000000000000",
+  usyc: "0xc1401fecd029e1f3a528cc02535e98f95873fac1",
+} as const;
+const westerly = historical.westerly;
 const finished = "0x7281C2b57894d9061B83A316426fC6149C729160";
 const proofs = [
   { name: "Gemini-driven swap with decision memo", hash: "0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41", boat: westerly, fn: "swap", status: "success" },
@@ -16,7 +23,7 @@ const proofs = [
 
 const results: Record<string, unknown>[] = [];
 try {
-  assert.equal(await pc.getChainId(), d.chainId, "Wrong chain");
+  assert.equal(await pc.getChainId(), arcTestnet.id, "Wrong chain");
   for (const proof of proofs) {
     try {
       const hash = proof.hash as Hex;
@@ -36,8 +43,8 @@ try {
         assert.equal(memo?.signal?.probability, 0.91);
         assert.equal(decoded.functionName, "swap");
         if (decoded.functionName === "swap") {
-          assert.equal(decoded.args[0].toLowerCase(), d.tokens.USDC.toLowerCase());
-          assert.equal(decoded.args[1].toLowerCase(), d.tokens.USYC.toLowerCase());
+          assert.equal(decoded.args[0].toLowerCase(), historical.usdc.toLowerCase());
+          assert.equal(decoded.args[1].toLowerCase(), historical.usyc.toLowerCase());
           detail.amountInUsdcBaseUnits = decoded.args[2].toString();
         }
         detail.memo = memo;
@@ -78,5 +85,5 @@ try {
   results.push({ name: "Arc connection", ok: false, error: (e as Error).message.split("\n")[0] });
 }
 const passed = results.filter(r => r.ok).length;
-console.log(JSON.stringify({ verifiedAt: new Date().toISOString(), chainId: d.chainId, readOnly: true, passed, total: proofs.length, results }, null, 2));
+console.log(JSON.stringify({ verifiedAt: new Date().toISOString(), chainId: arcTestnet.id, readOnly: true, passed, total: proofs.length, results }, null, 2));
 if (passed !== proofs.length) process.exitCode = 1;

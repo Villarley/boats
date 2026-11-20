@@ -6,6 +6,8 @@ The thesis: **delegated trading with enforceable limits and a captain who loses 
 
 ## Reproduce the evidence without a wallet
 
+The proof transactions predate the current deployment with invitation-gated boarding. Their original boat and mock-token addresses are pinned in the verifier; updating the live app's deployment does not move those receipts to the new boats. For current contract addresses use the [deployment manifest](../app/src/config/arc-deployment.json).
+
 ```bash
 npm install
 npm run verify:agent   # eight offline synthetic scenarios, no network

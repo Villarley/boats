@@ -22,7 +22,7 @@ _Screenshots of the PWA reading Arc testnet live (iPhone size)._
 
 ## Live on Arc testnet
 
-Everything below happened on chain and can be checked on the explorer.
+Everything below happened on chain and can be checked on the explorer. These are historical receipts from the previous deployment. The current factory and boats, including invitation-gated boarding, are listed in [Contract addresses](#contract-addresses-arc-testnet); the verifier keeps historical targets and token addresses pinned to their original transactions.
 
 | What | Proof |
 |---|---|
@@ -89,7 +89,7 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 
 | Layer | Path | What |
 |---|---|---|
-| Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 18 tests incl. invariants, CI on every push) |
+| Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 23 tests incl. invariants, CI on every push) |
 | SDK | `packages/sdk/` | `@boats/sdk`: reads, mandate pre-check, waterfall, score, calldata builders, wallet interface, keeper, Gemini odds |
 | App | `app/` | PWA for crew and captains; Circle Modular Wallets passkey onboarding verified in production on November 20, plus a local demo-wallet fallback. Sponsored boarding remains unverified |
 | MCP server | `packages/mcp/` | Any AI agent (Claude, GPT...) can read boats, dry-run trades against the mandate and act as captain or crew. See [AGENTS.md](AGENTS.md) |
@@ -148,7 +148,7 @@ npm test                  # SDK, captain and MCP unit tests
 
 cd contracts
 forge install foundry-rs/forge-std --no-git
-forge test -vv            # 18 tests incl. invariants
+forge test -vv            # 23 tests incl. invariants
 ```
 
 Deploy to Arc testnet without Foundry (viem + solc-js), after funding three wallets at faucet.circle.com:
