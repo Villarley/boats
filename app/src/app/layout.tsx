@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "A fund manager who can't take your money.",
   applicationName: "Boats",
   appleWebApp: { capable: true, title: "Boats", statusBarStyle: "default" },
-  icons: { icon: "/icon.svg", apple: "/icon-180.png" },
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/icon-32.png", sizes: "32x32", type: "image/png" }], apple: "/icon-180.png" },
   formatDetection: { telephone: false },
 };
 

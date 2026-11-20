@@ -1,5 +1,5 @@
 // Boats service worker: offline app shell. Money data is always fetched live (never cached).
-const CACHE = "boats-shell-v1";
+const CACHE = "boats-shell-v2"; // bump to drop cached shell files (new boat icon)
 const SHELL = ["/", "/home", "/explore", "/activity", "/me", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
