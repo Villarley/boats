@@ -242,6 +242,16 @@ export const appCopy = {
     alreadySent: "We already sent you test dollars. Use Circle's faucet for more.",
     empty: "Our faucet is empty right now. Use Circle's faucet below.",
   },
+  name: {
+    title: "What should we call you?",
+    sub: "It shows on your home screen and when you invite family. It stays on this device.",
+    label: "Your first name",
+    placeholder: "First name",
+    save: "Continue",
+    later: "Not now",
+    edit: "Change name",
+    fallback: "You",
+  },
   welcome: {
     headline: "A fund manager who can't take your money.",
     sub: "Someone you trust invests it. Only you can take it out.",

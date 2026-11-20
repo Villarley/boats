@@ -6,6 +6,9 @@ import { friendlyError } from "@boats/sdk";
 import { Button } from "@/components/button";
 import { ArtBanner } from "@/components/art-banner";
 import { Wordmark } from "@/components/brand";
+import { NameField } from "@/components/name-field";
+import { PasskeyWallet } from "@/lib/wallet/passkey";
+import { setPendingName } from "@/lib/names";
 import { useStore } from "@/lib/store";
 import { CHAIN_NAME } from "@/lib/deployment";
 import { copy } from "@/lib/copy";
@@ -20,6 +23,10 @@ export default function Welcome() {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // First time on this device (no Face ID account saved here): ask the name before opening the account.
+  const [isNew, setIsNew] = useState(false);
+  const [name, setName] = useState("");
+  useEffect(() => { setIsNew(!PasskeyWallet.hasSaved()); }, []);
 
   useEffect(() => {
     if (ready && wallet) router.replace("/home");
@@ -29,6 +36,7 @@ export default function Welcome() {
     setBusy(demo ?? "me");
     setErr(null);
     try {
+      if (!demo && isNew) setPendingName(name);
       await signIn(demo ? { demo } : undefined);
       router.replace("/home");
     } catch (e) {
@@ -52,7 +60,8 @@ export default function Welcome() {
       </div>
       <div className="flex flex-col gap-3 pt-6">
         {err && <p role="alert" className="rounded-input bg-card px-4 py-3 text-[15px] text-loss">{err}</p>}
-        <Button icon={<ScanSmiley weight="bold" />} onClick={() => go()} loading={busy === "me"} disabled={!!busy} testId="signin">
+        {isNew && <NameField value={name} onChange={setName} />}
+        <Button icon={<ScanSmiley weight="bold" />} onClick={() => go()} loading={busy === "me"} disabled={!!busy || (isNew && !name.trim())} testId="signin">
           {busy === "me" ? W.opening : PASSKEY ? W.faceId : W.open}
         </Button>
         <p className="text-center text-[13px] text-muted">{W.fine}{CHAIN_NAME === "arc" && W.fineArc}</p>

@@ -17,7 +17,8 @@ import { WebTopBar } from "@/components/web-top-bar";
 import { Proof } from "@/components/proof";
 import { useStore, type BoatView } from "@/lib/store";
 import { boatScore } from "@/lib/boat";
-import { displayName, managerOf, statusOf } from "@/lib/fund";
+import { useDisplayName } from "@/lib/names";
+import { managerOf, statusOf } from "@/lib/fund";
 import { pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
@@ -97,7 +98,7 @@ export default function Dashboard() {
   const mine = boats.filter((b) => captainOf.some((a) => a.toLowerCase() === b.address.toLowerCase()));
   const atRisk = mine.filter((b) => b.state !== "Closed").reduce((s, b) => s + b.captainStake, 0n);
   const investors = mine.filter((b) => b.state !== "Closed").reduce((s, b) => s + b.crewTotal, 0n);
-  const name = displayName(wallet?.address);
+  const name = useDisplayName(wallet?.address);
   const first = mine.find((b) => b.state !== "Closed") ?? mine[0];
   const openFund = mine.find((b) => b.address === open);
 

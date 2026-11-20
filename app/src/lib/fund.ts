@@ -34,12 +34,6 @@ export function managerOf(b: Pick<BoatView, "name" | "captain" | "address"> & Pa
   return { name: `Manager ${b.captain.slice(2, 6).toUpperCase()}`, first: "The manager", initials: b.captain.slice(2, 4).toUpperCase(), kind: "person", verified: false };
 }
 
-/** The signed-in person's display name. Demo personas only: there are no profiles on-chain. */
-export function displayName(address?: Address) {
-  if (address && deployment.demo.ana && address.toLowerCase() === deployment.demo.ana.toLowerCase()) return "Laura";
-  return "María";
-}
-
 export type Risk = keyof typeof terms.risk;
 export function riskOf(b: BoatView): Risk {
   const s = boatScore(b).total;

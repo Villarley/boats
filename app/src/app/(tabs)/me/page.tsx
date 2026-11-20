@@ -9,7 +9,9 @@ import { HelmIcon } from "@/components/brand";
 import { IconTile, ListGroup, ListRow } from "@/components/list-group";
 import { ModeSwitch } from "@/components/sidebar";
 import { useStore } from "@/lib/store";
-import { displayName, managerOf } from "@/lib/fund";
+import { saveName, useDisplayName, useSavedName } from "@/lib/names";
+import { NameSheet } from "@/components/name-sheet";
+import { managerOf } from "@/lib/fund";
 import { usd } from "@/lib/format";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
@@ -21,7 +23,9 @@ export default function Profile() {
   const { wallet, captainOf, boats, signOut, cash } = useStore();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const name = displayName(wallet?.address);
+  const name = useDisplayName(wallet?.address);
+  const saved = useSavedName(wallet?.address);
+  const [editName, setEditName] = useState(false);
   const isManager = captainOf.length > 0;
   const managed = boats.filter((b) => captainOf.some((a) => a.toLowerCase() === b.address.toLowerCase()));
   const verified = managed.some((b) => managerOf(b).verified);
@@ -34,6 +38,7 @@ export default function Profile() {
       <div className="mt-3.5 flex flex-col items-center gap-1 rounded-[20px] bg-card px-4 pb-4 pt-5">
         <span className={`grid size-[68px] place-items-center rounded-full bg-card-2 text-[26px] font-semibold ${isManager ? "shadow-[0_0_0_2.5px_var(--bt-navy)]" : ""}`}>{name.slice(0, 1)}</span>
         <b className="mt-1.5 text-[20px] font-semibold">{name}</b>
+        <button type="button" onClick={() => setEditName(true)} className="text-[13px] font-semibold text-signal" data-testid="edit-name">{appCopy.name.edit}</button>
         {isManager && verified ? (
           <span className="flex items-center gap-1 text-[13px] font-semibold"><ShieldCheck weight="fill" className="size-4 text-signal" />{copy.profile.verified}</span>
         ) : (
@@ -86,6 +91,8 @@ export default function Profile() {
         </button>
       )}
 
+      <NameSheet open={editName} initial={saved ?? ""} onClose={() => setEditName(false)}
+        onSave={(n) => { if (wallet) saveName(wallet.address, n); setEditName(false); }} />
       <Button variant="outline" className="mb-6 mt-4" icon={<SignOut weight="bold" />} onClick={() => { signOut(); router.replace("/"); }} testId="signout">{copy.profile.signOut}</Button>
     </Page>
   );

@@ -24,7 +24,8 @@ import { PasskeyWallet } from "@/lib/wallet/passkey";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { assetName, pct, usd } from "@/lib/format";
-import { displayName, fundHref, managerOf, myFunds, riskOf, statusOf, worstCaseBps } from "@/lib/fund";
+import { useDisplayName } from "@/lib/names";
+import { fundHref, managerOf, myFunds, riskOf, statusOf, worstCaseBps } from "@/lib/fund";
 
 type ActivityItem = { key: string; leading: ReactNode; title: string; sub: string; amount?: string };
 
@@ -69,7 +70,7 @@ const FAMILY = [
 export default function Home() {
   const { boats, cash, loading, gift, wallet } = useStore();
   const main = useMainAction();
-  const name = displayName(wallet?.address);
+  const name = useDisplayName(wallet?.address);
   const mine = myFunds(boats).sort((a, b) => (b.position.valueNow > a.position.valueNow ? 1 : -1));
   const invested = mine.reduce((s, b) => s + b.position.valueNow, 0n);
   const deposits = mine.reduce((s, b) => s + b.position.deposit, 0n);

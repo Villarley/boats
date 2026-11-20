@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { WifiSlash, Info } from "@phosphor-icons/react";
 import { TabBar } from "@/components/tab-bar";
 import { Sidebar } from "@/components/sidebar";
 import { useTrackScreens } from "@/components/top-bar";
+import { NameSheet } from "@/components/name-sheet";
+import { claimPendingName, saveName, useSavedName } from "@/lib/names";
 import { useStore } from "@/lib/store";
 import { isDeployed } from "@/lib/deployment";
 import { appCopy } from "@/lib/copy.app";
@@ -27,6 +29,16 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const path = usePathname();
   useTrackScreens();
+  // New accounts name themselves on Welcome; accounts opened before that are asked once here.
+  const saved = useSavedName(wallet?.address);
+  const [askName, setAskName] = useState(false);
+  useEffect(() => {
+    if (!wallet || saved) return setAskName(false);
+    if (claimPendingName(wallet.address)) return;
+    let skipped = false;
+    try { skipped = sessionStorage.getItem("boats.nameLater") === "1"; } catch {}
+    setAskName(!skipped);
+  }, [wallet, saved]);
   useEffect(() => {
     if (ready && !wallet) router.replace("/");
   }, [ready, wallet, router]);
@@ -52,6 +64,11 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
         {children}
       </div>
       <TabBar />
+      <NameSheet
+        open={askName}
+        onSave={(n) => { saveName(wallet.address, n); setAskName(false); }}
+        onClose={() => { try { sessionStorage.setItem("boats.nameLater", "1"); } catch {} setAskName(false); }}
+      />
     </div>
   );
 }

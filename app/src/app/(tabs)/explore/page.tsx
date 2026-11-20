@@ -12,7 +12,8 @@ import { UserAvatar } from "@/components/user-avatar";
 import { WebTopBar } from "@/components/web-top-bar";
 import { useStore } from "@/lib/store";
 import { boatScore, isAiCaptain } from "@/lib/boat";
-import { displayName, fundHref, isExample, managerOf, riskOf, worstCaseBps } from "@/lib/fund";
+import { useDisplayName } from "@/lib/names";
+import { fundHref, isExample, managerOf, riskOf, worstCaseBps } from "@/lib/fund";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 
@@ -20,7 +21,7 @@ function ExploreScreen() {
   const { boats, loading, wallet } = useStore();
   const q = (useSearchParams().get("q") ?? "").trim().toLowerCase();
   const [filter, setFilter] = useState<(typeof copy.explore.filters)[number]>("All");
-  const name = displayName(wallet?.address);
+  const name = useDisplayName(wallet?.address);
 
   const list = useMemo(() => {
     let l = boats.map((b) => ({ b, s: boatScore(b).total, m: managerOf(b) }));

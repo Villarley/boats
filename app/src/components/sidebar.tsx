@@ -7,7 +7,7 @@ import { Button } from "./button";
 import { UserAvatar } from "./user-avatar";
 import { INVESTOR_NAV, MANAGER_NAV, isActive, useMainAction } from "./tab-bar";
 import { useStore } from "@/lib/store";
-import { displayName } from "@/lib/fund";
+import { useDisplayName } from "@/lib/names";
 import { terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 
@@ -44,7 +44,7 @@ export function Sidebar() {
   const { mode, captainOf, wallet } = useStore();
   const items = mode === "captain" ? MANAGER_NAV : INVESTOR_NAV;
   const main = useMainAction();
-  const name = displayName(wallet?.address);
+  const name = useDisplayName(wallet?.address);
   return (
     <aside className="sticky top-0 hidden h-dvh flex-col gap-1 px-4 py-6 lg:flex">
       <Link href="/home" className="px-2.5 pb-6 pt-1 text-ink"><Wordmark width={112} /></Link>
