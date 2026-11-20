@@ -1,0 +1,20 @@
+{
+  "name": "@boats/sdk",
+  "version": "0.1.0",
+  "description": "Protocol SDK for Boats: fund voyages on Arc where the captain can trade but never withdraw.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": { "viem": "^2.21.0" },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.7.2",
+    "viem": "2.21.54",
+    "vitest": "2.1.8"
+  }
+}

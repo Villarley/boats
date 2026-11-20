@@ -16,15 +16,29 @@ import {IERC20, IPriceOracle, ISwapAdapter} from "../src/interfaces.sol";
 ///   EURC     Arc testnet EURC address. Optional: a mock is deployed if unset.
 ///   USYC     Optional, mock if unset (USYC needs an allowlist).
 ///   CIRBTC   Optional, mock if unset.
-///   CAPTAIN  AI captain address (the captain bot's EOA). Required.
+///   CAPTAIN        AI captain address (the captain bot's EOA). Captains Westerly. Required.
+///   CAPTAIN_HUMAN  Human captain (Ana's passkey smart account). Captains Safe Harbor and Open Sea.
+///                  Defaults to CAPTAIN.
+///   ADAPTER_USDC   USDC (base units) the deployer sends to the adapter as liquidity. Default 0.
 ///
 /// forge script script/Deploy.s.sol --rpc-url arc_testnet --broadcast --private-key $DEPLOYER_KEY
 contract Deploy is Script {
     uint256 constant U = 1e6;
 
+    struct Infra {
+        address usdc;
+        PriceOracle oracle;
+        SwapAdapter adapter;
+        address usyc;
+        address eurc;
+        address cirbtc;
+    }
+
     function run() external {
         address usdc = vm.envAddress("USDC");
         address captain = vm.envAddress("CAPTAIN");
+        address human = vm.envOr("CAPTAIN_HUMAN", captain);
+        uint256 adapterUsdc = vm.envOr("ADAPTER_USDC", uint256(0));
 
         vm.startBroadcast();
 
@@ -41,9 +55,17 @@ contract Deploy is Script {
         SwapAdapter adapter = new SwapAdapter(IPriceOracle(address(oracle)), 10); // 0.10% spread
         BoatFactory factory = new BoatFactory();
 
-        Boat safeHarbor = factory.createBoat(_cfg("Safe Harbor", captain, usdc, oracle, adapter, usyc, eurc, cirbtc, 6_000, 3_000, 1_000, 1_000, 1_500));
-        Boat westerly = factory.createBoat(_cfg("Westerly", captain, usdc, oracle, adapter, usyc, eurc, cirbtc, 5_000, 4_000, 2_500, 1_500, 2_500));
-        Boat openSea = factory.createBoat(_cfg("Open Sea", captain, usdc, oracle, adapter, usyc, eurc, cirbtc, 4_000, 3_000, 5_000, 2_500, 4_000));
+        Infra memory inf = Infra(usdc, oracle, adapter, usyc, eurc, cirbtc);
+        // weights: [USYC, EURC, cirBTC] in bps; then stop loss, take profit
+        Boat safeHarbor = factory.createBoat(_cfg("Safe Harbor", human, inf, [uint16(7_000), 3_000, 1_000], 1_000, 1_500));
+        Boat westerly = factory.createBoat(_cfg("Westerly", captain, inf, [uint16(6_000), 4_000, 2_000], 1_500, 2_000));
+        Boat openSea = factory.createBoat(_cfg("Open Sea", human, inf, [uint16(4_000), 3_000, 5_000], 2_500, 4_000));
+
+        // Liquidity: mocks are minted straight into the adapter; real tokens are sent by the deployer.
+        _fund(eurc, address(adapter), 1_000_000 * U);
+        _fund(usyc, address(adapter), 1_000_000 * U);
+        _fund(cirbtc, address(adapter), 20e8);
+        if (adapterUsdc > 0) IERC20(usdc).transfer(address(adapter), adapterUsdc);
 
         vm.stopBroadcast();
 
@@ -57,7 +79,16 @@ contract Deploy is Script {
         console2.log("BOAT_SAFE_HARBOR", address(safeHarbor));
         console2.log("BOAT_WESTERLY", address(westerly));
         console2.log("BOAT_OPEN_SEA", address(openSea));
-        console2.log("Next: fund the adapter with each token and run Seed.s.sol");
+        console2.log("Next: run Seed.s.sol for the AI boat (Westerly) and share these in packages/shared");
+    }
+
+    /// Mints if the token is one of our mocks; otherwise transfers from the deployer if it has enough.
+    function _fund(address token, address to, uint256 amount) internal {
+        (bool ok,) = token.call(abi.encodeWithSignature("mint(address,uint256)", to, amount));
+        if (!ok) {
+            uint256 bal = IERC20(token).balanceOf(msg.sender);
+            if (bal > 0) IERC20(token).transfer(to, bal < amount ? bal : amount);
+        }
     }
 
     function _tokenOrMock(string memory key, string memory name, string memory symbol, uint8 decimals)
@@ -70,35 +101,25 @@ contract Deploy is Script {
         return address(t);
     }
 
-    function _cfg(
-        string memory name,
-        address captain,
-        address usdc,
-        PriceOracle oracle,
-        SwapAdapter adapter,
-        address usyc,
-        address eurc,
-        address cirbtc,
-        uint16 wUsyc,
-        uint16 wEurc,
-        uint16 wBtc,
-        uint16 stopLossBps,
-        uint16 takeProfitBps
-    ) internal view returns (Boat.Config memory c) {
+    function _cfg(string memory name, address captain, Infra memory inf, uint16[3] memory w3, uint16 stopLossBps, uint16 takeProfitBps)
+        internal
+        view
+        returns (Boat.Config memory c)
+    {
         address[] memory assets = new address[](3);
-        assets[0] = usyc;
-        assets[1] = eurc;
-        assets[2] = cirbtc;
+        assets[0] = inf.usyc;
+        assets[1] = inf.eurc;
+        assets[2] = inf.cirbtc;
         uint16[] memory w = new uint16[](3);
-        w[0] = wUsyc;
-        w[1] = wEurc;
-        w[2] = wBtc;
+        w[0] = w3[0];
+        w[1] = w3[1];
+        w[2] = w3[2];
         c = Boat.Config({
             name: name,
             captain: captain,
-            usdc: IERC20(usdc),
-            oracle: IPriceOracle(address(oracle)),
-            router: ISwapAdapter(address(adapter)),
+            usdc: IERC20(inf.usdc),
+            oracle: IPriceOracle(address(inf.oracle)),
+            router: ISwapAdapter(address(inf.adapter)),
             assets: assets,
             maxWeightBps: w,
             stopLossBps: stopLossBps,

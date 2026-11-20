@@ -1,0 +1,25 @@
+{
+  "name": "@boats/captain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI captain for Boats: reads Gemini prediction-market odds and trades only through Boat.swap(), inside the mandate.",
+  "scripts": {
+    "captain": "tsx src/cli.ts",
+    "captain:once": "tsx src/cli.ts --once",
+    "captain:rogue": "tsx src/cli.ts --once --rogue",
+    "keeper": "tsx src/keeper-cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@boats/sdk": "0.1.0",
+    "viem": "2.21.54"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "tsx": "4.19.2",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  }
+}
