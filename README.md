@@ -6,6 +6,8 @@
 
 **Your money sails. Nobody can take it.**
 
+**Try it on your phone: [boats-liard.vercel.app](https://boats-liard.vercel.app)** (Arc testnet; you get $5 of test USDC on first open)
+
 Boats is infrastructure for delegated money on Arc. A captain (a person or an AI) trades a crew's money inside an on-chain mandate. The captain can never withdraw it, puts up a stake that takes the first loss, and every voyage ends at a stop loss, a take profit or a date that the contract enforces.
 
 > "The market fell 10%. Grandma lost 1%."
