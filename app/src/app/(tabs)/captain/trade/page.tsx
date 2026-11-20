@@ -68,7 +68,9 @@ function TradeScreen() {
   const holding = (t: string) => b.holdings.find((h) => h.token.toLowerCase() === t.toLowerCase());
   const toUsdc = to.toLowerCase() === b.usdc.toLowerCase();
   const maxBps = b.maxWeightBps[to.toLowerCase()] ?? 0;
-  const after = check?.weightAfterBps ?? 0;
+  const navNow = b.holdings.reduce((x, h) => x + h.value, 0n);
+  const nowBps = navNow > 0n ? Number(((holding(to)?.value ?? 0n) * 10_000n) / navNow) : 0;
+  const after = (amount > 0n && check?.weightAfterBps) || nowBps;
   const broken = Boolean(amount > 0n && check && !check.ok);
   const maxAllowed = check && !check.ok ? check.maxAllowed : undefined;
   const ruleMsg = check && !check.ok ? check.message : "";

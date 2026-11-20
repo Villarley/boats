@@ -5,7 +5,7 @@ import { ASSET_NAMES } from "@boats/sdk";
 import { Sheet } from "./sheet";
 import { Seal } from "./seal";
 import { Button } from "./button";
-import { ListGroup, ListRow } from "./list-group";
+import { IconTile, ListGroup, ListRow } from "./list-group";
 import { Proof } from "./proof";
 import { useCaptainLog, type LogEntry } from "./captain-log";
 import { useStore, type BoatView } from "@/lib/store";
@@ -23,16 +23,15 @@ export function BlockedSheet({ event, onClose }: { event: BlockedEvent | null; o
   if (!event) return null;
   const { fund, entry } = event;
   const yours = fund.position.valueNow || fund.position.deposit;
-  const ic = "grid size-[26px] place-items-center [&_svg]:size-[22px]";
   return (
     <Sheet open onClose={() => { setTech(false); onClose(); }} center testId="blocked-sheet">
       <Seal />
       <b className="mt-1 text-[26px] font-semibold leading-[1.2]">{copy.blocked.title}</b>
       <p className="mt-2.5 text-[15px] leading-[1.45] text-muted">{appCopy.blocked.body(fund.name, assetIn(entry.message))}</p>
       <ListGroup className="mt-[18px] text-left">
-        <ListRow dense leading={<span className={`${ic} text-gain`}><CheckCircle weight="fill" /></span>} title={copy.blocked.rows[0].title(usd(yours, { cents: true }))} sub={copy.blocked.rows[0].sub} />
-        <ListRow dense leading={<span className={`${ic} text-loss`}><X weight="bold" /></span>} title={copy.blocked.rows[1].title} sub={copy.blocked.rows[1].sub} />
-        <ListRow dense leading={<span className={`${ic} text-signal`}><ShieldCheck weight="fill" /></span>} title={copy.blocked.rows[2].title} sub={copy.blocked.rows[2].sub} />
+        <ListRow dense leading={<IconTile color="gain"><CheckCircle weight="fill" /></IconTile>} title={copy.blocked.rows[0].title(usd(yours, { cents: true }))} sub={copy.blocked.rows[0].sub} />
+        <ListRow dense leading={<IconTile color="loss"><X weight="bold" /></IconTile>} title={copy.blocked.rows[1].title} sub={copy.blocked.rows[1].sub} />
+        <ListRow dense leading={<IconTile color="signal"><ShieldCheck weight="fill" /></IconTile>} title={copy.blocked.rows[2].title} sub={copy.blocked.rows[2].sub} />
       </ListGroup>
       <Button className="mt-5" onClick={() => { setTech(false); onClose(); }} testId="blocked-ok">{copy.blocked.ok}</Button>
       <button type="button" onClick={() => setTech((t) => !t)} className="mx-auto mt-3.5 flex items-center gap-1 text-[14px] font-semibold" aria-expanded={tech}>
@@ -64,7 +63,7 @@ export function useBlockedAlert() {
     if (!seen) return null;
     for (const e of log) {
       if (e.kind !== "blocked") continue;
-      const fund = boats.find((b) => b.address.toLowerCase() === e.boat.toLowerCase() && b.position.deposit > 0n);
+      const fund = boats.find((b) => b.address.toLowerCase() === e.boat.toLowerCase() && b.position.deposit > 0n && b.state !== "Closed");
       const key = `${e.boat}:${e.at}`;
       if (fund && !seen.includes(key)) return { key, fund, entry: e };
     }

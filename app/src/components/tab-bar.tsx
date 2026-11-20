@@ -1,13 +1,18 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowsLeftRight, ChartLineUp, ClockCounterClockwise, Compass, House, Plus } from "@phosphor-icons/react";
+import { ArrowsDownUp, ClockCounterClockwise, Compass, House, Plus, RocketLaunch } from "@phosphor-icons/react";
+import { HelmIcon } from "./brand";
 import type { Icon, IconWeight } from "@phosphor-icons/react";
 import { useStore } from "@/lib/store";
 import { copy } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 
-export type NavItem = { href: string; label: string; icon: Icon; weight: IconWeight; exact?: boolean };
+type IconLike = Icon | ((p: { weight?: IconWeight; className?: string }) => React.ReactNode);
+export type NavItem = { href: string; label: string; icon: IconLike; weight: IconWeight; exact?: boolean };
+
+/** Manager mode glyph: the ship's wheel (not a Phosphor icon). */
+const Helm = ({ className }: { weight?: IconWeight; className?: string }) => <HelmIcon className={className} />;
 
 export const INVESTOR_NAV: NavItem[] = [
   { href: "/home", label: copy.tabs.home, icon: House, weight: "fill" },
@@ -15,8 +20,8 @@ export const INVESTOR_NAV: NavItem[] = [
   { href: "/activity", label: copy.tabs.activity, icon: ClockCounterClockwise, weight: "bold" },
 ];
 export const MANAGER_NAV: NavItem[] = [
-  { href: "/captain", label: copy.managerTabs.dashboard, icon: ChartLineUp, weight: "fill", exact: true },
-  { href: "/captain/trade", label: copy.managerTabs.trade, icon: ArrowsLeftRight, weight: "bold" },
+  { href: "/captain", label: copy.managerTabs.dashboard, icon: Helm, weight: "fill", exact: true },
+  { href: "/captain/trade", label: copy.managerTabs.trade, icon: ArrowsDownUp, weight: "bold" },
   { href: "/activity", label: copy.managerTabs.activity, icon: ClockCounterClockwise, weight: "bold" },
 ];
 
@@ -67,7 +72,7 @@ export function TabBar() {
         data-testid="fab"
         className={`pointer-events-auto grid size-16 flex-none place-items-center rounded-full text-white ${main.manager ? "bg-navy shadow-fab-navy" : "bg-signal shadow-fab"}`}
       >
-        <Plus weight="bold" className="size-6" />
+        {main.manager ? <RocketLaunch weight="fill" className="size-6" /> : <Plus weight="bold" className="size-6" />}
       </Link>
     </div>
   );
