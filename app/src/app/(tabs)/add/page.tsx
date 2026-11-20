@@ -22,10 +22,12 @@ export default function AddDollars() {
   const [faucetOn, setFaucetOn] = useState<boolean | null>(null);
   // Arc: the faucet hands out up to its drip (FAUCET_DRIP_USD); local mints up to $10,000.
   const [maxUsd, setMaxUsd] = useState(CHAIN_NAME === "arc" ? 5 : 10_000);
+  const [fixed, setFixed] = useState(false); // Circle's faucet: one fixed amount
   useEffect(() => {
     fetch("/api/faucet").then((r) => r.json()).then((j) => {
       setFaucetOn(Boolean(j.enabled));
       if (j.drip) setMaxUsd(Number(j.drip) / 1e6);
+      if (j.fixed) setFixed(true);
     }).catch(() => setFaucetOn(false));
   }, []);
   const amount = parseUsd(v);
@@ -41,7 +43,7 @@ export default function AddDollars() {
       router.push("/home");
     } catch (e) {
       const m = String((e as Error).message);
-      setErr(m === "you already have dollars" ? A.alreadyHave : m === "already sent" ? A.alreadySent : CHAIN_NAME === "arc" ? A.empty : A.error);
+      setErr(m === "you already have dollars" ? A.alreadyHave : m === "already sent" ? A.alreadySent : m === "circle limit" ? A.limit : CHAIN_NAME === "arc" ? A.empty : A.error);
     } finally {
       setBusy(false);
     }
@@ -54,16 +56,27 @@ export default function AddDollars() {
   return (
     <Page testId="add">
       <TopBar left={<BackButton fallback="/home" />} title={A.title} />
-      <AmountDisplay value={v} caption={A.upTo(usd(BigInt(Math.round(maxUsd * 1e6)), { cents: false }))} className="mt-[46px]" />
-      <Keypad value={v} onChange={setV} max={maxUsd} quick={[
-        { label: "MAX", value: String(maxUsd) },
-        { label: "50%", value: String(Math.floor(maxUsd * 50) / 100) },
-        { label: "25%", value: String(Math.floor(maxUsd * 25) / 100) },
-        { label: A.clear, value: "" },
-      ]} />
-      <p className="mt-4 text-center text-[13px] text-muted">{CHAIN_NAME === "arc" ? A.noteArc : A.note}</p>
-      {err && <p role="alert" className="mt-2 text-center text-[14px] text-loss">{err}</p>}
-      <Button className="mt-4" onClick={() => post({ amount: amount.toString() })} disabled={amount === 0n || faucetOn === false} loading={busy} testId="confirm-add">{A.cta(v || "0")}</Button>
+      {fixed ? (
+        <>
+          <AmountDisplay value={String(maxUsd)} caption={A.fixed} className="mt-[46px]" />
+          <p className="mt-6 text-center text-[13px] text-muted">{A.noteArc}</p>
+          {err && <p role="alert" className="mt-2 text-center text-[14px] text-loss">{err}</p>}
+          <Button className="mt-4" onClick={() => post({})} loading={busy} testId="confirm-add">{A.cta(String(maxUsd))}</Button>
+        </>
+      ) : (
+        <>
+          <AmountDisplay value={v} caption={A.upTo(usd(BigInt(Math.round(maxUsd * 1e6)), { cents: false }))} className="mt-[46px]" />
+          <Keypad value={v} onChange={setV} max={maxUsd} quick={[
+            { label: "MAX", value: String(maxUsd) },
+            { label: "50%", value: String(Math.floor(maxUsd * 50) / 100) },
+            { label: "25%", value: String(Math.floor(maxUsd * 25) / 100) },
+            { label: A.clear, value: "" },
+          ]} />
+          <p className="mt-4 text-center text-[13px] text-muted">{CHAIN_NAME === "arc" ? A.noteArc : A.note}</p>
+          {err && <p role="alert" className="mt-2 text-center text-[14px] text-loss">{err}</p>}
+          <Button className="mt-4" onClick={() => post({ amount: amount.toString() })} disabled={amount === 0n || faucetOn === false} loading={busy} testId="confirm-add">{A.cta(v || "0")}</Button>
+        </>
+      )}
       {CHAIN_NAME === "arc" && (
         <>
           <Button className="mt-2.5" variant="secondary" icon={<ArrowSquareOut weight="bold" />} onClick={circle} testId="circle-faucet">{A.circleMore}</Button>

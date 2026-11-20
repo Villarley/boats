@@ -64,6 +64,7 @@ export const appCopy = {
       failedEmpty: "Our faucet is empty right now. Circle's faucet has more: we copy your account address, you pick Arc Testnet and paste it.",
       failedHave: "You already have test dollars. Pick a fund to invest.",
       failedSent: "We already sent you some. Circle's faucet has more.",
+      failedLimit: "Circle's test faucet is busy: too many requests for now. Try again in a little while, or use Circle's faucet page.",
       retry: "Try again",
       sent: (amount: string) => `You got ${amount} of test dollars`,
       sentAny: "Your test dollars are on the way",
@@ -324,6 +325,7 @@ export const appCopy = {
     noteArc: "This is Arc testnet: test dollars with no real value. Card and bank deposits come later.",
     cta: (v: string) => `Add $${v}`,
     upTo: (max: string) => `Up to ${max} of test dollars`,
+    fixed: "Test dollars from Circle's faucet, once an hour",
     clear: "Clear",
     error: "We couldn't add dollars right now. Nothing was charged. Try again.",
     gift: "Get $5 of test dollars",
@@ -333,6 +335,7 @@ export const appCopy = {
     alreadyHave: "You already have test dollars. Pick a fund.",
     alreadySent: "We already sent you test dollars. Use Circle's faucet for more.",
     empty: "Our faucet is empty right now. Use Circle's faucet below.",
+    limit: "Circle's test faucet is busy right now. Try again in a little while, or use Circle's faucet below.",
   },
   name: {
     title: "What should we call you?",

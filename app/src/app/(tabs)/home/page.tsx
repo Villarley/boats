@@ -118,10 +118,10 @@ export default function Home() {
       {gift?.state === "failed" && (
         <div className="mt-4 rounded-card bg-card p-4" data-testid="gift">
           <b className="block text-[15px] font-semibold">{G.failedTitle}</b>
-          <p className="mt-1 text-[13px] text-muted">{gift.reason === "have" ? G.failedHave : gift.reason === "sent" ? G.failedSent : G.failedEmpty}</p>
+          <p className="mt-1 text-[13px] text-muted">{gift.reason === "have" ? G.failedHave : gift.reason === "sent" ? G.failedSent : gift.reason === "limit" ? G.failedLimit : G.failedEmpty}</p>
           <div className="mt-3 flex gap-2">
             <Button variant="secondary" size="dense" block={false} onClick={openCircle}>{G.faucetCta}</Button>
-            {gift.reason === "empty" && <Button variant="outline" size="dense" block={false} onClick={claimGift}>{G.retry}</Button>}
+            {(gift.reason === "empty" || gift.reason === "limit") && <Button variant="outline" size="dense" block={false} onClick={claimGift}>{G.retry}</Button>}
           </div>
         </div>
       )}

@@ -38,7 +38,7 @@ type Store = {
 };
 
 /** Arc testnet test dollars: ready to claim → sending → sent, or failed / unavailable (no faucet). */
-export type Gift = { state: "ready" | "sending" | "sent" | "failed" | "unavailable"; hash?: string; amount?: bigint; reason?: "have" | "sent" | "empty" };
+export type Gift = { state: "ready" | "sending" | "sent" | "failed" | "unavailable"; hash?: string; amount?: bigint; reason?: "have" | "sent" | "empty" | "limit" };
 
 const Ctx = createContext<Store | null>(null);
 const MODE_KEY = "boats.mode";
@@ -149,7 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       refresh();
     } catch (e) {
       const m = String((e as Error).message);
-      setGift((g) => ({ state: "failed", amount: g?.amount, reason: m === "you already have dollars" ? "have" : m === "already sent" ? "sent" : "empty" }));
+      setGift((g) => ({ state: "failed", amount: g?.amount, reason: m === "you already have dollars" ? "have" : m === "already sent" ? "sent" : m === "circle limit" ? "limit" : "empty" }));
     }
   }, [wallet, refresh]);
 
