@@ -35,8 +35,16 @@
 
   /* Space / shape */
   --bt-s1: 4px; --bt-s2: 8px; --bt-s3: 12px; --bt-s4: 16px; --bt-s5: 24px; --bt-s6: 32px; --bt-s7: 48px; --bt-s8: 64px;
-  --bt-radius: 10px;          /* cards, buttons, inputs (flags stay square) */
-  --bt-radius-sm: 4px;        /* score chips */
+  /* Radius scale. Nested shapes are concentric: inner = outer - padding. */
+  --bt-radius-chip: 8px;      /* score chips, tags */
+  --bt-radius-tile: 10px;     /* 36px icon tiles */
+  --bt-radius: 16px;          /* cards, buttons, inputs */
+  --bt-radius-sheet: 28px;    /* bottom sheets (top corners) */
+  --bt-radius-pill: 999px;    /* filter chips only */
+  --bt-radius-sm: var(--bt-radius-chip); --bt-radius-btn: var(--bt-radius); --bt-radius-card: var(--bt-radius);
+  /* Layout: 20px screen gutter, 16px card padding, 12px between cards, 56px min list row, 52px buttons 8px apart at the bottom. */
+  --bt-gutter: 20px; --bt-row: 56px; --bt-btn: 52px; --bt-tile: 36px;
+  --bt-line: #E3E6EB;         /* 1px card border. Border OR shadow, never both */
   --bt-border: 1px;           /* hairline (--bt-hair) on cards and inputs */
   --bt-tap: 56px;
   --bt-ease: cubic-bezier(.2,.7,.2,1); --bt-dur: 220ms;
