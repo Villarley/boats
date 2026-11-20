@@ -153,6 +153,8 @@ export function dayLabel(unix?: number) {
 }
 
 const DOT: Record<Category, string> = { manager: "bg-signal", money: "bg-ink", alert: "bg-loss" };
+// On the blue week card: light dots that still tell the kinds apart.
+const DOT_ON_BLUE: Record<Category, string> = { manager: "bg-white", money: "bg-signal-soft", alert: "bg-[#FF9DA0]" };
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
@@ -164,15 +166,21 @@ function catsOn(entries: FeedEntry[], k: string) {
   return [...new Set(entries.filter((e) => entryDay(e) === k).map((e) => e.cat))].slice(0, 3);
 }
 
-function DayCell({ d, k, on, today, entries, onDay, label, tall = true, testId }: { d: Date; k: string; on: boolean; today: boolean; entries: FeedEntry[]; onDay: (k: string) => void; label?: string; tall?: boolean; testId?: string }) {
+function DayCell({ d, k, on, today, entries, onDay, label, tall = true, onBlue, testId }: { d: Date; k: string; on: boolean; today: boolean; entries: FeedEntry[]; onDay: (k: string) => void; label?: string; tall?: boolean; onBlue?: boolean; testId?: string }) {
   const future = d.getTime() > Date.now();
   const cats = catsOn(entries, k);
+  // Blue card: white pill with blue text when picked. White sheet: blue pill with white text.
+  const look = onBlue
+    ? on ? "bg-white text-signal shadow-[0_6px_16px_rgba(11,26,48,.18)]" : "text-white"
+    : on ? "bg-signal text-white shadow-[0_6px_16px_rgba(43,79,216,.28)]" : today ? "text-signal" : "text-ink";
+  const sub = onBlue ? (on ? "text-signal/70" : "text-white/70") : on ? "text-white/80" : "text-muted";
+  const dot = (c: Category) => (onBlue ? (on ? DOT[c] : DOT_ON_BLUE[c]) : on ? "bg-white" : DOT[c]);
   return (
     <button type="button" role="radio" aria-checked={on} disabled={future} onClick={() => onDay(k)} data-testid={testId}
-      className={`flex flex-col items-center justify-center gap-0.5 rounded-[18px] disabled:opacity-30 ${tall ? "h-[66px]" : "h-12"} ${on ? "bg-signal text-white shadow-[0_6px_16px_rgba(43,79,216,.28)]" : today ? "text-signal" : "text-ink"}`}>
-      {label && <span className={`text-[11px] ${on ? "text-white/80" : "text-muted"}`}>{label}</span>}
+      className={`flex flex-col items-center justify-center gap-0.5 rounded-[18px] disabled:opacity-30 ${tall ? "h-[66px]" : "h-12"} ${look}`}>
+      {label && <span className={`text-[11px] ${sub}`}>{label}</span>}
       <b className={`bt-num font-semibold ${tall ? "text-[17px]" : "text-[15px]"}`}>{d.getDate()}</b>
-      <span className="flex h-1.5 gap-[3px]">{cats.map((c) => <i key={c} className={`size-1.5 rounded-full ${on ? "bg-white" : DOT[c]}`} />)}</span>
+      <span className="flex h-1.5 gap-[3px]">{cats.map((c) => <i key={c} className={`size-1.5 rounded-full ${dot(c)}`} />)}</span>
     </button>
   );
 }
@@ -188,23 +196,23 @@ export function WeekStrip({ entries, day, onDay, offset, onOffset, onCalendar }:
   const days = Array.from({ length: 7 }, (_, i) => addDays(end, i - 6));
   const todayK = todayKey();
   const month = end.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  const nav = "grid size-9 place-items-center rounded-full bg-signal-50 text-signal disabled:opacity-35 [&_svg]:size-4";
-  // Folder card like Home's Overview, in light signal: the month is the tab, the days the card.
+  const nav = "grid size-9 place-items-center rounded-full bg-card-2 text-ink disabled:opacity-35 [&_svg]:size-4";
+  // Folder card like Home's Overview (same signal blue): the month is the tab, the days the card.
   return (
     <section className="mt-4" data-testid="week-card">
       <div className="flex items-end justify-between gap-2">
-        <span className="flex h-[38px] items-center rounded-t-[14px] bg-signal-50 px-[18px] text-[14px] font-semibold text-ink" data-testid="week-month">{month}</span>
+        <span className="flex h-[38px] items-center rounded-t-[14px] bg-signal px-[18px] text-[14px] font-semibold text-white" data-testid="week-month">{month}</span>
         <div className="flex gap-1.5 pb-1.5">
           <button type="button" className={nav} onClick={() => onOffset(offset + 1)} aria-label={A.prevWeek} data-testid="week-prev"><CaretLeft weight="bold" /></button>
           <button type="button" className={nav} onClick={() => onOffset(offset - 1)} disabled={offset === 0} aria-label={A.nextWeek} data-testid="week-next"><CaretRight weight="bold" /></button>
           <button type="button" className={nav} onClick={onCalendar} aria-label={A.calendar} data-testid="calendar"><CalendarBlank weight="bold" /></button>
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-1 rounded-[0_22px_22px_22px] bg-signal-50 p-2" role="radiogroup" aria-label={A.days} data-testid="week">
+      <div className="grid grid-cols-7 gap-1 rounded-[0_22px_22px_22px] bg-signal p-2" role="radiogroup" aria-label={A.days} data-testid="week">
         {days.map((d) => {
           const k = keyOfDate(d);
           const isToday = k === todayK;
-          return <DayCell key={k} d={d} k={k} on={k === day} today={isToday} entries={entries} onDay={onDay}
+          return <DayCell key={k} d={d} k={k} on={k === day} today={isToday} entries={entries} onDay={onDay} onBlue
             label={isToday ? A.today : d.toLocaleDateString("en-US", { weekday: "short" })} testId={isToday ? "day-today" : `day-${k}`} />;
         })}
       </div>
