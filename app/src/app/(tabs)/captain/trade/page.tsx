@@ -160,13 +160,16 @@ function TradeScreen() {
         </p>
       )}
 
-      <StickyActions single aboveTabs>
-        {broken && maxAllowed !== undefined && maxAllowed > 0n ? (
+      {broken && maxAllowed !== undefined && maxAllowed > 0n ? (
+        <StickyActions aboveTabs>
+          <Button variant="secondary" onClick={() => setReview(true)} testId="trade">{copy.manager.reviewTrade}</Button>
           <Button onClick={() => setV(String(Number(maxAllowed) / 1e6))} testId="use-max">{appCopy.manager.useMax(usd(maxAllowed))}</Button>
-        ) : (
+        </StickyActions>
+      ) : (
+        <StickyActions single aboveTabs>
           <Button onClick={() => setReview(true)} disabled={amount === 0n} testId="trade">{copy.manager.reviewTrade}</Button>
-        )}
-      </StickyActions>
+        </StickyActions>
+      )}
       <div className="mt-5 hidden lg:block">
         <Button onClick={() => setReview(true)} disabled={amount === 0n}>{copy.manager.reviewTrade}</Button>
       </div>

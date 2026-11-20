@@ -59,19 +59,22 @@ export function useBlockedAlert() {
   useEffect(() => {
     try { setSeen(JSON.parse(localStorage.getItem("boats.blocked.seen") ?? "[]")); } catch { setSeen([]); }
   }, []);
-  const event = useMemo<BlockedEvent | null>(() => {
-    if (!seen) return null;
+  // Newest unseen blocked trade in a fund you're still in. One alert covers them all.
+  const pending = useMemo<BlockedEvent[]>(() => {
+    if (!seen) return [];
+    const out: BlockedEvent[] = [];
     for (const e of log) {
       if (e.kind !== "blocked") continue;
       const fund = boats.find((b) => b.address.toLowerCase() === e.boat.toLowerCase() && b.position.deposit > 0n && b.state !== "Closed");
       const key = `${e.boat}:${e.at}`;
-      if (fund && !seen.includes(key)) return { key, fund, entry: e };
+      if (fund && !seen.includes(key)) out.push({ key, fund, entry: e });
     }
-    return null;
+    return out;
   }, [log, boats, seen]);
+  const event = pending[0] ?? null;
   const dismiss = () => {
-    if (!event) return;
-    const next = [...(seen ?? []), event.key].slice(-50);
+    if (!pending.length) return;
+    const next = [...(seen ?? []), ...pending.map((p) => p.key)].slice(-50);
     setSeen(next);
     try { localStorage.setItem("boats.blocked.seen", JSON.stringify(next)); } catch {}
   };

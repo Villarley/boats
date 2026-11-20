@@ -22,17 +22,20 @@ function Banner({ icon, title, children }: { icon: ReactNode; title: string; chi
  * ≥ 1024: 240px sidebar + page (pages lay out their own `1fr 360px` grid).
  */
 export default function TabsLayout({ children }: { children: ReactNode }) {
-  const { ready, wallet, error, mode, setMode } = useStore();
+  const { ready, wallet, error, mode, setMode, captainOf } = useStore();
   const router = useRouter();
   const path = usePathname();
   useEffect(() => {
     if (ready && !wallet) router.replace("/");
   }, [ready, wallet, router]);
   // Manager screens put the app in manager mode (tab bar, FAB, sidebar); Home puts it back.
+  // Only for people who manage a fund: the store drops everyone else back to investor mode,
+  // and fighting it loops (someone creating their first fund is still an investor).
+  const manages = captainOf.length > 0;
   useEffect(() => {
-    if (path.startsWith("/captain") && mode !== "captain") setMode("captain");
+    if (path.startsWith("/captain") && manages && mode !== "captain") setMode("captain");
     if (path === "/home" && mode !== "crew") setMode("crew");
-  }, [path, mode, setMode]);
+  }, [path, mode, setMode, manages]);
   if (!ready || !wallet) return <div className="min-h-dvh" />;
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[240px_1fr]">
