@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Bell, CaretRight } from "@phosphor-icons/react";
 import { BlockedSheet, type BlockedEvent } from "./blocked-sheet";
-import { ago, useActivityItems, useBlockTimes, type ActivityEntry } from "./activity-items";
+import { ago, useActivityItems, type ActivityEntry } from "./activity-items";
 import { useStore } from "@/lib/store";
 import { appCopy } from "@/lib/copy.app";
 
@@ -38,7 +38,6 @@ export function NotificationBell() {
   // What was already seen when the panel opened, so its "new" dots stay while it's open.
   const [seenAtOpen, setSeenAtOpen] = useState<string[]>([]);
   const items = useMemo(() => [...stopped, ...yours].slice(0, SHOW), [stopped, yours]);
-  const timeOf = useBlockTimes(open ? items.map((i) => i.block) : []);
   const unread = seen !== null && items.some((i) => !seen.includes(i.key));
 
   useEffect(() => {
@@ -55,7 +54,7 @@ export function NotificationBell() {
 
   const row = (i: ActivityEntry) => {
     const isNew = !seenAtOpen.includes(i.key);
-    const when = ago(i.at ?? timeOf(i.block));
+    const when = ago(i.at);
     const inner = (
       <>
         <span className="[&>*]:!size-9">{i.tile}</span>

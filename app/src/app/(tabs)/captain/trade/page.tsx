@@ -43,6 +43,8 @@ function TradeScreen() {
   const running = boats.filter((b) => b.state === "Sailing" && captainOf.some((a) => a.toLowerCase() === b.address.toLowerCase()));
   const [fundAddr, setFundAddr] = useState<string | null>(params.get("boat"));
   const b = running.find((x) => x.address.toLowerCase() === (fundAddr ?? "").toLowerCase()) ?? running[0];
+  // Nothing running yet: the newest fund of theirs that is still open to join, if any.
+  const waiting = boats.filter((x) => x.state === "Open" && captainOf.some((a) => a.toLowerCase() === x.address.toLowerCase())).at(-1);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [v, setV] = useState("");
@@ -63,7 +65,21 @@ function TradeScreen() {
     return (
       <Page>
         <TopBar left={<BackButton fallback="/captain" />} title={copy.manager.trade} />
-        <p className="mt-6 rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{appCopy.manager.tradeNone}</p>
+        {waiting ? (
+          // A fund of theirs is still open to join: say what's missing before it can trade.
+          <div className="mt-6 rounded-card bg-card p-4" data-testid="trade-waiting">
+            <b className="block text-[16px] font-semibold">{appCopy.manager.tradeWaitTitle(waiting.name)}</b>
+            <p className="mt-1 text-[14px] leading-[1.45] text-muted">
+              {waiting.crewTotal === 0n ? appCopy.manager.tradeWaitNoInvestors : appCopy.manager.tradeWaitStart}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {waiting.crewTotal === 0n && <Button href="/invite" size="dense" block={false}>{appCopy.actions.inviteInvestors.title}</Button>}
+              <Button href="/captain" size="dense" variant={waiting.crewTotal === 0n ? "secondary" : "primary"} block={false}>{appCopy.manager.tradeWaitDashboard}</Button>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-6 rounded-card bg-card px-4 py-3.5 text-[14px] text-muted">{appCopy.manager.tradeNone}</p>
+        )}
       </Page>
     );
 

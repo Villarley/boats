@@ -19,7 +19,7 @@ import { useStore, type BoatView } from "@/lib/store";
 import { boatScore } from "@/lib/boat";
 import { useDisplayName } from "@/lib/names";
 import { managerOf, statusOf } from "@/lib/fund";
-import { pct, usd } from "@/lib/format";
+import { parseUsd, pct, usd } from "@/lib/format";
 import { copy, terms } from "@/lib/copy";
 import { appCopy } from "@/lib/copy.app";
 import { NotificationBell } from "@/components/notification-bell";
@@ -48,7 +48,12 @@ function ManageSheet({ b, onClose }: { b: BoatView; onClose: () => void }) {
   // ~10% of the fund, capped by what the manager holds (keeps a little for network fees on Arc).
   const want = b.crewTotal > 0n ? b.crewTotal / 9n : 1_000_000_000n;
   const spendable = cash > 200_000n ? cash - 200_000n : 0n;
-  const stake = want < spendable ? want : spendable;
+  const suggested = want < spendable ? want : spendable;
+  // The manager types how much of their own money goes in (suggested: ~10% of the fund, capped by their dollars).
+  const [stakeV, setStakeV] = useState<string | null>(null);
+  const typed = stakeV ?? (suggested > 0n ? String(Number(suggested) / 1e6) : "");
+  const stake = parseUsd(typed);
+  const tooMuch = stake > spendable;
   const check = async () => {
     setBusy("check");
     try {
@@ -72,12 +77,25 @@ function ManageSheet({ b, onClose }: { b: BoatView; onClose: () => void }) {
         {b.state === "Open" && b.captainStake === 0n && (
           <>
             <p className="text-[14px] text-muted">{appCopy.manager.stakeHint}</p>
-            <Button icon={<Coins weight="fill" />} disabled={stake === 0n} loading={busy === "stake"} onClick={() => run("stake", appCopy.manager.stake(amt(stake)), () => wallet!.send(buildStakeCalls(b.address, b.usdc, stake)))} testId="stake">{appCopy.manager.stake(amt(stake))}</Button>
+            <label className="flex items-center gap-2 rounded-card bg-card px-4 py-3">
+              <span className="flex-1">
+                <span className="block text-[13px] font-medium text-muted">{appCopy.manager.stakeLabel}</span>
+                <span className="mt-0.5 flex items-baseline gap-1 text-[24px] font-semibold">
+                  <span className="text-muted">$</span>
+                  <input value={typed} inputMode="decimal" placeholder="0" aria-label={appCopy.manager.stakeLabel} data-testid="stake-amount"
+                    onChange={(e) => { const x = e.target.value.replace(/[^\d.]/g, ""); if (/^\d*\.?\d{0,2}$/.test(x)) setStakeV(x); }}
+                    className="bt-num w-full min-w-0 bg-transparent outline-none placeholder:text-faint" />
+                </span>
+              </span>
+              <button type="button" onClick={() => setStakeV(String(Number(spendable) / 1e6))} className="h-8 rounded-full bg-white px-3 text-[13px] font-semibold text-signal">MAX</button>
+            </label>
+            <p className={`-mt-1 text-[13px] ${tooMuch ? "text-loss" : "text-muted"}`}>{appCopy.manager.stakeHave(amt(cash))}</p>
+            <Button icon={<Coins weight="fill" />} disabled={stake === 0n || tooMuch} loading={busy === "stake"} onClick={() => run("stake", appCopy.manager.stake(amt(stake)), () => wallet!.send(buildStakeCalls(b.address, b.usdc, stake)))} testId="stake">{appCopy.manager.stake(amt(stake))}</Button>
           </>
         )}
         {b.state === "Open" && b.captainStake > 0n && (
           <>
-            <p className="text-[14px] text-muted">{appCopy.manager.startHint}</p>
+            <p className="text-[14px] text-muted">{b.crewTotal === 0n ? appCopy.manager.startNeedsInvestors : appCopy.manager.startHint}</p>
             <Button icon={<Play weight="fill" />} disabled={b.crewTotal === 0n} loading={busy === "start"} onClick={() => run("start", appCopy.manager.start, () => wallet!.send([buildSailCall(b.address)]))} testId="sail">{appCopy.manager.start}</Button>
           </>
         )}

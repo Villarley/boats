@@ -60,6 +60,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const inflight = useRef(false);
   const fails = useRef(0);
+  // Arc's public RPC rate-limits: after a "rate limit" answer, skip refreshes for a while (15s, 30s, 60s).
+  const pauseUntil = useRef(0);
+  const limited = useRef(0);
   // Arc testnet: every new wallet gets a one-time drip of test dollars, so a visitor can board right away.
   const [gift, setGift] = useState<Gift | null>(null);
 
@@ -88,7 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async () => {
-    if (!isDeployed || inflight.current) return;
+    if (!isDeployed || inflight.current || Date.now() < pauseUntil.current) return;
     // only show the network error after two failures in a row (one 429 is not an outage)
     inflight.current = true;
     try {
@@ -107,10 +110,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setCaptainOf(caps);
       }
       fails.current = 0;
+      limited.current = 0;
       setError(null);
     } catch (e) {
-      if (++fails.current >= 2) setError("We couldn't reach the network. Your money hasn't moved.");
-      console.error(e);
+      if (/rate limit|exceeds defined limit|429/i.test(String((e as Error)?.message ?? e))) {
+        // Not an outage: wait and try again, without the error banner.
+        limited.current = Math.min(limited.current + 1, 3);
+        pauseUntil.current = Date.now() + 15_000 * 2 ** (limited.current - 1);
+        console.warn("network busy, retrying in", (pauseUntil.current - Date.now()) / 1000, "s");
+      } else {
+        if (++fails.current >= 2) setError("We couldn't reach the network. Your money hasn't moved.");
+        console.warn(e);
+      }
     } finally {
       setLoading(false);
       inflight.current = false;
@@ -120,7 +131,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     refresh();
-    const id = setInterval(() => { if (typeof document === "undefined" || !document.hidden) refresh(); }, 6000);
+    // Arc's public RPC is shared and rate-limited: poll it less often than the local chain.
+    const id = setInterval(() => { if (typeof document === "undefined" || !document.hidden) refresh(); }, CHAIN_NAME === "arc" ? 15_000 : 6_000);
     return () => clearInterval(id);
   }, [ready, refresh]);
 

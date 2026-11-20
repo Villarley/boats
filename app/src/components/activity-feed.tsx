@@ -6,7 +6,6 @@ import { ASSET_NAMES } from "@boats/sdk";
 import { ManagerAvatar } from "./manager-avatar";
 import { Proof } from "./proof";
 import { useCaptainLog, type LogEntry } from "./captain-log";
-import { useBlockTimes } from "./activity-items";
 import type { BlockedEvent } from "./blocked-sheet";
 import { useStore, type BoatView } from "@/lib/store";
 import { useActivityFeed } from "@/lib/activity";
@@ -76,7 +75,7 @@ export function useFeed(): FeedEntry[] {
       const mine = String(args.crew ?? "").toLowerCase() === me;
       const m = managerOf(b);
       const who = b.position.isCaptain ? A.you : m.first; // your own fund: "You moved…"
-      const base = { fund: b, block: a.blockNumber, hash: a.txHash, href: fundHref(b) };
+      const base = { fund: b, block: a.blockNumber, when: (a as { at?: number }).at, hash: a.txHash, href: fundHref(b) };
       const avatar = <ManagerAvatar manager={m} />;
       if (a.kind === "traded" && inFund) {
         const tokenIn = String(args.tokenIn), tokenOut = String(args.tokenOut);
@@ -132,11 +131,10 @@ export function useFeed(): FeedEntry[] {
     return out;
   }, [acts, boats, log, me]);
 
-  const timeOf = useBlockTimes(entries.slice(0, 60).map((e) => e.block));
+  // Times come with the activity (stamped once on the server), so no per-browser block lookups.
   return useMemo(
-    () => entries.map((e) => ({ ...e, when: e.when ?? timeOf(e.block) })).sort((x, y) => (y.when ?? 0) - (x.when ?? 0) || Number((y.block ?? 0n) - (x.block ?? 0n))),
-    [entries, timeOf], // timeOf is new whenever block times arrive
-
+    () => [...entries].sort((x, y) => (y.when ?? 0) - (x.when ?? 0) || Number((y.block ?? 0n) - (x.block ?? 0n))),
+    [entries],
   );
 }
 

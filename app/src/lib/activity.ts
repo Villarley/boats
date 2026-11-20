@@ -35,12 +35,14 @@ export function useEndedAt(fund?: string) {
   const [at, setAt] = useState<number | null>(null);
   const ended = fund ? acts.find((a) => a.kind === "ended" && a.boat.toLowerCase() === fund.toLowerCase()) : undefined;
   const block = ended?.blockNumber;
+  const known = (ended as (Activity & { at?: number }) | undefined)?.at; // stamped by /api/activity
   useEffect(() => {
+    if (known) return setAt(known);
     if (block === undefined) return;
     let alive = true;
     import("./client").then(({ publicClient }) => publicClient().getBlock({ blockNumber: block })).then((b) => alive && setAt(Number(b.timestamp))).catch(() => {});
     return () => { alive = false; };
-  }, [block]);
+  }, [block, known]);
   return at;
 }
 

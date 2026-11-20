@@ -137,8 +137,14 @@ test("manager: a family member creates their own fund, puts money in first, and 
   await expect(page).toHaveURL(/\/captain$/, { timeout: 30_000 });
   await page.locator("[data-testid=\"fund-Abuela's Harbor\"]:visible").click();
   const sheet = page.getByTestId("bridge-Abuela's Harbor");
+  // The manager picks how much of their own money goes in.
+  await sheet.getByTestId("stake-amount").fill("250");
+  await expect(sheet.getByTestId("stake")).toContainText("$250");
   await sheet.getByTestId("stake").click();
   await expect(sheet.getByText(/: done\./)).toBeVisible({ timeout: 30_000 });
+  // Trade explains why there's nothing to trade yet: the fund hasn't started and has no investors.
+  await page.goto("/captain/trade");
+  await expect(page.getByTestId("trade-waiting")).toContainText("Abuela's Harbor hasn't started yet");
   await page.goto("/explore");
   await expect(page.getByTestId("boat-card-Abuela's Harbor")).toBeVisible();
 });

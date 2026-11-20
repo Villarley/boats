@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ArrowDownLeft, ArrowUpRight, ArrowsLeftRight, Coins, Flag as FlagGlyph, Play, X } from "@phosphor-icons/react";
 import { IconTile } from "./list-group";
 import { useCaptainLog } from "./captain-log";
@@ -55,7 +55,7 @@ export function useActivityItems() {
     if (!b) continue;
     const fund = b.name;
     const args = a.args as Record<string, bigint | string>;
-    const base = { block: a.blockNumber, hash: a.txHash, href: fundHref(b) };
+    const base = { block: a.blockNumber, at: (a as { at?: number }).at, hash: a.txHash, href: fundHref(b) };
     const mine = String(args.crew ?? "").toLowerCase() === me;
     const relevant = mineOrManaged.has(a.boat.toLowerCase());
     let item: ActivityEntry | null = null;
@@ -92,23 +92,6 @@ export function useActivityItems() {
   }));
 
   return { yours, everyone, stopped };
-}
-
-/** Unix time of each block (fetched once per block, shared across the app). */
-const blockTimes = new Map<string, number>();
-export function useBlockTimes(blocks: (bigint | undefined)[]) {
-  const [, bump] = useState(0);
-  const missing = [...new Set(blocks.filter((b): b is bigint => b !== undefined).map(String))].filter((b) => !blockTimes.has(b));
-  const want = missing.join(",");
-  useEffect(() => {
-    if (!want) return;
-    let alive = true;
-    import("@/lib/client").then(({ publicClient }) =>
-      Promise.all(want.split(",").map((b) => publicClient().getBlock({ blockNumber: BigInt(b) }).then((x) => blockTimes.set(b, Number(x.timestamp))).catch(() => {}))),
-    ).then(() => alive && bump((n) => n + 1));
-    return () => { alive = false; };
-  }, [want]);
-  return (block?: bigint) => (block === undefined ? undefined : blockTimes.get(String(block)));
 }
 
 /** "Just now", "5m ago", "3h ago", "2d ago", then "Nov 18". */

@@ -77,7 +77,7 @@ export function Sidebar() {
         <UserAvatar name={name} href={null} manager={mode === "captain"} />
         <div className="min-w-0">
           {name}
-          <small className="bt-num block truncate text-[12px] font-normal text-muted">{mode === "captain" ? appCopy.nav.managerRole : appCopy.nav.available(usd(cash, { cents: true }))}</small>
+          <small className="bt-num block truncate text-[12px] font-normal text-muted">{mode === "captain" ? `${appCopy.nav.managerRole} · ${usd(cash, { cents: true })}` : appCopy.nav.available(usd(cash, { cents: true }))}</small>
         </div>
       </Link>
     </aside>
