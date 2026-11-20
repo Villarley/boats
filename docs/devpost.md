@@ -32,7 +32,7 @@ arc, usdc, solidity, foundry, viem, typescript, next.js, circle-modular-wallets,
 ## Inspiration
 If a group lets an agent manage pooled money, who sets its limits—and whose capital takes the first loss? Boats answers both questions before the voyage starts: the contract defines trading authority, and the captain posts a stake.
 
-Two findings shaped that design. In I-HITL's controlled payment experiment, 9 of 10 tested models raised their spending limit in at least one of 20 runs per model without an adversarial prompt. It is evidence from that setup, not a population-wide failure rate. [Research paper, October 2026](https://arxiv.org/html/2610.35835v1) In Riskified's survey of 5,100 adult online shoppers across five countries, 29% accepted automatic AI purchases within their rules, versus 7% without approval. The survey concerns shopping, but the distinction—delegation within explicit boundaries—is the question we apply to fund management. [Riskified, October 27, 2026](https://www.riskified.com/press/agentic-commerce-pulse-consumer-survey-november-2026/)
+In I-HITL’s controlled payment experiment, 9 of 10 tested models raised their own spending limit in at least one of 20 runs per model. That result belongs to this setup; it motivates limits enforced outside the model. [Research paper, October 2026](https://arxiv.org/html/2610.35835v1)
 
 ## What it does
 A boat is a USDC vault with a fixed voyage. A captain, human or AI, trades pooled crew deposits subject to an immutable mandate:
@@ -43,21 +43,41 @@ A boat is a USDC vault with a fixed voyage. A captain, human or AI, trades poole
 
 For $10,000 crew principal and $1,000 captain stake, an exit exactly 10% below starting NAV leaves $9,900 for the crew: a 1% crew loss before exit costs. Gaps, delays, oracle failure and liquidity can make losses larger.
 
-## Proof on Arc testnet
+## Current deployment on Arc testnet
+The current deployment includes public and invitation-gated boats. For an invite-only boat, the captain can invite crew while boarding is open; an uninvited address cannot board. The current Westerly demo is public.
+
+- BoatFactory: [0x115e0bebcce14481f2c4b00aac533e15efddb2fb](https://testnet.arcscan.app/address/0x115e0bebcce14481f2c4b00aac533e15efddb2fb)
+- PriceOracle: [0x712f8c439e455e928b2f84c6f389d77e93c980f0](https://testnet.arcscan.app/address/0x712f8c439e455e928b2f84c6f389d77e93c980f0)
+- SwapAdapter: [0xd1a6b1a5ccc3b5470a5a41595a186f885ea9464f](https://testnet.arcscan.app/address/0xd1a6b1a5ccc3b5470a5a41595a186f885ea9464f)
+- Westerly: [0x6f762E474d9aA387631f2F32013B8bDb6d0A66e5](https://testnet.arcscan.app/address/0x6f762E474d9aA387631f2F32013B8bDb6d0A66e5)
+
+The [deployment manifest](https://github.com/Villarley/boats/blob/main/app/src/config/arc-deployment.json) lists every current boat and token. The historical transaction proofs below belong to the previous deployment, whose contracts remain on Arc testnet.
+
+## Historical proof on Arc testnet
 - **Gemini-driven decision:** the bundled captain recorded event `FED261211`, outcome “Hike 25bps”, probability 91%, its reason and fetch timestamp in a successful swap's calldata. The memo-bearing swap moved about $0.55; an earlier trade moved $5.50. [Swap + memo](https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41) · [Earlier swap](https://testnet.arcscan.app/tx/0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea)
 - **Rejected trade:** a swap attempting to exceed the Bitcoin weight cap reverted. The verification command replays it at the preceding block to check the specific rejection reason. [Reverted swap](https://testnet.arcscan.app/tx/0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6)
 - **Complete voyage:** in a controlled testnet scenario, we manually increased the mock Bitcoin oracle price. A public call triggered take profit, the vault returned to USDC, and the crew received 2.197402 test USDC for a 2 USDC deposit: +9.8701% after the captain fee. This demonstrates settlement, not real investment performance. [Take profit](https://testnet.arcscan.app/tx/0x2248e6f6ce95e912017c645bdee0f4fcf8be8db26f1552927f682157c06491f8) · [Return](https://testnet.arcscan.app/tx/0xe5f95b1ff9ab4f9fc54f51a5802cbdea2deff90c1144b144e1a2a65561f882e2) · [Crew withdrawal](https://testnet.arcscan.app/tx/0x87a3d5ffd2b045ba0aa702d64247a4b2716211a98234501e330b811d5f88954e)
 
 `npm run verify:proof` checks transaction targets, methods, receipts, the decision memo, the historical rejected trade and crew payout. It requires neither a private key nor a new transaction.
 
+## Live agent fleet (Arc testnet)
+13 independent AI agents (Grok bots) use Boats on Arc testnet:
+
+- **3 AI captains**: Harbor (conservative, 5% stop loss), Trade Wind (balanced, 10%), and Storm (aggressive, 20%). Each captain's workflow includes first-loss staking and one deliberate out-of-mandate attempt to test contract enforcement.
+- **10 AI crew**: each claims testnet USDC, checks risk, and boards 1–2 boats.
+
+Follow action updates and Arcscan transaction links in the [Live fleet log](https://docs.google.com/spreadsheets/d/1VLwuWsYzeWdigM6EKsna8yVn_h-LOXiaj9zrD77IU3E/edit?usp=sharing).
+
+Demo boat Westerly: [0x6f76…66e5](https://testnet.arcscan.app/address/0x6f762E474d9aA387631f2F32013B8bDb6d0A66e5).
+
 ## How we built it
-- **Contracts:** Solidity and Foundry: `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. Unit and invariant tests cover mandate restrictions and first-loss settlement.
+- **Contracts:** Solidity and Foundry: `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter`. 23 Foundry tests, including five invariants, cover mandate restrictions, invitation-gated boarding and first-loss settlement.
 - **SDK:** TypeScript and viem for reads, trade pre-checks, loss estimates, scores, calldata and keepers.
-- **Agent interface:** a stdio MCP server with 14 tools, three discoverable resources and a review prompt. Structured JSON, AGENTS.md, llms.txt and a public agent.json connect claims to evidence. Agents can discover boats, inspect limits, plan trades, read Gemini odds and receive unsigned calls without supplying a key. With a signer, each step is simulated before sending; partial failures return transaction hashes so the agent can check before retrying.
+- **Agent interface:** a stdio MCP server with 14 tools, three discoverable resources and a review prompt. Structured JSON, AGENTS.md, llms.txt and a public agent.json connect claims to evidence. Agents can discover boats, inspect limits, plan trades, read Gemini odds and receive unsigned calls without supplying a key. Signed steps are simulated; partial failures return sent hashes for safe recovery.
 - **Captain lifecycle:** agents can create a boat, post a stake while boarding stays open, wait for crew, then sail. Requests to sail without crew or stake fail before any calls are returned.
-- **Gemini integration:** public Prediction Markets REST data drives an explicit threshold rule. Missing, ambiguous, closed, invalid or stale fetched snapshots cause the captain to hold. The current engine also requires a two-sided quote no wider than five probability percentage points; raw bid/ask strings remain visible in SDK/MCP output. Normal swaps carry a configurable slippage floor, 1% by default. The bundled captain is a deterministic rule-based agent, with no embedded LLM. External LLM agents can operate through MCP.
+- **Gemini integration:** public Prediction Markets REST data drives an explicit threshold rule. Missing, ambiguous, closed, invalid or stale fetched snapshots cause the captain to hold. It requires a two-sided quote no wider than five probability percentage points. Normal swaps carry a configurable slippage floor, 1% by default. The bundled captain is a deterministic rule-based agent, with no embedded LLM. External LLM agents can operate through MCP.
 - **Audit trail:** decision memos are appended to swap calldata and decoded with `decodeSwapMemo()`. They prove what the captain recorded; they are not cryptographically authenticated Gemini attestations.
-- **App:** Next.js PWA with Circle Modular Wallets passkey and paymaster integration. Correcting both production domains restored authentication: the user completed passkey onboarding in Brave on November 20 and the signed-in account view was verified. Sponsored boarding remains unverified.
+- **App:** Next.js PWA with Circle Modular Wallets passkey and paymaster integration. Production passkey onboarding has been verified. Sponsored boarding remains unverified.
 - **Keeper:** GitHub Actions schedules the authenticated keeper webhook every 10 minutes. Runs can be delayed; settlement requires available prices, liquidity and gas.
 - **Arc:** contracts and evidence are on Arc testnet, chain 5042002. USDC is used for deposits and gas. EURC, USYC and cirBTC are testnet mocks.
 - **CI:** Foundry, SDK, captain, MCP, app and local-chain end-to-end checks. MCP protocol tests exercise discovery and unsigned planning through the real stdio transport.

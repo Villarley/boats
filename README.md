@@ -22,7 +22,7 @@ _Screenshots of the PWA reading Arc testnet live (iPhone size)._
 
 ## Live on Arc testnet
 
-Everything below happened on chain and can be checked on the explorer.
+Everything below happened on chain and can be checked on the explorer. These are historical receipts from the previous deployment. The current factory and boats, including invitation-gated boarding, are listed in [Contract addresses](#contract-addresses-arc-testnet); the verifier keeps historical targets and token addresses pinned to their original transactions.
 
 | What | Proof |
 |---|---|
@@ -39,7 +39,7 @@ Addresses are in [Contract addresses](#contract-addresses-arc-testnet).
 
 ## For AI agents
 
-An MCP-capable agent can be a captain or crew member. The contract enforces trading permissions independently of the model. Oracle, liquidity and liveness risks still apply.
+An MCP-capable agent can be a captain or crew member. The contract enforces trading permissions independently of the model. Oracle, liquidity and liveness risks still apply. See [Grok Bot's role and fleet log](docs/grok/README.md) for the external captain and crew workflows.
 
 - **MCP server** (`packages/mcp`, 14 tools): read boats, score them, estimate loss at the stop threshold before boarding, pre-check trades, read Gemini odds, launch a boat, and act as captain or crew. Tools publish read/write annotations and structured JSON. With no key they return unsigned calls and disclose skipped caller checks. Signed writes simulate each step, reject a mismatched caller and preserve transaction hashes on partial failure. Pre-checks cannot guarantee execution as state, prices and liquidity change. Run `npx tsx packages/mcp/src/server.ts`. Example: [agent session](packages/mcp/examples/session.md).
 - **Auditable decisions:** the bundled rule-based captain and `boats_act swap` record reasons in trailing swap calldata (`decodeSwapMemo()` in the SDK). [Live proof](https://testnet.arcscan.app/tx/0x8762611513bddaf380a5dab13eea3c470b761fd57f7c9e5bd84b9b0283d5fc41). The memo is the captain's self-reported signal; it is not an authenticated Gemini price attestation. The bundled captain uses deterministic rules, with no embedded LLM; external AI agents use the MCP interface.
@@ -89,7 +89,7 @@ Open ──sail()──▶ Sailing ──checkVoyage()──▶ Returning ──
 
 | Layer | Path | What |
 |---|---|---|
-| Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 18 tests incl. invariants, CI on every push) |
+| Contracts | `contracts/` | `Boat`, `BoatFactory`, `PriceOracle`, `SwapAdapter` (Foundry, 23 tests incl. invariants, CI on every push) |
 | SDK | `packages/sdk/` | `@boats/sdk`: reads, mandate pre-check, waterfall, score, calldata builders, wallet interface, keeper, Gemini odds |
 | App | `app/` | PWA for crew and captains; Circle Modular Wallets passkey onboarding verified in production on November 20, plus a local demo-wallet fallback. Sponsored boarding remains unverified |
 | MCP server | `packages/mcp/` | Any AI agent (Claude, GPT...) can read boats, dry-run trades against the mandate and act as captain or crew. See [AGENTS.md](AGENTS.md) |
@@ -148,7 +148,7 @@ npm test                  # SDK, captain and MCP unit tests
 
 cd contracts
 forge install foundry-rs/forge-std --no-git
-forge test -vv            # 18 tests incl. invariants
+forge test -vv            # 23 tests incl. invariants
 ```
 
 Deploy to Arc testnet without Foundry (viem + solc-js), after funding three wallets at faucet.circle.com:
