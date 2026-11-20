@@ -1,13 +1,13 @@
 {
   "chainId": 5042002,
-  "factory": "0x154c6f6019e8deca1bea388ecb1d81993a528936",
-  "oracle": "0x9d32649fafd0e13aeb57770f764a4986a4046f5c",
-  "adapter": "0xf94f024cde1e4efcd0e3e29f0bbd8d993e0d2f57",
+  "factory": "0x90acf1bb09a7b71c276187a7791e0593dfc68e74",
+  "oracle": "0xec5c4538335dc7712ae98660574b071232272093",
+  "adapter": "0x0cca2f532467984014445bef61b592a1eaec9cf0",
   "tokens": {
     "USDC": "0x3600000000000000000000000000000000000000",
-    "USYC": "0x95e88570e02d6071ec88874fa18e64c45a123431",
-    "EURC": "0x36ac64cc019c2f7e8bbdd3c6e455ea580862043e",
-    "cirBTC": "0x3318e4b95316dd91c3ab1c1afc4df977073d1126"
+    "USYC": "0xc1401fecd029e1f3a528cc02535e98f95873fac1",
+    "EURC": "0x1a5dc3284fc658472fe2a7eaef3c87f0c7575000",
+    "cirBTC": "0x1f99f14b0704bd2551129385867a7f477d2b1e5e"
   },
   "mocks": [
     "USYC",
@@ -17,40 +17,40 @@
   "boats": [
     {
       "name": "Safe Harbor",
-      "address": "0x2A923331aA7f452fD3A566DE1a85D1Dc16673092"
+      "address": "0x89376Bb6bE0824A4bCD832C86C8Fac483B6Eb978"
     },
     {
       "name": "Westerly",
-      "address": "0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b"
+      "address": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359"
     },
     {
       "name": "Open Sea",
-      "address": "0x45bEaA6866Fb29C2bf5207E1918F4B64F3F4e392"
+      "address": "0xC2FFFAAA021f4214E6e685e883Cc06E0601e5c29"
     }
   ],
-  "startBlock": 73136948,
+  "startBlock": 73190666,
   "demo": {
-    "aiCaptain": "0xFbC12A29C476bcAD3945e7471a893624b33EB040",
+    "aiCaptain": "0x6C40b242f6bF39AA488c3fD0bdFC6834A24020dF",
     "blocked": [
       {
-        "message": "The AI captain tried to move all $15 into Bitcoin. Blocked by the contract: max weight exceeded.",
-        "txHash": "0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630"
+        "message": "The AI captain tried to move all $5 into Bitcoin. Blocked by the contract: max weight exceeded.",
+        "txHash": "0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6"
       }
     ],
     "log": [
       {
-        "at": "2026-11-20T05:27:30.000Z",
-        "boat": "0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b",
-        "kind": "trade",
-        "message": "Odds of \"Hike 25bps\" at 91% (above 70%). Moving $7.50 to Treasuries.",
-        "txHash": "0xfc9335b11c63399060b7708db5aeb18705b51b8c1ac578d7091bc6913cbfda51"
+        "at": "2026-11-20T12:54:07.998Z",
+        "boat": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
+        "kind": "blocked",
+        "message": "Trying to move all 5 dollars into Bitcoin. Blocked by the contract: max weight exceeded.",
+        "txHash": "0x748ab0dbcdb8f122e27c3dff303eb268950f194111bb804e731ad348ee186ee6"
       },
       {
-        "at": "2026-11-20T05:26:45.000Z",
-        "boat": "0xb32BA4D152Cbf3a596A2D533162AC94FDE548e0b",
-        "kind": "blocked",
-        "message": "Tried to move all $15 into Bitcoin. Blocked by the contract: max weight exceeded.",
-        "txHash": "0x05f6810342d3c61f0b0f23c0a39f7818dbf161c3c2df81fa95a0aa828f795630"
+        "at": "2026-11-20T12:53:56.418Z",
+        "boat": "0xeaA3d4Bc9B2Be8341B76B04d3c2E7ce4B9DdC359",
+        "kind": "trade",
+        "message": "Odds of \"Hike 25bps\" at 91% (above 70%). Moving $5.50 to Treasuries.",
+        "txHash": "0x7fd20ec1dc368c1180c3156638ae4a9914e719722cc10962680879cd477225ea"
       }
     ]
   }
